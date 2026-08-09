@@ -1,0 +1,267 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-e4dd29188856a05b4318.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						18,
+						19
+					]
+				},
+				{
+					"build" : "turtlebot3_pick_place__py",
+					"jsonFile" : "directory-turtlebot3_pick_place__py-fcd39d32677183210182.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "/home/user/turtlebot3_ws/build/turtlebot3_pick_place/turtlebot3_pick_place__py",
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"build" : "turtlebot3_pick_place__rs",
+					"jsonFile" : "directory-turtlebot3_pick_place__rs-40a687e21a2fdb8825bd.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "/home/user/turtlebot3_ws/build/turtlebot3_pick_place/turtlebot3_pick_place__rs",
+					"targetIndexes" : 
+					[
+						17
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2
+					],
+					"name" : "turtlebot3_pick_place",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ament_cmake_python_build_turtlebot3_pick_place_egg::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ament_cmake_python_build_turtlebot3_pick_place_egg-acb3bfe34e17c0171c38.json",
+					"name" : "ament_cmake_python_build_turtlebot3_pick_place_egg",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ament_cmake_python_copy_turtlebot3_pick_place::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ament_cmake_python_copy_turtlebot3_pick_place-4c26b83e962427e86e58.json",
+					"name" : "ament_cmake_python_copy_turtlebot3_pick_place",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "pick_place_orchestrator::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-pick_place_orchestrator-1f8b4062f2fc75209d52.json",
+					"name" : "pick_place_orchestrator",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place-4fa2c2532dfc2f3e260a.json",
+					"name" : "turtlebot3_pick_place",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__cpp-a2615b539faf105e4743.json",
+					"name" : "turtlebot3_pick_place__cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "turtlebot3_pick_place__py::@4747edc35063958aeaa8",
+					"jsonFile" : "target-turtlebot3_pick_place__py-901b9a93be1c67ace864.json",
+					"name" : "turtlebot3_pick_place__py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_generator_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_generator_c-979c2eb86c459b85f5a8.json",
+					"name" : "turtlebot3_pick_place__rosidl_generator_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_generator_py::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_generator_py-28e39b2f7d7ebf6bc4df.json",
+					"name" : "turtlebot3_pick_place__rosidl_generator_py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_typesupport_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_typesupport_c-e1f53e42174cbf128f96.json",
+					"name" : "turtlebot3_pick_place__rosidl_typesupport_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_typesupport_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_typesupport_c__pyext-2b77c780f172eba12453.json",
+					"name" : "turtlebot3_pick_place__rosidl_typesupport_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_typesupport_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_typesupport_cpp-93c6af9e149cd8ab3894.json",
+					"name" : "turtlebot3_pick_place__rosidl_typesupport_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_typesupport_fastrtps_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_typesupport_fastrtps_c-10cd52cafe3543e084b4.json",
+					"name" : "turtlebot3_pick_place__rosidl_typesupport_fastrtps_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_typesupport_fastrtps_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_typesupport_fastrtps_c__pyext-39c3d7480fb6a9e65eb8.json",
+					"name" : "turtlebot3_pick_place__rosidl_typesupport_fastrtps_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_typesupport_fastrtps_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_typesupport_fastrtps_cpp-d86e713a2e33632dd565.json",
+					"name" : "turtlebot3_pick_place__rosidl_typesupport_fastrtps_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_typesupport_introspection_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_typesupport_introspection_c-411bca8db2aa358300aa.json",
+					"name" : "turtlebot3_pick_place__rosidl_typesupport_introspection_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_typesupport_introspection_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_typesupport_introspection_c__pyext-ca19216225187937df1f.json",
+					"name" : "turtlebot3_pick_place__rosidl_typesupport_introspection_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place__rosidl_typesupport_introspection_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place__rosidl_typesupport_introspection_cpp-1116e81566c863d4deac.json",
+					"name" : "turtlebot3_pick_place__rosidl_typesupport_introspection_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "turtlebot3_pick_place__rs::@cf0a52500febdc829bc1",
+					"jsonFile" : "target-turtlebot3_pick_place__rs-bf778a919b8481d93b9f.json",
+					"name" : "turtlebot3_pick_place__rs",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "turtlebot3_pick_place_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-turtlebot3_pick_place_uninstall-cd722a5fa54b16fef12f.json",
+					"name" : "turtlebot3_pick_place_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-e3923ee39b06157828a3.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/user/turtlebot3_ws/build/turtlebot3_pick_place",
+		"source" : "/home/user/turtlebot3_ws/src/turtlebot3_pick_place"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

@@ -1,0 +1,142 @@
+[0.067s] Invoking command in '/home/user/turtlebot3_ws/build/realsense_bringup': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/user/turtlebot3_ws/src/realsense_bringup -DCMAKE_INSTALL_PREFIX=/home/user/turtlebot3_ws/install/realsense_bringup
+[0.090s] -- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.365s] -- Found rclcpp: 16.0.19 (/opt/ros/humble/share/rclcpp/cmake)
+[0.420s] -- Found rosidl_generator_c: 3.1.9 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.424s] -- Found rosidl_adapter: 3.1.9 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.436s] -- Found rosidl_generator_cpp: 3.1.9 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.456s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.479s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.544s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.545s] -- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[0.744s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[0.844s] -- Found sensor_msgs: 4.9.1 (/opt/ros/humble/share/sensor_msgs/cmake)
+[0.897s] -- Found visualization_msgs: 4.9.1 (/opt/ros/humble/share/visualization_msgs/cmake)
+[0.933s] -- Found message_filters: 4.3.18 (/opt/ros/humble/share/message_filters/cmake)
+[0.939s] -- Found cv_bridge: 3.2.1 (/opt/ros/humble/share/cv_bridge/cmake)
+[0.966s] -- Found tf2: 0.25.20 (/opt/ros/humble/share/tf2/cmake)
+[0.992s] -- Found tf2_ros: 0.25.20 (/opt/ros/humble/share/tf2_ros/cmake)
+[1.195s] -- Found tf2_geometry_msgs: 0.25.20 (/opt/ros/humble/share/tf2_geometry_msgs/cmake)
+[1.232s] -- Found eigen3_cmake_module: 0.1.1 (/opt/ros/humble/share/eigen3_cmake_module/cmake)
+[1.235s] -- Found Eigen3: TRUE (found version "3.4.0") 
+[1.235s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[1.242s] -- Found tf2_eigen: 0.25.20 (/opt/ros/humble/share/tf2_eigen/cmake)
+[1.276s] -- Checking for module 'eigen3'
+[1.305s] --   Found eigen3, version 3.4.0
+[1.375s] -- Found Eigen: /usr/include/eigen3 (Required is at least version "3.1") 
+[1.375s] -- Eigen found (include: /usr/include/eigen3, version: 3.4.0)
+[1.438s] -- Found Boost: /usr/lib/aarch64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found suitable version "1.74.0", minimum required is "1.65.0") found components: system filesystem date_time iostreams serialization 
+[1.561s] -- Checking for module 'libusb-1.0'
+[1.595s] --   Found libusb-1.0, version 1.0.25
+[1.671s] -- Found libusb: /usr/lib/aarch64-linux-gnu/libusb-1.0.so  
+[1.674s] -- Found OpenNI: /usr/lib/libOpenNI.so;libusb::libusb (found version "1.5.4.0") 
+[1.675s] -- OpenNI found (version: 1.5.4.0, include: /usr/include/ni, lib: /usr/lib/libOpenNI.so;libusb::libusb)
+[1.796s] -- Found OpenNI2: /usr/lib/aarch64-linux-gnu/libOpenNI2.so;libusb::libusb (found version "2.2.0.33") 
+[1.797s] -- OpenNI2 found (version: 2.2.0.33, include: /usr/include/openni2, lib: /usr/lib/aarch64-linux-gnu/libOpenNI2.so;libusb::libusb)
+[1.797s] [0m** WARNING ** io features related to pcap will be disabled[0m
+[1.798s] [0m** WARNING ** io features related to png will be disabled[0m
+[1.876s] -- Found GLEW: /usr/lib/aarch64-linux-gnu/libGLEW.so  
+[1.889s] -- Found OpenGL: /usr/lib/aarch64-linux-gnu/libOpenGL.so  found components: OpenGL GLX 
+[2.255s] -- Found MPI_C: /usr/lib/aarch64-linux-gnu/libmpi.so (found version "3.1") 
+[2.255s] -- Found MPI: TRUE (found version "3.1") found components: C 
+[2.264s] -- Found JsonCpp: /usr/lib/aarch64-linux-gnu/libjsoncpp.so (found suitable version "1.9.5", minimum required is "0.7.0") 
+[2.292s] -- Found ZLIB: /usr/lib/aarch64-linux-gnu/libz.so (found version "1.2.11") 
+[2.338s] -- Found PNG: /usr/lib/aarch64-linux-gnu/libpng.so (found version "1.6.37") 
+[2.370s] -- Found Eigen3: /usr/include/eigen3 (found version "3.4.0") 
+[2.564s] -- Found X11: /usr/include   
+[2.565s] -- Looking for XOpenDisplay in /usr/lib/aarch64-linux-gnu/libX11.so;/usr/lib/aarch64-linux-gnu/libXext.so
+[2.715s] -- Looking for XOpenDisplay in /usr/lib/aarch64-linux-gnu/libX11.so;/usr/lib/aarch64-linux-gnu/libXext.so - found
+[2.716s] -- Looking for gethostbyname
+[2.857s] -- Looking for gethostbyname - found
+[2.858s] -- Looking for connect
+[3.002s] -- Looking for connect - found
+[3.002s] -- Looking for remove
+[3.148s] -- Looking for remove - found
+[3.149s] -- Looking for shmat
+[3.291s] -- Looking for shmat - found
+[3.291s] -- Looking for IceConnectionNumber in ICE
+[3.436s] -- Looking for IceConnectionNumber in ICE - found
+[3.644s] -- Found EXPAT: /usr/lib/aarch64-linux-gnu/libexpat.so (found version "2.4.7") 
+[3.651s] -- Found double-conversion: /usr/lib/aarch64-linux-gnu/libdouble-conversion.so  
+[3.659s] -- Found LZ4: /usr/lib/aarch64-linux-gnu/liblz4.so (found version "1.9.3") 
+[3.666s] -- Found LZMA: /usr/lib/aarch64-linux-gnu/liblzma.so (found version "5.2.5") 
+[3.708s] -- Found JPEG: /usr/lib/aarch64-linux-gnu/libjpeg.so (found version "80") 
+[3.722s] -- Found TIFF: /usr/lib/aarch64-linux-gnu/libtiff.so (found version "4.3.0")  
+[3.732s] -- Found Freetype: /usr/lib/aarch64-linux-gnu/libfreetype.so (found version "2.11.1") 
+[3.745s] -- Found utf8cpp: /usr/include/utf8cpp  
+[3.818s] -- Eigen found (include: /usr/include/eigen3, version: 3.4.0)
+[4.372s] -- Checking for module 'flann'
+[4.405s] --   Found flann, version 1.9.1
+[4.508s] -- Found FLANN: /usr/lib/aarch64-linux-gnu/libflann_cpp.so  
+[4.508s] -- FLANN found (include: /usr/include, lib: /usr/lib/aarch64-linux-gnu/libflann_cpp.so)
+[4.509s] -- looking for PCL_COMMON
+[4.511s] -- Found PCL_COMMON: /usr/lib/aarch64-linux-gnu/libpcl_common.so  
+[4.511s] -- looking for PCL_OCTREE
+[4.513s] -- Found PCL_OCTREE: /usr/lib/aarch64-linux-gnu/libpcl_octree.so  
+[4.513s] -- looking for PCL_IO
+[4.515s] -- Found PCL_IO: /usr/lib/aarch64-linux-gnu/libpcl_io.so  
+[4.515s] -- looking for PCL_SAMPLE_CONSENSUS
+[4.517s] -- Found PCL_SAMPLE_CONSENSUS: /usr/lib/aarch64-linux-gnu/libpcl_sample_consensus.so  
+[4.517s] -- looking for PCL_FILTERS
+[4.519s] -- Found PCL_FILTERS: /usr/lib/aarch64-linux-gnu/libpcl_filters.so  
+[4.519s] -- looking for PCL_GEOMETRY
+[4.520s] -- Found PCL_GEOMETRY: /usr/include/pcl-1.12  
+[4.520s] -- looking for PCL_2D
+[4.520s] -- Found PCL_2D: /usr/include/pcl-1.12  
+[4.521s] -- looking for PCL_FEATURES
+[4.522s] -- Found PCL_FEATURES: /usr/lib/aarch64-linux-gnu/libpcl_features.so  
+[4.523s] -- looking for PCL_ML
+[4.524s] -- Found PCL_ML: /usr/lib/aarch64-linux-gnu/libpcl_ml.so  
+[4.524s] -- looking for PCL_SEGMENTATION
+[4.526s] -- Found PCL_SEGMENTATION: /usr/lib/aarch64-linux-gnu/libpcl_segmentation.so  
+[4.526s] -- looking for PCL_KDTREE
+[4.528s] -- Found PCL_KDTREE: /usr/lib/aarch64-linux-gnu/libpcl_kdtree.so  
+[4.528s] -- looking for PCL_SEARCH
+[4.529s] -- Found PCL_SEARCH: /usr/lib/aarch64-linux-gnu/libpcl_search.so  
+[4.530s] -- Found PCL: pcl_common;pcl_octree;pcl_io;pcl_sample_consensus;pcl_filters;pcl_features;pcl_ml;pcl_segmentation;pcl_kdtree;pcl_search;Boost::system;Boost::filesystem;Boost::date_time;Boost::iostreams;Boost::serialization;/usr/lib/libOpenNI.so;libusb::libusb;/usr/lib/aarch64-linux-gnu/libOpenNI2.so;libusb::libusb;VTK::ChartsCore;VTK::CommonColor;VTK::CommonComputationalGeometry;VTK::CommonCore;VTK::CommonDataModel;VTK::CommonExecutionModel;VTK::CommonMath;VTK::CommonMisc;VTK::CommonTransforms;VTK::FiltersCore;VTK::FiltersExtraction;VTK::FiltersGeneral;VTK::FiltersGeometry;VTK::FiltersModeling;VTK::FiltersSources;VTK::ImagingCore;VTK::ImagingSources;VTK::InteractionImage;VTK::InteractionStyle;VTK::InteractionWidgets;VTK::IOCore;VTK::IOGeometry;VTK::IOImage;VTK::IOLegacy;VTK::IOPLY;VTK::RenderingAnnotation;VTK::RenderingCore;VTK::RenderingContext2D;VTK::RenderingLOD;VTK::RenderingFreeType;VTK::ViewsCore;VTK::ViewsContext2D;VTK::RenderingOpenGL2;VTK::GUISupportQt;FLANN::FLANN  
+[4.537s] -- Found pcl_conversions: 2.4.5 (/opt/ros/humble/share/pcl_conversions/cmake)
+[4.593s] -- Found Eigen3: TRUE (found version "3.4.0") 
+[4.620s] -- Found ament_lint_auto: 0.12.15 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[4.824s] -- Added test 'copyright' to check source files copyright and LICENSE
+[4.826s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[4.827s] -- Configured cppcheck include dirs: /home/user/turtlebot3_ws/src/realsense_bringup/include
+[4.827s] -- Configured cppcheck exclude dirs and/or files: 
+[4.830s] -- Added test 'cpplint' to check C / C++ code against the Google style
+[4.830s] -- Configured cpplint exclude dirs and/or files: 
+[4.831s] -- Added test 'flake8' to check Python code syntax and style conventions
+[4.833s] -- Added test 'lint_cmake' to check CMake code style
+[4.834s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[4.836s] -- Added test 'uncrustify' to check C / C++ code style
+[4.837s] -- Configured uncrustify additional arguments: 
+[4.838s] -- Added test 'xmllint' to check XML markup files
+[4.843s] -- Configuring done
+[4.937s] -- Generating done
+[4.953s] -- Build files have been written to: /home/user/turtlebot3_ws/build/realsense_bringup
+[4.995s] Invoked command in '/home/user/turtlebot3_ws/build/realsense_bringup' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/user/turtlebot3_ws/src/realsense_bringup -DCMAKE_INSTALL_PREFIX=/home/user/turtlebot3_ws/install/realsense_bringup
+[5.000s] Invoking command in '/home/user/turtlebot3_ws/build/realsense_bringup': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/user/turtlebot3_ws/build/realsense_bringup -- -j8 -l8
+[5.101s] [ 50%] [32mBuilding CXX object CMakeFiles/realsense_tf_node.dir/src/realsense_tf.cpp.o[0m
+[51.723s] [100%] [32m[1mLinking CXX executable realsense_tf_node[0m
+[55.359s] [100%] Built target realsense_tf_node
+[55.380s] Invoked command in '/home/user/turtlebot3_ws/build/realsense_bringup' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/user/turtlebot3_ws/build/realsense_bringup -- -j8 -l8
+[55.386s] Invoking command in '/home/user/turtlebot3_ws/build/realsense_bringup': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/user/turtlebot3_ws/build/realsense_bringup
+[55.400s] -- Install configuration: ""
+[55.400s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/lib/realsense_bringup/realsense_tf_node
+[55.413s] -- Set runtime path of "/home/user/turtlebot3_ws/install/realsense_bringup/lib/realsense_bringup/realsense_tf_node" to ""
+[55.414s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/launch
+[55.414s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/launch/realsense_tf.launch.py
+[55.415s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/ament_index/resource_index/package_run_dependencies/realsense_bringup
+[55.415s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/ament_index/resource_index/parent_prefix_path/realsense_bringup
+[55.415s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/environment/ament_prefix_path.sh
+[55.416s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/environment/ament_prefix_path.dsv
+[55.416s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/environment/path.sh
+[55.416s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/environment/path.dsv
+[55.417s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/local_setup.bash
+[55.417s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/local_setup.sh
+[55.417s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/local_setup.zsh
+[55.417s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/local_setup.dsv
+[55.418s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/package.dsv
+[55.418s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/ament_index/resource_index/packages/realsense_bringup
+[55.418s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/cmake/ament_cmake_export_dependencies-extras.cmake
+[55.419s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/cmake/realsense_bringupConfig.cmake
+[55.419s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/cmake/realsense_bringupConfig-version.cmake
+[55.419s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/package.xml
+[55.424s] Invoked command in '/home/user/turtlebot3_ws/build/realsense_bringup' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/user/turtlebot3_ws/build/realsense_bringup

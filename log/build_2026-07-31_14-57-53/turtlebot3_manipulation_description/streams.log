@@ -1,0 +1,41 @@
+[0.077s] Invoking command in '/home/user/turtlebot3_ws/build/turtlebot3_manipulation_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/user/turtlebot3_ws/build/turtlebot3_manipulation_description -- -j8 -l8
+[0.152s] Invoked command in '/home/user/turtlebot3_ws/build/turtlebot3_manipulation_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/user/turtlebot3_ws/build/turtlebot3_manipulation_description -- -j8 -l8
+[0.172s] Invoking command in '/home/user/turtlebot3_ws/build/turtlebot3_manipulation_description': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/user/turtlebot3_ws/build/turtlebot3_manipulation_description
+[0.188s] -- Install configuration: ""
+[0.190s] -- Execute custom install script
+[0.194s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/launch/model.launch.py
+[0.195s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/rviz/model.rviz
+[0.196s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/urdf/open_manipulator_x.urdf.xacro
+[0.197s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/urdf/turtlebot3_manipulation.urdf.xacro
+[0.201s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/urdf/turtlebot3_waffle_pi.urdf.xacro
+[0.204s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/open_manipulator_x/gripper_left_palm.stl
+[0.204s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/open_manipulator_x/gripper_right_palm.stl
+[0.204s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/open_manipulator_x/link1.stl
+[0.204s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/open_manipulator_x/link2.stl
+[0.204s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/open_manipulator_x/link3.stl
+[0.205s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/open_manipulator_x/link4.stl
+[0.205s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/open_manipulator_x/link5.stl
+[0.205s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/turtlebot3_waffle_pi/base.stl
+[0.205s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/turtlebot3_waffle_pi/ladar.stl
+[0.206s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/turtlebot3_waffle_pi/left_tire.stl
+[0.207s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/meshes/turtlebot3_waffle_pi/right_tire.stl
+[0.208s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/ros2_control/turtlebot3_manipulation_system.ros2_control.xacro
+[0.210s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/gazebo/materials.xacro
+[0.210s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/gazebo/open_manipulator_x.gazebo.xacro
+[0.211s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/gazebo/turtlebot3_waffle_pi.gazebo.xacro
+[0.214s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/ament_index/resource_index/package_run_dependencies/turtlebot3_manipulation_description
+[0.215s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/ament_index/resource_index/parent_prefix_path/turtlebot3_manipulation_description
+[0.216s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/environment/ament_prefix_path.sh
+[0.218s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/environment/ament_prefix_path.dsv
+[0.219s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/environment/path.sh
+[0.219s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/environment/path.dsv
+[0.220s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/local_setup.bash
+[0.221s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/local_setup.sh
+[0.221s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/local_setup.zsh
+[0.222s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/local_setup.dsv
+[0.222s] -- Symlinking: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/package.dsv
+[0.224s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/ament_index/resource_index/packages/turtlebot3_manipulation_description
+[0.226s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/cmake/turtlebot3_manipulation_descriptionConfig.cmake
+[0.227s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/cmake/turtlebot3_manipulation_descriptionConfig-version.cmake
+[0.228s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_description/share/turtlebot3_manipulation_description/package.xml
+[0.303s] Invoked command in '/home/user/turtlebot3_ws/build/turtlebot3_manipulation_description' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/user/turtlebot3_ws/build/turtlebot3_manipulation_description

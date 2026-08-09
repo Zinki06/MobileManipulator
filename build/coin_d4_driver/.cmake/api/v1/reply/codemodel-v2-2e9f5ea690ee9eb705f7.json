@@ -1,0 +1,97 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-47943b271632faeb0f28.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "coin_d4_driver",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "coin_d4_driver_lib::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-coin_d4_driver_lib-a20dae9a6df0252f377a.json",
+					"name" : "coin_d4_driver_lib",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "coin_d4_driver_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-coin_d4_driver_uninstall-b04d1c7b087c203e1e6c.json",
+					"name" : "coin_d4_driver_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "multi_coin_d4_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-multi_coin_d4_node-41d3b66698bb0b8e415c.json",
+					"name" : "multi_coin_d4_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "single_coin_d4_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-single_coin_d4_node-b9db0ec3cb536a46c63c.json",
+					"name" : "single_coin_d4_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-9609152bdb70b3c823ef.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/user/turtlebot3_ws/build/coin_d4_driver",
+		"source" : "/home/user/turtlebot3_ws/src/coin_d4_driver"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

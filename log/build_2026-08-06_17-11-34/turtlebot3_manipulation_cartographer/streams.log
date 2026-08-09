@@ -1,0 +1,24 @@
+[0.083s] Invoking command in '/home/user/turtlebot3_ws/build/turtlebot3_manipulation_cartographer': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/user/turtlebot3_ws/build/turtlebot3_manipulation_cartographer -- -j8 -l8
+[0.642s] Invoked command in '/home/user/turtlebot3_ws/build/turtlebot3_manipulation_cartographer' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/user/turtlebot3_ws/build/turtlebot3_manipulation_cartographer -- -j8 -l8
+[0.644s] Invoking command in '/home/user/turtlebot3_ws/build/turtlebot3_manipulation_cartographer': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/user/turtlebot3_ws/build/turtlebot3_manipulation_cartographer
+[0.694s] -- Install configuration: ""
+[0.695s] -- Execute custom install script
+[0.695s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/config/turtlebot3_2d.lua
+[0.695s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/launch/cartographer.launch.py
+[0.696s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/rviz/cartographer.rviz
+[0.696s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/ament_index/resource_index/package_run_dependencies/turtlebot3_manipulation_cartographer
+[0.697s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/ament_index/resource_index/parent_prefix_path/turtlebot3_manipulation_cartographer
+[0.698s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/environment/ament_prefix_path.sh
+[0.698s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/environment/ament_prefix_path.dsv
+[0.699s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/environment/path.sh
+[0.699s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/environment/path.dsv
+[0.700s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/local_setup.bash
+[0.701s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/local_setup.sh
+[0.702s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/local_setup.zsh
+[0.702s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/local_setup.dsv
+[0.703s] -- Symlinking: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/package.dsv
+[0.739s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/ament_index/resource_index/packages/turtlebot3_manipulation_cartographer
+[0.740s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/cmake/turtlebot3_manipulation_cartographerConfig.cmake
+[0.740s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/cmake/turtlebot3_manipulation_cartographerConfig-version.cmake
+[0.742s] -- Up-to-date symlink: /home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer/share/turtlebot3_manipulation_cartographer/package.xml
+[0.764s] Invoked command in '/home/user/turtlebot3_ws/build/turtlebot3_manipulation_cartographer' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/user/turtlebot3_ws/build/turtlebot3_manipulation_cartographer

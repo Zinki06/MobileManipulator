@@ -1,0 +1,280 @@
+[0.023s] Invoking command in '/home/user/turtlebot3_ws/build/turtlebot3_pick_place': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/user/turtlebot3_ws/src/turtlebot3_pick_place -DCMAKE_INSTALL_PREFIX=/home/user/turtlebot3_ws/install/turtlebot3_pick_place
+[0.130s] -- The C compiler identification is GNU 11.4.0
+[0.245s] -- The CXX compiler identification is GNU 11.4.0
+[0.268s] -- Detecting C compiler ABI info
+[0.408s] -- Detecting C compiler ABI info - done
+[0.430s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.431s] -- Detecting C compile features
+[0.432s] -- Detecting C compile features - done
+[0.443s] -- Detecting CXX compiler ABI info
+[0.599s] -- Detecting CXX compiler ABI info - done
+[0.625s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.626s] -- Detecting CXX compile features
+[0.627s] -- Detecting CXX compile features - done
+[0.641s] -- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.956s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[1.203s] -- Found rclcpp: 16.0.19 (/opt/ros/humble/share/rclcpp/cmake)
+[1.308s] -- Found rosidl_generator_c: 3.1.9 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[1.322s] -- Found rosidl_adapter: 3.1.9 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[1.342s] -- Found rosidl_generator_cpp: 3.1.9 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[1.370s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.407s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.511s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[1.518s] -- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[1.716s] -- Found OpenSSL: /usr/lib/aarch64-linux-gnu/libcrypto.so (found version "3.0.2")  
+[1.774s] -- Found FastRTPS: /opt/ros/humble/include  
+[1.862s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[1.885s] -- Looking for pthread.h
+[2.029s] -- Looking for pthread.h - found
+[2.030s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[2.174s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[2.177s] -- Found Threads: TRUE  
+[2.323s] -- Found rclpy: 3.3.21 (/opt/ros/humble/share/rclpy/cmake)
+[2.331s] -- Found moveit_ros_planning_interface: 2.5.9 (/opt/ros/humble/share/moveit_ros_planning_interface/cmake)
+[2.406s] -- Found Boost: /usr/lib/aarch64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: date_time filesystem program_options system thread 
+[2.791s] -- Found Boost: /usr/lib/aarch64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: chrono date_time filesystem iostreams program_options regex serialization system thread 
+[2.904s] -- Found parameter_traits: 0.7.4 (/opt/ros/humble/share/parameter_traits/cmake)
+[2.945s] -- Found rclcpp_lifecycle: 16.0.19 (/opt/ros/humble/share/rclcpp_lifecycle/cmake)
+[3.219s] -- library: /usr/lib/aarch64-linux-gnu/libcurl.so
+[3.301s] -- Found Eigen3: TRUE (found version "3.4.0") 
+[3.302s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[3.619s] -- Found Boost: /usr/lib/aarch64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: system filesystem date_time program_options thread chrono 
+[3.688s] -- Found Boost: /usr/lib/aarch64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: thread system filesystem regex date_time program_options 
+[3.739s] -- Found Boost: /usr/lib/aarch64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: system filesystem date_time program_options thread 
+[3.806s] -- Found cv_bridge: 3.2.1 (/opt/ros/humble/share/cv_bridge/cmake)
+[3.834s] -- Found image_transport: 3.1.13 (/opt/ros/humble/share/image_transport/cmake)
+[3.844s] -- Found rosidl_default_generators: 1.2.1 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+[4.520s] -- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)
+[5.505s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[5.896s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[5.950s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") 
+[5.962s] -- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+[6.031s] -- Found PythonLibs: /usr/lib/aarch64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") 
+[6.032s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[6.032s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+[6.032s] -- Using PYTHON_LIBRARIES: /usr/lib/aarch64-linux-gnu/libpython3.10.so
+[6.075s] -- Found PythonExtra: .so  
+[6.460s] -- Configuring done
+[6.602s] -- Generating done
+[6.640s] -- Build files have been written to: /home/user/turtlebot3_ws/build/turtlebot3_pick_place
+[6.697s] Invoked command in '/home/user/turtlebot3_ws/build/turtlebot3_pick_place' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/user/turtlebot3_ws/src/turtlebot3_pick_place -DCMAKE_INSTALL_PREFIX=/home/user/turtlebot3_ws/install/turtlebot3_pick_place
+[6.701s] Invoking command in '/home/user/turtlebot3_ws/build/turtlebot3_pick_place': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/user/turtlebot3_ws/build/turtlebot3_pick_place -- -j8 -l8
+[6.793s] [  2%] [34m[1mGenerating C code for ROS interfaces[0m
+[6.811s] [  8%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[6.811s] [  8%] [34m[1mGenerating Rust code for ROS interfaces[0m
+[6.830s] [  8%] Built target ament_cmake_python_copy_turtlebot3_pick_place
+[7.323s] [  8%] Built target turtlebot3_pick_place__rs
+[7.370s] running egg_info
+[7.372s] creating turtlebot3_pick_place.egg-info
+[7.372s] writing turtlebot3_pick_place.egg-info/PKG-INFO
+[7.373s] writing dependency_links to turtlebot3_pick_place.egg-info/dependency_links.txt
+[7.373s] writing top-level names to turtlebot3_pick_place.egg-info/top_level.txt
+[7.374s] writing manifest file 'turtlebot3_pick_place.egg-info/SOURCES.txt'
+[7.382s] reading manifest file 'turtlebot3_pick_place.egg-info/SOURCES.txt'
+[7.382s] writing manifest file 'turtlebot3_pick_place.egg-info/SOURCES.txt'
+[7.416s] [ 11%] [32mBuilding C object CMakeFiles/turtlebot3_pick_place__rosidl_generator_c.dir/rosidl_generator_c/turtlebot3_pick_place/srv/detail/get_target_pose__functions.c.o[0m
+[7.416s] [ 11%] Built target turtlebot3_pick_place__cpp
+[7.437s] [ 17%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[7.437s] [ 17%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[7.437s] [ 20%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[7.459s] [ 20%] Built target ament_cmake_python_build_turtlebot3_pick_place_egg
+[7.562s] [ 23%] [32m[1mLinking C shared library libturtlebot3_pick_place__rosidl_generator_c.so[0m
+[7.633s] [ 23%] Built target turtlebot3_pick_place__rosidl_generator_c
+[7.654s] [ 32%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[7.655s] [ 32%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[7.655s] [ 32%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[7.969s] [ 35%] [32mBuilding CXX object CMakeFiles/turtlebot3_pick_place__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/turtlebot3_pick_place/srv/get_target_pose__type_support.cpp.o[0m
+[8.006s] [ 38%] [32mBuilding CXX object CMakeFiles/turtlebot3_pick_place__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/turtlebot3_pick_place/srv/detail/get_target_pose__type_support.cpp.o[0m
+[8.027s] [ 41%] [32mBuilding CXX object CMakeFiles/turtlebot3_pick_place__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/turtlebot3_pick_place/srv/detail/dds_fastrtps/get_target_pose__type_support.cpp.o[0m
+[8.173s] [ 44%] [32mBuilding CXX object CMakeFiles/turtlebot3_pick_place__rosidl_typesupport_c.dir/rosidl_typesupport_c/turtlebot3_pick_place/srv/get_target_pose__type_support.cpp.o[0m
+[8.245s] [ 47%] [32m[1mLinking CXX shared library libturtlebot3_pick_place__rosidl_typesupport_c.so[0m
+[8.249s] [ 50%] [32mBuilding C object CMakeFiles/turtlebot3_pick_place__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/turtlebot3_pick_place/srv/detail/get_target_pose__type_support.c.o[0m
+[8.250s] [ 52%] [32mBuilding CXX object CMakeFiles/turtlebot3_pick_place__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/turtlebot3_pick_place/srv/detail/get_target_pose__type_support_c.cpp.o[0m
+[8.330s] [ 55%] [32m[1mLinking C shared library libturtlebot3_pick_place__rosidl_typesupport_introspection_c.so[0m
+[8.332s] [ 55%] Built target turtlebot3_pick_place__rosidl_typesupport_c
+[8.401s] [ 55%] Built target turtlebot3_pick_place__rosidl_typesupport_introspection_c
+[8.576s] [ 58%] [32m[1mLinking CXX shared library libturtlebot3_pick_place__rosidl_typesupport_cpp.so[0m
+[8.653s] [ 58%] Built target turtlebot3_pick_place__rosidl_typesupport_cpp
+[8.695s] [ 61%] [32mBuilding CXX object CMakeFiles/pick_place_orchestrator.dir/src/pick_place_orchestrator.cpp.o[0m
+[8.887s] [ 64%] [32m[1mLinking CXX shared library libturtlebot3_pick_place__rosidl_typesupport_introspection_cpp.so[0m
+[8.950s] [ 67%] [32m[1mLinking CXX shared library libturtlebot3_pick_place__rosidl_typesupport_fastrtps_cpp.so[0m
+[9.013s] [ 67%] Built target turtlebot3_pick_place__rosidl_typesupport_introspection_cpp
+[9.028s] [ 70%] [32m[1mLinking CXX shared library libturtlebot3_pick_place__rosidl_typesupport_fastrtps_c.so[0m
+[9.108s] [ 70%] Built target turtlebot3_pick_place__rosidl_typesupport_fastrtps_cpp
+[9.170s] [ 70%] Built target turtlebot3_pick_place__rosidl_typesupport_fastrtps_c
+[9.208s] [ 70%] Built target turtlebot3_pick_place
+[9.248s] [ 73%] [34m[1mGenerating Python code for ROS interfaces[0m
+[10.015s] [ 73%] Built target turtlebot3_pick_place__py
+[10.053s] [ 76%] [32mBuilding C object CMakeFiles/turtlebot3_pick_place__rosidl_generator_py.dir/rosidl_generator_py/turtlebot3_pick_place/srv/_get_target_pose_s.c.o[0m
+[10.294s] [ 79%] [32m[1mLinking C shared library rosidl_generator_py/turtlebot3_pick_place/libturtlebot3_pick_place__rosidl_generator_py.so[0m
+[10.373s] [ 79%] Built target turtlebot3_pick_place__rosidl_generator_py
+[10.413s] [ 88%] [32mBuilding C object CMakeFiles/turtlebot3_pick_place__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/turtlebot3_pick_place/_turtlebot3_pick_place_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[10.413s] [ 88%] [32mBuilding C object CMakeFiles/turtlebot3_pick_place__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/turtlebot3_pick_place/_turtlebot3_pick_place_s.ep.rosidl_typesupport_c.c.o[0m
+[10.414s] [ 88%] [32mBuilding C object CMakeFiles/turtlebot3_pick_place__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/turtlebot3_pick_place/_turtlebot3_pick_place_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[10.622s] [ 94%] [32m[1mLinking C shared library rosidl_generator_py/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_introspection_c.cpython-310-aarch64-linux-gnu.so[0m
+[10.623s] [ 94%] [32m[1mLinking C shared library rosidl_generator_py/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_fastrtps_c.cpython-310-aarch64-linux-gnu.so[0m
+[10.623s] [ 97%] [32m[1mLinking C shared library rosidl_generator_py/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_c.cpython-310-aarch64-linux-gnu.so[0m
+[10.702s] [ 97%] Built target turtlebot3_pick_place__rosidl_typesupport_c__pyext
+[10.702s] [ 97%] Built target turtlebot3_pick_place__rosidl_typesupport_introspection_c__pyext
+[10.704s] [ 97%] Built target turtlebot3_pick_place__rosidl_typesupport_fastrtps_c__pyext
+[28.676s] [100%] [32m[1mLinking CXX executable pick_place_orchestrator[0m
+[29.577s] [100%] Built target pick_place_orchestrator
+[29.606s] Invoked command in '/home/user/turtlebot3_ws/build/turtlebot3_pick_place' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/user/turtlebot3_ws/build/turtlebot3_pick_place -- -j8 -l8
+[29.629s] Invoking command in '/home/user/turtlebot3_ws/build/turtlebot3_pick_place': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/user/turtlebot3_ws/build/turtlebot3_pick_place
+[29.646s] -- Install configuration: ""
+[29.646s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/ament_index/resource_index/rosidl_interfaces/turtlebot3_pick_place
+[29.647s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place
+[29.647s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/msg
+[29.647s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/msg/rosidl_generator_c__visibility_control.h
+[29.647s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv
+[29.648s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail
+[29.648s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__type_support.h
+[29.648s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__struct.h
+[29.648s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__functions.c
+[29.648s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__functions.h
+[29.649s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/get_target_pose.h
+[29.649s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/environment/library_path.sh
+[29.649s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/environment/library_path.dsv
+[29.649s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_generator_c.so
+[29.650s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_generator_c.so" to ""
+[29.650s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place
+[29.650s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/msg
+[29.651s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[29.651s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv
+[29.651s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail
+[29.651s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__rosidl_typesupport_fastrtps_c.h
+[29.652s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_fastrtps_c.so
+[29.652s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_fastrtps_c.so" to ""
+[29.652s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place
+[29.652s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/msg
+[29.652s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/msg/rosidl_generator_cpp__visibility_control.hpp
+[29.653s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv
+[29.653s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail
+[29.653s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__struct.hpp
+[29.653s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__type_support.hpp
+[29.654s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__traits.hpp
+[29.654s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__builder.hpp
+[29.654s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/get_target_pose.hpp
+[29.655s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place
+[29.655s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/msg
+[29.655s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[29.656s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv
+[29.656s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail
+[29.656s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/dds_fastrtps
+[29.656s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__rosidl_typesupport_fastrtps_cpp.hpp
+[29.657s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_fastrtps_cpp.so
+[29.657s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_fastrtps_cpp.so" to ""
+[29.657s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place
+[29.658s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/msg
+[29.658s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[29.658s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv
+[29.658s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail
+[29.659s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__rosidl_typesupport_introspection_c.h
+[29.659s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__type_support.c
+[29.659s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_introspection_c.so
+[29.660s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_introspection_c.so" to ""
+[29.660s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_c.so
+[29.660s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_c.so" to ""
+[29.661s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place
+[29.661s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv
+[29.661s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail
+[29.661s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__type_support.cpp
+[29.662s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/include/turtlebot3_pick_place/turtlebot3_pick_place/srv/detail/get_target_pose__rosidl_typesupport_introspection_cpp.hpp
+[29.662s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_introspection_cpp.so
+[29.662s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_introspection_cpp.so" to ""
+[29.663s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_cpp.so
+[29.663s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_typesupport_cpp.so" to ""
+[29.663s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/environment/pythonpath.sh
+[29.664s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/environment/pythonpath.dsv
+[29.664s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place-0.0.1-py3.10.egg-info
+[29.664s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place-0.0.1-py3.10.egg-info/SOURCES.txt
+[29.664s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place-0.0.1-py3.10.egg-info/dependency_links.txt
+[29.665s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place-0.0.1-py3.10.egg-info/top_level.txt
+[29.665s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place-0.0.1-py3.10.egg-info/PKG-INFO
+[29.665s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place
+[29.665s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/__init__.py
+[29.666s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/libturtlebot3_pick_place__rosidl_generator_py.so
+[29.666s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/_turtlebot3_pick_place_s.ep.rosidl_typesupport_fastrtps_c.c
+[29.666s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_c.cpython-310-aarch64-linux-gnu.so
+[29.666s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/_turtlebot3_pick_place_s.ep.rosidl_typesupport_c.c
+[29.667s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_introspection_c.cpython-310-aarch64-linux-gnu.so
+[29.667s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/_turtlebot3_pick_place_s.ep.rosidl_typesupport_introspection_c.c
+[29.667s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_fastrtps_c.cpython-310-aarch64-linux-gnu.so
+[29.667s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/srv
+[29.668s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/srv/__init__.py
+[29.668s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/srv/_get_target_pose.py
+[29.668s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/srv/_get_target_pose_s.c
+[29.733s] Listing '/home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place'...
+[29.733s] Compiling '/home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/__init__.py'...
+[29.734s] Listing '/home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/srv'...
+[29.734s] Compiling '/home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/srv/__init__.py'...
+[29.734s] Compiling '/home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/srv/_get_target_pose.py'...
+[29.746s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_fastrtps_c.cpython-310-aarch64-linux-gnu.so
+[29.746s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_fastrtps_c.cpython-310-aarch64-linux-gnu.so" to ""
+[29.747s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_introspection_c.cpython-310-aarch64-linux-gnu.so
+[29.747s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_introspection_c.cpython-310-aarch64-linux-gnu.so" to ""
+[29.748s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_c.cpython-310-aarch64-linux-gnu.so
+[29.748s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/local/lib/python3.10/dist-packages/turtlebot3_pick_place/turtlebot3_pick_place_s__rosidl_typesupport_c.cpython-310-aarch64-linux-gnu.so" to ""
+[29.748s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_generator_py.so
+[29.749s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/libturtlebot3_pick_place__rosidl_generator_py.so" to ""
+[29.749s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/ament_index/resource_index/rust_packages/turtlebot3_pick_place
+[29.750s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/rust
+[29.750s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/rust/Cargo.toml
+[29.750s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/rust/src
+[29.750s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/rust/src/lib.rs
+[29.751s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/rust/src/srv.rs
+[29.751s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/rust/src/srv
+[29.751s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/rust/src/srv/rmw.rs
+[29.752s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/rust/build.rs
+[29.752s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/srv/GetTargetPose.idl
+[29.752s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/srv/GetTargetPose.srv
+[29.753s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/srv/GetTargetPose_Request.msg
+[29.753s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/srv/GetTargetPose_Response.msg
+[29.753s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/turtlebot3_pick_place/pick_place_orchestrator
+[29.755s] -- Set runtime path of "/home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/turtlebot3_pick_place/pick_place_orchestrator" to ""
+[29.755s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/turtlebot3_pick_place/yolo_sam2_perception_server.py
+[29.755s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/launch
+[29.756s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/launch/pick_and_place.launch.py
+[29.756s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/srv
+[29.756s] -- Up-to-date: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/srv/GetTargetPose.srv
+[29.757s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/ament_index/resource_index/package_run_dependencies/turtlebot3_pick_place
+[29.757s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/ament_index/resource_index/parent_prefix_path/turtlebot3_pick_place
+[29.757s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/environment/ament_prefix_path.sh
+[29.757s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/environment/ament_prefix_path.dsv
+[29.758s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/environment/path.sh
+[29.758s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/environment/path.dsv
+[29.758s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/local_setup.bash
+[29.759s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/local_setup.sh
+[29.759s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/local_setup.zsh
+[29.759s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/local_setup.dsv
+[29.760s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/package.dsv
+[29.760s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/ament_index/resource_index/packages/turtlebot3_pick_place
+[29.760s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/export_turtlebot3_pick_place__rosidl_generator_cExport.cmake
+[29.761s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/export_turtlebot3_pick_place__rosidl_generator_cExport-noconfig.cmake
+[29.761s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/export_turtlebot3_pick_place__rosidl_typesupport_fastrtps_cExport.cmake
+[29.761s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/export_turtlebot3_pick_place__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+[29.762s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/export_turtlebot3_pick_place__rosidl_generator_cppExport.cmake
+[29.762s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/export_turtlebot3_pick_place__rosidl_typesupport_fastrtps_cppExport.cmake
+[29.762s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/export_turtlebot3_pick_place__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+[29.763s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/turtlebot3_pick_place__rosidl_typesupport_introspection_cExport.cmake
+[29.763s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/turtlebot3_pick_place__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[29.763s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/turtlebot3_pick_place__rosidl_typesupport_cExport.cmake
+[29.764s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/turtlebot3_pick_place__rosidl_typesupport_cExport-noconfig.cmake
+[29.764s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/turtlebot3_pick_place__rosidl_typesupport_introspection_cppExport.cmake
+[29.764s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/turtlebot3_pick_place__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[29.764s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/turtlebot3_pick_place__rosidl_typesupport_cppExport.cmake
+[29.765s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/turtlebot3_pick_place__rosidl_typesupport_cppExport-noconfig.cmake
+[29.765s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/export_turtlebot3_pick_place__rosidl_generator_pyExport.cmake
+[29.765s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/export_turtlebot3_pick_place__rosidl_generator_pyExport-noconfig.cmake
+[29.766s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/rosidl_cmake-extras.cmake
+[29.766s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/ament_cmake_export_dependencies-extras.cmake
+[29.766s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/ament_cmake_export_include_directories-extras.cmake
+[29.767s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/ament_cmake_export_libraries-extras.cmake
+[29.767s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/ament_cmake_export_targets-extras.cmake
+[29.767s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[29.768s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[29.768s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/rosidl_cmake_aggregate_target-extras.cmake
+[29.768s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/turtlebot3_pick_placeConfig.cmake
+[29.768s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/cmake/turtlebot3_pick_placeConfig-version.cmake
+[29.769s] -- Installing: /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/package.xml
+[29.774s] Invoked command in '/home/user/turtlebot3_ws/build/turtlebot3_pick_place' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/user/turtlebot3_ws/build/turtlebot3_pick_place

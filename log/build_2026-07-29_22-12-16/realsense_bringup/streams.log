@@ -1,0 +1,43 @@
+[0.020s] Invoking command in '/home/user/turtlebot3_ws/build/realsense_bringup': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/user/turtlebot3_ws/src/realsense_bringup -DCMAKE_INSTALL_PREFIX=/home/user/turtlebot3_ws/install/realsense_bringup
+[0.046s] -- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.283s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.303s] -- Found rclcpp: 16.0.19 (/opt/ros/humble/share/rclcpp/cmake)
+[0.372s] -- Found rosidl_generator_c: 3.1.9 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.377s] -- Found rosidl_adapter: 3.1.9 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.388s] -- Found rosidl_generator_cpp: 3.1.9 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.406s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.429s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.489s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.492s] -- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[0.690s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[0.786s] -- Found sensor_msgs: 4.9.1 (/opt/ros/humble/share/sensor_msgs/cmake)
+[0.839s] -- Found visualization_msgs: 4.9.1 (/opt/ros/humble/share/visualization_msgs/cmake)
+[0.874s] -- Found message_filters: 4.3.18 (/opt/ros/humble/share/message_filters/cmake)
+[0.879s] -- Found cv_bridge: 3.2.1 (/opt/ros/humble/share/cv_bridge/cmake)
+[0.889s] [31mCMake Error at /usr/lib/cmake/opencv4_backup_4.8.0/OpenCVModules.cmake:172 (message):
+[0.889s]   The imported target "opencv_gapi" references the file
+[0.889s] 
+[0.889s]      "/usr/lib/libopencv_gapi.so.4.8.0"
+[0.890s] 
+[0.890s]   but this file does not exist.  Possible reasons include:
+[0.890s] 
+[0.890s]   * The file was deleted, renamed, or moved to another location.
+[0.890s] 
+[0.891s]   * An install or uninstall procedure did not complete successfully.
+[0.891s] 
+[0.891s]   * The installation package was faulty and contained
+[0.891s] 
+[0.892s]      "/usr/lib/cmake/opencv4_backup_4.8.0/OpenCVModules.cmake"
+[0.892s] 
+[0.892s]   but not all the files it references.
+[0.892s] 
+[0.893s] Call Stack (most recent call first):
+[0.893s]   /usr/lib/cmake/opencv4_backup_4.8.0/OpenCVConfig.cmake:126 (include)
+[0.893s]   /opt/ros/humble/share/cv_bridge/cmake/ament_cmake_export_dependencies-extras.cmake:21 (find_package)
+[0.893s]   /opt/ros/humble/share/cv_bridge/cmake/cv_bridgeConfig.cmake:41 (include)
+[0.894s]   CMakeLists.txt:25 (find_package)
+[0.894s] 
+[0.894s] [0m
+[0.894s] -- Configuring incomplete, errors occurred!
+[0.895s] See also "/home/user/turtlebot3_ws/build/realsense_bringup/CMakeFiles/CMakeOutput.log".
+[0.906s] Invoked command in '/home/user/turtlebot3_ws/build/realsense_bringup' returned '1': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/user/turtlebot3_ws/src/realsense_bringup -DCMAKE_INSTALL_PREFIX=/home/user/turtlebot3_ws/install/realsense_bringup

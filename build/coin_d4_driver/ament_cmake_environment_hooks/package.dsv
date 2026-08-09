@@ -1,0 +1,4 @@
+source;share/coin_d4_driver/local_setup.bash
+source;share/coin_d4_driver/local_setup.dsv
+source;share/coin_d4_driver/local_setup.sh
+source;share/coin_d4_driver/local_setup.zsh

@@ -1,0 +1,29 @@
+[0.060s] Invoking command in '/home/user/turtlebot3_ws/build/realsense_bringup': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/user/turtlebot3_ws/build/realsense_bringup -- -j8 -l8
+[0.191s] [35m[1mConsolidate compiler generated dependencies of target realsense_tf_node[0m
+[0.234s] [ 50%] [32mBuilding CXX object CMakeFiles/realsense_tf_node.dir/src/realsense_tf.cpp.o[0m
+[46.551s] [100%] [32m[1mLinking CXX executable realsense_tf_node[0m
+[49.984s] [100%] Built target realsense_tf_node
+[50.009s] Invoked command in '/home/user/turtlebot3_ws/build/realsense_bringup' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/user/turtlebot3_ws/build/realsense_bringup -- -j8 -l8
+[50.015s] Invoking command in '/home/user/turtlebot3_ws/build/realsense_bringup': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/user/turtlebot3_ws/build/realsense_bringup
+[50.029s] -- Install configuration: ""
+[50.029s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/lib/realsense_bringup/realsense_tf_node
+[50.050s] -- Set runtime path of "/home/user/turtlebot3_ws/install/realsense_bringup/lib/realsense_bringup/realsense_tf_node" to ""
+[50.050s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/launch
+[50.051s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/launch/realsense_tf.launch.py
+[50.051s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/ament_index/resource_index/package_run_dependencies/realsense_bringup
+[50.051s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/ament_index/resource_index/parent_prefix_path/realsense_bringup
+[50.052s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/environment/ament_prefix_path.sh
+[50.052s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/environment/ament_prefix_path.dsv
+[50.052s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/environment/path.sh
+[50.052s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/environment/path.dsv
+[50.053s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/local_setup.bash
+[50.053s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/local_setup.sh
+[50.053s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/local_setup.zsh
+[50.053s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/local_setup.dsv
+[50.054s] -- Installing: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/package.dsv
+[50.054s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/ament_index/resource_index/packages/realsense_bringup
+[50.055s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/cmake/ament_cmake_export_dependencies-extras.cmake
+[50.058s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/cmake/realsense_bringupConfig.cmake
+[50.058s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/cmake/realsense_bringupConfig-version.cmake
+[50.059s] -- Up-to-date: /home/user/turtlebot3_ws/install/realsense_bringup/share/realsense_bringup/package.xml
+[50.059s] Invoked command in '/home/user/turtlebot3_ws/build/realsense_bringup' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/user/turtlebot3_ws/build/realsense_bringup

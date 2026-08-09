@@ -1,0 +1,23 @@
+running egg_info
+writing ../../build/segmentation/segmentation.egg-info/PKG-INFO
+writing dependency_links to ../../build/segmentation/segmentation.egg-info/dependency_links.txt
+writing entry points to ../../build/segmentation/segmentation.egg-info/entry_points.txt
+writing requirements to ../../build/segmentation/segmentation.egg-info/requires.txt
+writing top-level names to ../../build/segmentation/segmentation.egg-info/top_level.txt
+reading manifest file '../../build/segmentation/segmentation.egg-info/SOURCES.txt'
+writing manifest file '../../build/segmentation/segmentation.egg-info/SOURCES.txt'
+running build
+running build_py
+copying segmentation/__init__.py -> /home/user/turtlebot3_ws/build/segmentation/build/lib/segmentation
+copying segmentation/segmentation_node.py -> /home/user/turtlebot3_ws/build/segmentation/build/lib/segmentation
+running install
+running install_lib
+running install_data
+copying resource/segmentation -> /home/user/turtlebot3_ws/install/segmentation/share/ament_index/resource_index/packages
+copying package.xml -> /home/user/turtlebot3_ws/install/segmentation/share/segmentation
+running install_egg_info
+removing '/home/user/turtlebot3_ws/install/segmentation/lib/python3.10/site-packages/segmentation-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../../build/segmentation/segmentation.egg-info to /home/user/turtlebot3_ws/install/segmentation/lib/python3.10/site-packages/segmentation-0.0.0-py3.10.egg-info
+running install_scripts
+Installing segmentation_node script to /home/user/turtlebot3_ws/install/segmentation/lib/segmentation
+writing list of installed files to '/home/user/turtlebot3_ws/build/segmentation/install.log'

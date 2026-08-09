@@ -1,0 +1,102 @@
+[0.000000] (-) TimerEvent: {}
+[0.000607] (-) JobUnselected: {'identifier': 'coin_d4_driver'}
+[0.000749] (-) JobUnselected: {'identifier': 'ld08_driver'}
+[0.000865] (-) JobUnselected: {'identifier': 'turtlebot3_manipulation'}
+[0.001034] (-) JobUnselected: {'identifier': 'turtlebot3_manipulation_bringup'}
+[0.001110] (-) JobUnselected: {'identifier': 'turtlebot3_manipulation_cartographer'}
+[0.001214] (-) JobUnselected: {'identifier': 'turtlebot3_manipulation_description'}
+[0.001389] (-) JobUnselected: {'identifier': 'turtlebot3_manipulation_hardware'}
+[0.001474] (-) JobUnselected: {'identifier': 'turtlebot3_manipulation_moveit_config'}
+[0.001562] (-) JobUnselected: {'identifier': 'turtlebot3_manipulation_navigation2'}
+[0.001730] (-) JobUnselected: {'identifier': 'turtlebot3_manipulation_teleop'}
+[0.001865] (realsense_bringup) JobQueued: {'identifier': 'realsense_bringup', 'dependencies': OrderedDict()}
+[0.001930] (realsense_bringup) JobStarted: {'identifier': 'realsense_bringup'}
+[0.018838] (realsense_bringup) JobProgress: {'identifier': 'realsense_bringup', 'progress': 'cmake'}
+[0.019830] (realsense_bringup) Command: {'cmd': ['/usr/bin/cmake', '/home/user/turtlebot3_ws/src/realsense_bringup', '-DCMAKE_INSTALL_PREFIX=/home/user/turtlebot3_ws/install/realsense_bringup'], 'cwd': '/home/user/turtlebot3_ws/build/realsense_bringup', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'user'), ('SSH_CLIENT', '192.168.0.39 59992 22'), ('LC_TIME', 'ko_KR.UTF-8'), ('XDG_SESSION_TYPE', 'tty'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/user/turtlebot3_ws/install/turtlebot3_manipulation_hardware/lib:/home/user/turtlebot3_ws/install/coin_d4_driver/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/aarch64-linux-gnu:/opt/ros/humble/lib'), ('MOTD_SHOWN', 'pam'), ('HOME', '/home/user'), ('OLDPWD', '/home/user/turtlebot3_ws'), ('SSH_TTY', '/dev/pts/0'), ('ROS_PYTHON_VERSION', '3'), ('LC_MONETARY', 'ko_KR.UTF-8'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLCON_PREFIX_PATH', '/home/user/turtlebot3_ws/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'user'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('TERM', 'xterm-256color'), ('XDG_SESSION_ID', '4'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'), ('LC_ADDRESS', 'ko_KR.UTF-8'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('LANG', 'en_US.UTF-8'), ('LC_TELEPHONE', 'ko_KR.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '10'), ('AMENT_PREFIX_PATH', '/home/user/turtlebot3_ws/install/turtlebot3_manipulation:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_teleop:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_navigation2:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_moveit_config:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_hardware:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_bringup:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_description:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer:/home/user/turtlebot3_ws/install/ld08_driver:/home/user/turtlebot3_ws/install/coin_d4_driver:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LC_NAME', 'ko_KR.UTF-8'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'ko_KR.UTF-8'), ('LC_IDENTIFICATION', 'ko_KR.UTF-8'), ('PWD', '/home/user/turtlebot3_ws/build/realsense_bringup'), ('TURTLEBOT3_MODEL', 'waffle'), ('LC_ALL', 'en_US.UTF-8'), ('SSH_CONNECTION', '192.168.0.39 59992 192.168.0.28 22'), ('XDG_DATA_DIRS', '/usr/share/gnome:/usr/local/share:/usr/share:/var/lib/snapd/desktop'), ('LDS_MODEL', 'LDS-02'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('LC_NUMERIC', 'ko_KR.UTF-8'), ('LC_PAPER', 'ko_KR.UTF-8'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/home/user/turtlebot3_ws/install/turtlebot3_manipulation:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_teleop:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_navigation2:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_moveit_config:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_hardware:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_bringup:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_description:/home/user/turtlebot3_ws/install/turtlebot3_manipulation_cartographer:/home/user/turtlebot3_ws/install/ld08_driver:/home/user/turtlebot3_ws/install/coin_d4_driver:/opt/ros/humble')]), 'shell': False}
+[0.098345] (-) TimerEvent: {}
+[0.130342] (realsense_bringup) StdoutLine: {'line': b'-- The C compiler identification is GNU 11.4.0\n'}
+[0.198461] (-) TimerEvent: {}
+[0.240751] (realsense_bringup) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 11.4.0\n'}
+[0.263604] (realsense_bringup) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.298618] (-) TimerEvent: {}
+[0.399245] (-) TimerEvent: {}
+[0.408158] (realsense_bringup) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.433160] (realsense_bringup) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[0.433745] (realsense_bringup) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.435058] (realsense_bringup) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.445728] (realsense_bringup) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.499393] (-) TimerEvent: {}
+[0.596769] (realsense_bringup) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.599478] (-) TimerEvent: {}
+[0.621546] (realsense_bringup) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[0.622582] (realsense_bringup) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.624181] (realsense_bringup) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.637347] (realsense_bringup) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[0.699631] (-) TimerEvent: {}
+[0.800245] (-) TimerEvent: {}
+[0.900886] (-) TimerEvent: {}
+[0.948789] (realsense_bringup) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter \n'}
+[1.001275] (-) TimerEvent: {}
+[1.101868] (-) TimerEvent: {}
+[1.193260] (realsense_bringup) StdoutLine: {'line': b'-- Found rclcpp: 16.0.19 (/opt/ros/humble/share/rclcpp/cmake)\n'}
+[1.201952] (-) TimerEvent: {}
+[1.299032] (realsense_bringup) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.9 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[1.302060] (-) TimerEvent: {}
+[1.311921] (realsense_bringup) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.9 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[1.331514] (realsense_bringup) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.9 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[1.358779] (realsense_bringup) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[1.394550] (realsense_bringup) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[1.402160] (-) TimerEvent: {}
+[1.495300] (realsense_bringup) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)\n'}
+[1.502155] (realsense_bringup) StdoutLine: {'line': b'-- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)\n'}
+[1.502494] (-) TimerEvent: {}
+[1.602960] (-) TimerEvent: {}
+[1.693639] (realsense_bringup) StdoutLine: {'line': b'-- Found OpenSSL: /usr/lib/aarch64-linux-gnu/libcrypto.so (found version "3.0.2")  \n'}
+[1.703032] (-) TimerEvent: {}
+[1.749760] (realsense_bringup) StdoutLine: {'line': b'-- Found FastRTPS: /opt/ros/humble/include  \n'}
+[1.803207] (-) TimerEvent: {}
+[1.831930] (realsense_bringup) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[1.854082] (realsense_bringup) StdoutLine: {'line': b'-- Looking for pthread.h\n'}
+[1.903348] (-) TimerEvent: {}
+[1.991004] (realsense_bringup) StdoutLine: {'line': b'-- Looking for pthread.h - found\n'}
+[1.992274] (realsense_bringup) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n'}
+[2.003427] (-) TimerEvent: {}
+[2.104287] (-) TimerEvent: {}
+[2.134142] (realsense_bringup) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n'}
+[2.137708] (realsense_bringup) StdoutLine: {'line': b'-- Found Threads: TRUE  \n'}
+[2.204351] (-) TimerEvent: {}
+[2.279517] (realsense_bringup) StdoutLine: {'line': b'-- Found sensor_msgs: 4.9.1 (/opt/ros/humble/share/sensor_msgs/cmake)\n'}
+[2.304455] (-) TimerEvent: {}
+[2.342070] (realsense_bringup) StdoutLine: {'line': b'-- Found visualization_msgs: 4.9.1 (/opt/ros/humble/share/visualization_msgs/cmake)\n'}
+[2.381694] (realsense_bringup) StdoutLine: {'line': b'-- Found message_filters: 4.3.18 (/opt/ros/humble/share/message_filters/cmake)\n'}
+[2.390403] (realsense_bringup) StdoutLine: {'line': b'-- Found cv_bridge: 3.2.1 (/opt/ros/humble/share/cv_bridge/cmake)\n'}
+[2.400451] (realsense_bringup) StderrLine: {'line': b'\x1b[31mCMake Error at /usr/lib/cmake/opencv4_backup_4.8.0/OpenCVModules.cmake:172 (message):\n'}
+[2.400989] (realsense_bringup) StderrLine: {'line': b'  The imported target "opencv_gapi" references the file\n'}
+[2.401286] (realsense_bringup) StderrLine: {'line': b'\n'}
+[2.401550] (realsense_bringup) StderrLine: {'line': b'     "/usr/lib/libopencv_gapi.so.4.8.0"\n'}
+[2.401806] (realsense_bringup) StderrLine: {'line': b'\n'}
+[2.402053] (realsense_bringup) StderrLine: {'line': b'  but this file does not exist.  Possible reasons include:\n'}
+[2.402297] (realsense_bringup) StderrLine: {'line': b'\n'}
+[2.402534] (realsense_bringup) StderrLine: {'line': b'  * The file was deleted, renamed, or moved to another location.\n'}
+[2.402782] (realsense_bringup) StderrLine: {'line': b'\n'}
+[2.403020] (realsense_bringup) StderrLine: {'line': b'  * An install or uninstall procedure did not complete successfully.\n'}
+[2.403255] (realsense_bringup) StderrLine: {'line': b'\n'}
+[2.403488] (realsense_bringup) StderrLine: {'line': b'  * The installation package was faulty and contained\n'}
+[2.403775] (realsense_bringup) StderrLine: {'line': b'\n'}
+[2.404023] (realsense_bringup) StderrLine: {'line': b'     "/usr/lib/cmake/opencv4_backup_4.8.0/OpenCVModules.cmake"\n'}
+[2.404262] (realsense_bringup) StderrLine: {'line': b'\n'}
+[2.404489] (-) TimerEvent: {}
+[2.404788] (realsense_bringup) StderrLine: {'line': b'  but not all the files it references.\n'}
+[2.405130] (realsense_bringup) StderrLine: {'line': b'\n'}
+[2.405391] (realsense_bringup) StderrLine: {'line': b'Call Stack (most recent call first):\n'}
+[2.405638] (realsense_bringup) StderrLine: {'line': b'  /usr/lib/cmake/opencv4_backup_4.8.0/OpenCVConfig.cmake:126 (include)\n'}
+[2.405881] (realsense_bringup) StderrLine: {'line': b'  /opt/ros/humble/share/cv_bridge/cmake/ament_cmake_export_dependencies-extras.cmake:21 (find_package)\n'}
+[2.406123] (realsense_bringup) StderrLine: {'line': b'  /opt/ros/humble/share/cv_bridge/cmake/cv_bridgeConfig.cmake:41 (include)\n'}
+[2.406360] (realsense_bringup) StderrLine: {'line': b'  CMakeLists.txt:25 (find_package)\n'}
+[2.406592] (realsense_bringup) StderrLine: {'line': b'\n'}
+[2.406826] (realsense_bringup) StderrLine: {'line': b'\x1b[0m\n'}
+[2.407058] (realsense_bringup) StdoutLine: {'line': b'-- Configuring incomplete, errors occurred!\n'}
+[2.407304] (realsense_bringup) StdoutLine: {'line': b'See also "/home/user/turtlebot3_ws/build/realsense_bringup/CMakeFiles/CMakeOutput.log".\n'}
+[2.424694] (realsense_bringup) CommandEnded: {'returncode': 1}
+[2.476218] (realsense_bringup) JobEnded: {'identifier': 'realsense_bringup', 'rc': 1}
+[2.487522] (-) EventReactorShutdown: {}

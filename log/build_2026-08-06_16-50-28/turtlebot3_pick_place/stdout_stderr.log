@@ -1,0 +1,36 @@
+/home/user/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+  warnings.warn(msg)
+running egg_info
+creating ../../build/turtlebot3_pick_place/turtlebot3_pick_place.egg-info
+writing ../../build/turtlebot3_pick_place/turtlebot3_pick_place.egg-info/PKG-INFO
+writing dependency_links to ../../build/turtlebot3_pick_place/turtlebot3_pick_place.egg-info/dependency_links.txt
+writing entry points to ../../build/turtlebot3_pick_place/turtlebot3_pick_place.egg-info/entry_points.txt
+writing requirements to ../../build/turtlebot3_pick_place/turtlebot3_pick_place.egg-info/requires.txt
+writing top-level names to ../../build/turtlebot3_pick_place/turtlebot3_pick_place.egg-info/top_level.txt
+writing manifest file '../../build/turtlebot3_pick_place/turtlebot3_pick_place.egg-info/SOURCES.txt'
+reading manifest file '../../build/turtlebot3_pick_place/turtlebot3_pick_place.egg-info/SOURCES.txt'
+writing manifest file '../../build/turtlebot3_pick_place/turtlebot3_pick_place.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/user/turtlebot3_ws/build/turtlebot3_pick_place/build/lib/turtlebot3_pick_place
+copying turtlebot3_pick_place/__init__.py -> /home/user/turtlebot3_ws/build/turtlebot3_pick_place/build/lib/turtlebot3_pick_place
+copying turtlebot3_pick_place/segmentation_node.py -> /home/user/turtlebot3_ws/build/turtlebot3_pick_place/build/lib/turtlebot3_pick_place
+running install
+running install_lib
+creating /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/python3.10/site-packages/turtlebot3_pick_place
+copying /home/user/turtlebot3_ws/build/turtlebot3_pick_place/build/lib/turtlebot3_pick_place/__init__.py -> /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/python3.10/site-packages/turtlebot3_pick_place
+copying /home/user/turtlebot3_ws/build/turtlebot3_pick_place/build/lib/turtlebot3_pick_place/segmentation_node.py -> /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/python3.10/site-packages/turtlebot3_pick_place
+byte-compiling /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/python3.10/site-packages/turtlebot3_pick_place/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/python3.10/site-packages/turtlebot3_pick_place/segmentation_node.py to segmentation_node.cpython-310.pyc
+running install_data
+copying package.xml -> /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place
+copying launch/segmentation.launch.py -> /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/launch
+creating /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/resource
+copying resource/turtlebot3_pick_place -> /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/resource
+copying resource/yolo.pt -> /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/resource
+copying resource/sam2_t.pt -> /home/user/turtlebot3_ws/install/turtlebot3_pick_place/share/turtlebot3_pick_place/resource
+running install_egg_info
+Copying ../../build/turtlebot3_pick_place/turtlebot3_pick_place.egg-info to /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/python3.10/site-packages/turtlebot3_pick_place-0.0.1-py3.10.egg-info
+running install_scripts
+Installing segmentation_node script to /home/user/turtlebot3_ws/install/turtlebot3_pick_place/lib/turtlebot3_pick_place
+writing list of installed files to '/home/user/turtlebot3_ws/build/turtlebot3_pick_place/install.log'

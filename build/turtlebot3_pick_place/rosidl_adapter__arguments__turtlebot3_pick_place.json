@@ -1,0 +1,6 @@
+{
+  "package_name": "turtlebot3_pick_place",
+  "non_idl_tuples": [
+    "/home/user/turtlebot3_ws/src/turtlebot3_pick_place:srv/GetTargetPose.srv"
+  ]
+}

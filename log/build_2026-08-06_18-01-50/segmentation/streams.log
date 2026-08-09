@@ -1,0 +1,29 @@
+[2.041s] Invoking command in '/home/user/turtlebot3_ws/src/segmentation': PYTHONPATH=/home/user/turtlebot3_ws/build/segmentation/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/user/turtlebot3_ws/install/segmentation/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/segmentation build --build-base /home/user/turtlebot3_ws/build/segmentation/build install --record /home/user/turtlebot3_ws/build/segmentation/install.log --install-scripts $base/lib/segmentation --single-version-externally-managed install_data
+[2.402s] /home/user/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+[2.404s]   warnings.warn(msg)
+[2.665s] running egg_info
+[2.706s] writing ../../build/segmentation/segmentation.egg-info/PKG-INFO
+[2.707s] writing dependency_links to ../../build/segmentation/segmentation.egg-info/dependency_links.txt
+[2.707s] writing entry points to ../../build/segmentation/segmentation.egg-info/entry_points.txt
+[2.708s] writing requirements to ../../build/segmentation/segmentation.egg-info/requires.txt
+[2.708s] writing top-level names to ../../build/segmentation/segmentation.egg-info/top_level.txt
+[2.799s] reading manifest file '../../build/segmentation/segmentation.egg-info/SOURCES.txt'
+[2.802s] writing manifest file '../../build/segmentation/segmentation.egg-info/SOURCES.txt'
+[2.803s] running build
+[2.805s] running build_py
+[2.805s] copying segmentation/__init__.py -> /home/user/turtlebot3_ws/build/segmentation/build/lib/segmentation
+[2.806s] copying segmentation/segmentation_node.py -> /home/user/turtlebot3_ws/build/segmentation/build/lib/segmentation
+[2.806s] running install
+[2.812s] running install_lib
+[2.858s] copying /home/user/turtlebot3_ws/build/segmentation/build/lib/segmentation/segmentation_node.py -> /home/user/turtlebot3_ws/install/segmentation/lib/python3.10/site-packages/segmentation
+[2.859s] byte-compiling /home/user/turtlebot3_ws/install/segmentation/lib/python3.10/site-packages/segmentation/segmentation_node.py to segmentation_node.cpython-310.pyc
+[2.863s] running install_data
+[2.863s] copying resource/segmentation -> /home/user/turtlebot3_ws/install/segmentation/share/ament_index/resource_index/packages
+[2.864s] copying package.xml -> /home/user/turtlebot3_ws/install/segmentation/share/segmentation
+[2.865s] running install_egg_info
+[2.911s] removing '/home/user/turtlebot3_ws/install/segmentation/lib/python3.10/site-packages/segmentation-0.0.0-py3.10.egg-info' (and everything under it)
+[2.912s] Copying ../../build/segmentation/segmentation.egg-info to /home/user/turtlebot3_ws/install/segmentation/lib/python3.10/site-packages/segmentation-0.0.0-py3.10.egg-info
+[2.915s] running install_scripts
+[3.228s] Installing segmentation_node script to /home/user/turtlebot3_ws/install/segmentation/lib/segmentation
+[3.228s] writing list of installed files to '/home/user/turtlebot3_ws/build/segmentation/install.log'
+[3.312s] Invoked command in '/home/user/turtlebot3_ws/src/segmentation' returned '0': PYTHONPATH=/home/user/turtlebot3_ws/build/segmentation/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/user/turtlebot3_ws/install/segmentation/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/segmentation build --build-base /home/user/turtlebot3_ws/build/segmentation/build install --record /home/user/turtlebot3_ws/build/segmentation/install.log --install-scripts $base/lib/segmentation --single-version-externally-managed install_data
