@@ -128,14 +128,14 @@ private:
             return false;
         }
 
-        // 1. 최신 TF(Time 0)를 조회하여 map -> link1 상대 좌표 변환
+        // 1. 최신 TF(Time 0)를 조회하여 map/base -> link1 상대 좌표 변환
         geometry_msgs::msg::PointStamped target_in_arm;
         try {
             target_in_map.header.stamp = rclcpp::Time(0);
             target_in_arm = tf_buffer_->transform(target_in_map, "link1", tf2::durationFromSec(0.2));
         } catch (const tf2::TransformException &ex) {
-            RCLCPP_ERROR(this->get_logger(), "TF Transform from map to link1 failed: %s", ex.what());
-            message = std::string("TF transform from map to link1 failed: ") + ex.what();
+            RCLCPP_ERROR(this->get_logger(), "TF Transform to link1 failed: %s", ex.what());
+            message = std::string("TF transform to link1 failed: ") + ex.what();
             return false;
         }
 
@@ -143,44 +143,86 @@ private:
         double rel_y = target_in_arm.point.y;
         double rel_z = target_in_arm.point.z;
 
-        RCLCPP_INFO(this->get_logger(), 
-            "[RELATIVE TARGET (link1)] x = %.3f m, y = %.3f m, z = %.3f m", rel_x, rel_y, rel_z);
+        RCLCPP_INFO(this->get_logger(),
+            "============================================================");
+        RCLCPP_INFO(this->get_logger(),
+            "[TARGET (link1)] x = %.3f m, y = %.3f m, z = %.3f m", rel_x, rel_y, rel_z);
 
-        // 2. 4-DOF 역기구학 계산
-        std::vector<double> joint_angles(4, 0.0);
-        if (!solve4DofIK(rel_x, rel_y, rel_z, joint_angles)) {
-            RCLCPP_ERROR(this->get_logger(), "Target is out of reachable workspace!");
-            message = "Target is outside the manipulator workspace.";
+        // 2. Grasp 및 Pre-grasp / Lift 역기구학 계산
+        // (1) Grasp 목표 관절각 계산
+        std::vector<double> grasp_joints(4, 0.0);
+        if (!solve4DofIK(rel_x, rel_y, rel_z, grasp_joints, -60.0)) {
+            RCLCPP_ERROR(this->get_logger(), "Grasp target is out of manipulator workspace!");
+            message = "Grasp target is outside the manipulator workspace.";
             return false;
         }
 
-        // === Step 1: 그리퍼 열기 Action ===
-        RCLCPP_INFO(this->get_logger(), "===> 1. Opening Gripper (Action)...");
+        // (2) Pre-grasp / Lift (물체 상공 +6cm) 목표 관절각 계산
+        double lift_z = rel_z + 0.06;
+        std::vector<double> pre_grasp_joints(4, 0.0);
+        if (!solve4DofIK(rel_x, rel_y, lift_z, pre_grasp_joints, -60.0)) {
+            lift_z = rel_z + 0.04;
+            if (!solve4DofIK(rel_x, rel_y, lift_z, pre_grasp_joints, -60.0)) {
+                pre_grasp_joints = grasp_joints;
+                pre_grasp_joints[1] = -0.523;
+                pre_grasp_joints[2] = -0.523;
+                pre_grasp_joints[3] = 1.5707;
+            }
+        }
+
+        RCLCPP_INFO(this->get_logger(),
+            "[IK Grasp Result] J1(Yaw): %.1f°, J2(Shoulder): %.1f°, J3(Elbow): %.1f°, J4(Wrist): %.1f°",
+            grasp_joints[0] * 180.0 / M_PI,
+            grasp_joints[1] * 180.0 / M_PI,
+            grasp_joints[2] * 180.0 / M_PI,
+            grasp_joints[3] * 180.0 / M_PI);
+        RCLCPP_INFO(this->get_logger(),
+            "============================================================");
+
+        // === Step 1: 그리퍼 열기 (Open Gripper) ===
+        RCLCPP_INFO(this->get_logger(), "===> [Step 1/6] Opening Gripper...");
         if (!sendGripperGoal(0.019)) {
-            RCLCPP_ERROR(this->get_logger(), "Failed to open gripper!");
-            message = "Failed to open the gripper.";
-            return false;
-        }
-
-        // === Step 2: 로봇팔 목표 좌표 이동 Action ===
-        RCLCPP_INFO(this->get_logger(), "===> 2. Moving Arm to Target [%.2f, %.2f, %.2f, %.2f] rad...",
-            joint_angles[0], joint_angles[1], joint_angles[2], joint_angles[3]);
-        if (!sendArmGoal(joint_angles, 3.0)) {
-            RCLCPP_ERROR(this->get_logger(), "Failed to move arm to target!");
-            message = "Failed to move the arm to the target.";
-            return false;
-        }
-
-        // === Step 3: 그리퍼 닫기 (물체 파지) Action ===
-        RCLCPP_INFO(this->get_logger(), "===> 3. Closing Gripper (Action Grasp)...");
-        if (!sendGripperGoal(-0.010)) {
-            message = "Failed to close the gripper.";
+            message = "Failed to open gripper.";
             RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
             return false;
         }
 
-        // === Step 4: 홈 포즈 복귀 Action ===
-        RCLCPP_INFO(this->get_logger(), "===> 4. Returning to Home Pose...");
+        // === Step 2: 물체 상공 접근 (Pre-Grasp Pose) ===
+        // Joint 1(Yaw)이 물체 방향으로 정렬되며 물체 상공으로 위치
+        RCLCPP_INFO(this->get_logger(),
+            "===> [Step 2/6] Moving to Pre-Grasp Pose (Above target, Yaw: %.1f°)...",
+            pre_grasp_joints[0] * 180.0 / M_PI);
+        if (!sendArmGoal(pre_grasp_joints, 2.5)) {
+            message = "Failed to reach pre-grasp pose.";
+            RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
+            return false;
+        }
+
+        // === Step 3: 물체 위치로 수직 하강 (Grasp Pose) ===
+        RCLCPP_INFO(this->get_logger(), "===> [Step 3/6] Descending to Target Grasp Pose...");
+        if (!sendArmGoal(grasp_joints, 1.8)) {
+            message = "Failed to reach target grasp pose.";
+            RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
+            return false;
+        }
+
+        // === Step 4: 물체 파지 (Close Gripper) ===
+        RCLCPP_INFO(this->get_logger(), "===> [Step 4/6] Closing Gripper (Grasping object)...");
+        if (!sendGripperGoal(-0.010, 15.0)) {
+            message = "Failed to close gripper.";
+            RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
+            return false;
+        }
+
+        // === Step 5: 물체 수직 인양 (Lift Object) ===
+        RCLCPP_INFO(this->get_logger(),
+            "===> [Step 5/6] Lifting Object (+%.1f cm)...", (lift_z - rel_z) * 100.0);
+        if (!sendArmGoal(pre_grasp_joints, 1.8)) {
+            RCLCPP_WARN(this->get_logger(), "Object grasped, but failed to lift cleanly.");
+        }
+
+        // === Step 6: 안전 홈 포즈 복귀 (Return to Home) ===
+        RCLCPP_INFO(this->get_logger(), "===> [Step 6/6] Returning to Home Pose...");
         std::vector<double> home_joints = {0.0, -0.523, -0.523, 1.5707};
         if (!sendArmGoal(home_joints, 2.5)) {
             message = "Object grasped, but the arm failed to return home.";
@@ -188,7 +230,7 @@ private:
             return false;
         }
 
-        RCLCPP_INFO(this->get_logger(), "===> Pick & Place Sequence Completed Successfully!\n");
+        RCLCPP_INFO(this->get_logger(), "===> [SUCCESS] Pick & Place Sequence Completed Successfully!\n");
         message = "Pick-and-place sequence completed successfully.";
         return true;
     }
@@ -249,53 +291,73 @@ private:
         return result_future.get().code == rclcpp_action::ResultCode::SUCCEEDED;
     }
 
-    // OpenMANIPULATOR-X 4-DOF 해석적 기구학 (Analytical IK)
-    // OpenMANIPULATOR-X 4-DOF 해석적 기구학 (Analytical IK)
-    bool solve4DofIK(double x, double y, double z, std::vector<double>& out_joints) {
-        // OpenMANIPULATOR-X 링크 길이 (단위: m)
-        const double L1 = 0.077;  // Base to Joint2 (Z축 오프셋)
-        const double L2 = 0.130;  // Joint2 to Joint3
-        const double L3 = 0.124;  // Joint3 to Joint4
-        const double L4 = 0.126;  // Joint4 to Gripper Tip
+    // OpenMANIPULATOR-X 4-DOF 정밀 해석적 기구학 (Analytical IK)
+    // 입력: link1 기준 물체 좌표 (x, y, z)
+    // 출력: [joint1, joint2, joint3, joint4] rad
+    bool solve4DofIK(
+        double x, double y, double z,
+        std::vector<double>& out_joints,
+        double preferred_pitch = -60.0)
+    {
+        // OpenMANIPULATOR-X 링크 기하 구조 치수 (단위: m)
+        const double X_OFFSET = 0.012;   // Joint 1 회전축 X 오프셋
+        const double Z_OFFSET = 0.0765;  // Joint 2 회전축 Z 높이
+        const double L2 = 0.13025;       // Joint 2 to Joint 3 링크 길이
+        const double ALPHA2 = 0.1853;    // Link 3 굽힘 각도 (atan2(0.024, 0.128))
+        const double OFFSET2 = M_PI / 2.0 - ALPHA2; // 1.3855 rad (79.38°)
+        const double L3 = 0.124;         // Joint 3 to Joint 4 링크 길이
+        const double L4 = 0.126;         // Joint 4 to Gripper Tip 링크 길이
 
-        // 1. Joint 1 (Base Yaw)
-        out_joints[0] = std::atan2(y, x);
+        // 1. Joint 1 (Base Yaw) 계산
+        double dx = x - X_OFFSET;
+        double dy = y;
+        out_joints[0] = std::atan2(dy, dx);
 
-        // 2. 평면 2D 좌표계 변환
-        double r = std::sqrt(x * x + y * y);
-        double z_rel = z - L1; // Joint2 중심 기준 상대 높이
+        // 2. 평면 2D 좌표계 변환 (Joint 1/2 회전 중심 기준)
+        double r = std::sqrt(dx * dx + dy * dy);
+        double z_rel = z - Z_OFFSET;
 
-        // 3. 다양한 접근 피치 각도 탐색 (바닥 물체는 -80도 ~ 0도 하향 접근)
-        for (double pitch_deg = -80.0; pitch_deg <= 10.0; pitch_deg += 2.0) {
-            double phi = pitch_deg * M_PI / 180.0; // 수평 기준 End-Effector 절대 피치각
+        // 3. 다양한 접근 피치 각도 탐색 (preferred_pitch 우선)
+        std::vector<double> pitch_candidates;
+        pitch_candidates.push_back(preferred_pitch);
+        for (double p = -85.0; p <= 15.0; p += 2.5) {
+            if (std::abs(p - preferred_pitch) > 1e-3) {
+                pitch_candidates.push_back(p);
+            }
+        }
 
-            // 손목 관절(Joint 4) 목표 위치 역산
+        for (double pitch_deg : pitch_candidates) {
+            double phi = pitch_deg * M_PI / 180.0; // 수평 기준 End-Effector 절대 피치각 (하향은 음수)
+
+            // 손목 관절(Joint 4) 위치 역산
             double rw = r - L4 * std::cos(phi);
             double zw = z_rel - L4 * std::sin(phi);
 
-            double D = (rw * rw + zw * zw - L2 * L2 - L3 * L3) / (2.0 * L2 * L3);
-            if (D < -1.0 || D > 1.0) continue; // 도달 불가
+            double D_sq = rw * rw + zw * zw;
+            double cos_d = (D_sq - L2 * L2 - L3 * L3) / (2.0 * L2 * L3);
+            if (cos_d < -1.0 || cos_d > 1.0) continue; // 작업 영역 밖
 
-            // Elbow-Up 해 선택 (팔꿈치가 위로 솟고 손끝이 바닥으로 내려가는 형상)
-            double q3 = -std::acos(D); 
+            // Elbow-Up 형상 선택
+            double delta_theta = std::acos(cos_d);
 
-            // Joint 2 계산 (URDF 기준: 수직 위쪽이 0 rad이므로 pi/2 - planar_angle 적용)
-            double alpha = std::atan2(zw, rw);
-            double beta = std::atan2(L3 * std::sin(q3), L2 + L3 * std::cos(q3));
-            double theta2_planar = alpha - beta;
-            double q2 = (M_PI / 2.0) - theta2_planar;
+            double gamma = std::atan2(zw, rw);
+            double delta = std::atan2(L3 * std::sin(delta_theta), L2 + L3 * std::cos(delta_theta));
+            double theta2_abs = gamma + delta;
+            double theta3_abs = theta2_abs - delta_theta;
 
-            // Joint 4 계산 (전체 피치각 phi 유지)
-            double q4 = phi - theta2_planar - q3;
+            // URDF 관절 각도 변환
+            double q2 = OFFSET2 - theta2_abs;
+            double q3 = -theta3_abs - q2;
+            double q4 = -phi + theta3_abs;
 
-            // OpenMANIPULATOR-X 실제 관절 가동 범위(Limit) 체크
-            // Joint 2: -1.8 ~ 1.57 rad (-103도 ~ 90도)
-            // Joint 3: -1.57 ~ 1.53 rad (-90도 ~ 87도)
-            // Joint 4: -1.8 ~ 2.0 rad (-103도 ~ 114도)
-            if (q2 >= -1.8 && q2 <= 1.57 &&
-                q3 >= -1.57 && q3 <= 1.53 &&
-                q4 >= -1.8 && q4 <= 2.0) {
-                
+            // OpenMANIPULATOR-X URDF 물리적 관절 리미트 검사
+            // Joint 2: -1.79 ~ 1.57 rad (-102° ~ 90°)
+            // Joint 3: -0.94 ~ 1.38 rad (-54° ~ 79°)
+            // Joint 4: -1.79 ~ 2.04 rad (-102° ~ 117°)
+            if (q2 >= -1.75 && q2 <= 1.55 &&
+                q3 >= -0.92 && q3 <= 1.35 &&
+                q4 >= -1.75 && q4 <= 2.00)
+            {
                 out_joints[1] = q2;
                 out_joints[2] = q3;
                 out_joints[3] = q4;
