@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>project_bringup</name>
+  <version>0.1.0</version>
+  <description>Top-level launch package for the TurtleBot3 perception, navigation, and manipulation stack.</description>
+  <maintainer email="user@todo.todo">user</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>aruco_localizer</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>pick_and_place</exec_depend>
+  <exec_depend>realsense2_camera</exec_depend>
+  <exec_depend>realsense_bringup</exec_depend>
+  <exec_depend>segmentation</exec_depend>
+  <exec_depend>turtlebot3_manipulation_bringup</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

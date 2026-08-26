@@ -4,18 +4,20 @@
 #include <control_msgs/action/follow_joint_trajectory.hpp>
 #include <control_msgs/action/gripper_command.hpp>
 #include <trajectory_msgs/msg/joint_trajectory_point.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-#include <iostream>
-#include <thread>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <vector>
 #include <mutex>
 #include <memory>
+#include <string>
+#include <thread>
 
 using namespace std::chrono_literals;
 
@@ -23,13 +25,17 @@ class PickAndPlaceActionNode : public rclcpp::Node {
 public:
     using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
     using GripperCommand = control_msgs::action::GripperCommand;
+    using Trigger = std_srvs::srv::Trigger;
 
     PickAndPlaceActionNode() : Node("pick_and_place_action_node"), has_target_(false) {
+        action_callback_group_ = this->create_callback_group(
+            rclcpp::CallbackGroupType::Reentrant);
+
         // 1. Action Clients 생성
         arm_action_client_ = rclcpp_action::create_client<FollowJointTrajectory>(
-            this, "/arm_controller/follow_joint_trajectory");
+            this, "/arm_controller/follow_joint_trajectory", action_callback_group_);
         gripper_action_client_ = rclcpp_action::create_client<GripperCommand>(
-            this, "/gripper_controller/gripper_cmd");
+            this, "/gripper_controller/gripper_cmd", action_callback_group_);
 
         // 2. TF 리스너 초기화
         tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
@@ -40,16 +46,29 @@ public:
             "/object_centroid", 10,
             std::bind(&PickAndPlaceActionNode::targetCallback, this, std::placeholders::_1));
 
-        RCLCPP_INFO(this->get_logger(), "Pick & Place Action Node Initialized.");
-        RCLCPP_INFO(this->get_logger(), "Waiting for Action Servers & /object_centroid...");
+        // 4. 파지 시퀀스 실행 서비스
+        execute_service_ = this->create_service<Trigger>(
+            "/execute_pick_and_place",
+            std::bind(
+                &PickAndPlaceActionNode::handleExecuteRequest,
+                this,
+                std::placeholders::_1,
+                std::placeholders::_2),
+            rmw_qos_profile_services_default,
+            action_callback_group_);
 
-        // 4. 터미널 입력 스레드 시작
-        input_thread_ = std::thread(&PickAndPlaceActionNode::terminalLoop, this);
+        // 5. 런처 실행 시 로봇팔 초기 자세 자동 이동 비동기 스레드 시작
+        init_thread_ = std::thread(&PickAndPlaceActionNode::initializePoseOnStartup, this);
+
+        RCLCPP_INFO(this->get_logger(), "Pick & Place Action Node Initialized.");
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Waiting for /object_centroid. Call /execute_pick_and_place to start.");
     }
 
-    ~PickAndPlaceActionNode() {
-        if (input_thread_.joinable()) {
-            input_thread_.join();
+    ~PickAndPlaceActionNode() override {
+        if (init_thread_.joinable()) {
+            init_thread_.join();
         }
     }
 
@@ -60,49 +79,53 @@ private:
         has_target_ = true;
     }
 
-    void terminalLoop() {
-        // 액션 서버 연결 대기
-        if (!arm_action_client_->wait_for_action_server(5s)) {
-            RCLCPP_WARN(this->get_logger(), "Arm Action Server not ready yet.");
+    void handleExecuteRequest(
+        const std::shared_ptr<Trigger::Request> request,
+        std::shared_ptr<Trigger::Response> response)
+    {
+        (void)request;
+
+        bool expected = false;
+        if (!sequence_in_progress_.compare_exchange_strong(expected, true)) {
+            response->success = false;
+            response->message = "A pick-and-place sequence is already in progress.";
+            return;
         }
-        if (!gripper_action_client_->wait_for_action_server(5s)) {
-            RCLCPP_WARN(this->get_logger(), "Gripper Action Server not ready yet.");
+
+        std::string message;
+        try {
+            response->success = executePickSequence(message);
+            response->message = message;
+        } catch (const std::exception & ex) {
+            response->success = false;
+            response->message = std::string("Unexpected pick-and-place error: ") + ex.what();
+            RCLCPP_ERROR(this->get_logger(), "%s", response->message.c_str());
         }
 
-        while (rclcpp::ok()) {
-            std::cout << "\n======================================================\n";
-            {
-                std::lock_guard<std::mutex> lock(target_mutex_);
-                if (has_target_) {
-                    std::cout << "[GLOBAL TARGET in map] X: " << latest_map_target_.point.x
-                              << " m | Y: " << latest_map_target_.point.y
-                              << " m | Z: " << latest_map_target_.point.z << " m\n";
-                    std::cout << ">>> Press [ENTER] to execute Pick & Place Action Sequence: ";
-                } else {
-                    std::cout << "[WAITING] No /object_centroid received yet...\n";
-                    std::this_thread::sleep_for(1s);
-                    continue;
-                }
-            }
-
-            std::string input;
-            std::getline(std::cin, input);
-
-            if (!rclcpp::ok()) break;
-
-            executePickSequence();
-        }
+        sequence_in_progress_ = false;
     }
 
-    void executePickSequence() {
+    bool executePickSequence(std::string & message) {
         geometry_msgs::msg::PointStamped target_in_map;
         {
             std::lock_guard<std::mutex> lock(target_mutex_);
             if (!has_target_) {
-                RCLCPP_WARN(this->get_logger(), "No target point available!");
-                return;
+                message = "No /object_centroid target has been received.";
+                RCLCPP_WARN(this->get_logger(), "%s", message.c_str());
+                return false;
             }
             target_in_map = latest_map_target_;
+        }
+
+        if (!arm_action_client_->wait_for_action_server(2s)) {
+            message = "Arm action server is unavailable.";
+            RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
+            return false;
+        }
+        if (!gripper_action_client_->wait_for_action_server(2s)) {
+            message = "Gripper action server is unavailable.";
+            RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
+            return false;
         }
 
         // 1. 최신 TF(Time 0)를 조회하여 map -> link1 상대 좌표 변환
@@ -112,7 +135,8 @@ private:
             target_in_arm = tf_buffer_->transform(target_in_map, "link1", tf2::durationFromSec(0.2));
         } catch (const tf2::TransformException &ex) {
             RCLCPP_ERROR(this->get_logger(), "TF Transform from map to link1 failed: %s", ex.what());
-            return;
+            message = std::string("TF transform from map to link1 failed: ") + ex.what();
+            return false;
         }
 
         double rel_x = target_in_arm.point.x;
@@ -126,14 +150,16 @@ private:
         std::vector<double> joint_angles(4, 0.0);
         if (!solve4DofIK(rel_x, rel_y, rel_z, joint_angles)) {
             RCLCPP_ERROR(this->get_logger(), "Target is out of reachable workspace!");
-            return;
+            message = "Target is outside the manipulator workspace.";
+            return false;
         }
 
         // === Step 1: 그리퍼 열기 Action ===
         RCLCPP_INFO(this->get_logger(), "===> 1. Opening Gripper (Action)...");
         if (!sendGripperGoal(0.019)) {
             RCLCPP_ERROR(this->get_logger(), "Failed to open gripper!");
-            return;
+            message = "Failed to open the gripper.";
+            return false;
         }
 
         // === Step 2: 로봇팔 목표 좌표 이동 Action ===
@@ -141,21 +167,30 @@ private:
             joint_angles[0], joint_angles[1], joint_angles[2], joint_angles[3]);
         if (!sendArmGoal(joint_angles, 3.0)) {
             RCLCPP_ERROR(this->get_logger(), "Failed to move arm to target!");
-            return;
+            message = "Failed to move the arm to the target.";
+            return false;
         }
 
         // === Step 3: 그리퍼 닫기 (물체 파지) Action ===
         RCLCPP_INFO(this->get_logger(), "===> 3. Closing Gripper (Action Grasp)...");
         if (!sendGripperGoal(-0.010)) {
-            RCLCPP_WARN(this->get_logger(), "Grasp completed with stall or resistance (normal for grasping).");
+            message = "Failed to close the gripper.";
+            RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
+            return false;
         }
 
         // === Step 4: 홈 포즈 복귀 Action ===
         RCLCPP_INFO(this->get_logger(), "===> 4. Returning to Home Pose...");
         std::vector<double> home_joints = {0.0, -0.523, -0.523, 1.5707};
-        sendArmGoal(home_joints, 2.5);
+        if (!sendArmGoal(home_joints, 2.5)) {
+            message = "Object grasped, but the arm failed to return home.";
+            RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
+            return false;
+        }
 
         RCLCPP_INFO(this->get_logger(), "===> Pick & Place Sequence Completed Successfully!\n");
+        message = "Pick-and-place sequence completed successfully.";
+        return true;
     }
 
     // FollowJointTrajectory 액션 전송 및 완료 대기
@@ -182,7 +217,13 @@ private:
         if (!goal_handle) return false;
 
         auto result_future = arm_action_client_->async_get_result(goal_handle);
-        return (result_future.wait_for(std::chrono::duration<double>(duration_sec + 3.0)) == std::future_status::ready);
+        if (result_future.wait_for(std::chrono::duration<double>(duration_sec + 3.0)) !=
+            std::future_status::ready)
+        {
+            return false;
+        }
+
+        return result_future.get().code == rclcpp_action::ResultCode::SUCCEEDED;
     }
 
     // GripperCommand 액션 전송 및 완료 대기
@@ -203,7 +244,9 @@ private:
         if (!goal_handle) return false;
 
         auto result_future = gripper_action_client_->async_get_result(goal_handle);
-        return (result_future.wait_for(3s) == std::future_status::ready);
+        if (result_future.wait_for(3s) != std::future_status::ready) return false;
+
+        return result_future.get().code == rclcpp_action::ResultCode::SUCCEEDED;
     }
 
     // OpenMANIPULATOR-X 4-DOF 해석적 기구학 (Analytical IK)
@@ -263,9 +306,32 @@ private:
         return false;
     }
 
+    void initializePoseOnStartup() {
+        RCLCPP_INFO(this->get_logger(), "Waiting for arm action server to initialize arm pose...");
+        if (!arm_action_client_->wait_for_action_server(30s)) {
+            RCLCPP_WARN(this->get_logger(), "Arm action server not available within 30s for initial pose.");
+            return;
+        }
+
+        // 안정적인 컨트롤러 구동을 위해 0.5초 대기
+        rclcpp::sleep_for(500ms);
+
+        std::vector<double> init_joints = {0.0, -0.523, -0.523, 1.5707};
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Arm action server ready! Moving arm to initial pose [0.0, -0.523, -0.523, 1.5707] rad...");
+        if (sendArmGoal(init_joints, 2.5)) {
+            RCLCPP_INFO(this->get_logger(), "Arm successfully positioned at initial pose.");
+        } else {
+            RCLCPP_WARN(this->get_logger(), "Failed to move arm to initial pose on startup.");
+        }
+    }
+
     rclcpp_action::Client<FollowJointTrajectory>::SharedPtr arm_action_client_;
     rclcpp_action::Client<GripperCommand>::SharedPtr gripper_action_client_;
     rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr target_sub_;
+    rclcpp::Service<Trigger>::SharedPtr execute_service_;
+    rclcpp::CallbackGroup::SharedPtr action_callback_group_;
 
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
@@ -273,7 +339,8 @@ private:
     geometry_msgs::msg::PointStamped latest_map_target_;
     bool has_target_;
     std::mutex target_mutex_;
-    std::thread input_thread_;
+    std::atomic_bool sequence_in_progress_{false};
+    std::thread init_thread_;
 };
 
 int main(int argc, char** argv) {

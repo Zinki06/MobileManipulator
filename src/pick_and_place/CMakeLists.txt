@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(tf2 REQUIRED)
@@ -20,6 +21,7 @@ ament_target_dependencies(pick_and_place
   rclcpp
   rclcpp_action
   geometry_msgs
+  std_srvs
   trajectory_msgs
   control_msgs
   tf2
