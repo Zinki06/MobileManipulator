@@ -1,0 +1,35 @@
+map_size_meters:
+  width: 8.5
+  height: 10.95
+origin: center
+markers:
+- id: 1
+  x: 0.0
+  y: -0.5
+  size: 0.133
+  yaw: 0.0
+- id: 2
+  x: 0.0
+  y: 0.5
+  size: 0.133
+  yaw: 0.0
+- id: 3
+  x: 0.0
+  y: 1.5
+  size: 0.133
+  yaw: 0.0
+- id: 4
+  x: 0.0
+  y: 2.5
+  size: 0.133
+  yaw: 0.0
+- id: 5
+  x: 1.0
+  y: 2.5
+  size: 0.133
+  yaw: 0.0
+- id: 0
+  x: 1.0
+  y: -0.5
+  size: 0.133
+  yaw: 0.0

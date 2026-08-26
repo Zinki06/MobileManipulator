@@ -1,0 +1,29 @@
+# ROS 2 build & runtime artifacts
+build/
+install/
+log/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# ROS / colcon isolation dirs
+build_isolated/
+devel/
+install_isolated/
+
+# Temporary and local test files
+temp/
+
+# IDE / Editor configuration
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store

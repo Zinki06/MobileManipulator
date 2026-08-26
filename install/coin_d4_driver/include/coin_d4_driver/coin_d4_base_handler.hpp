@@ -1,1 +1,0 @@
-/home/user/turtlebot3_ws/src/coin_d4_driver/include/coin_d4_driver/coin_d4_base_handler.hpp

@@ -1,1 +1,0 @@
-/home/user/turtlebot3_ws/build/coin_d4_driver/ament_cmake_export_include_directories/ament_cmake_export_include_directories-extras.cmake

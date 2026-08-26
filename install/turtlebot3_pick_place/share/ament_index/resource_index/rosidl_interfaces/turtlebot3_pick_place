@@ -1,4 +1,0 @@
-srv/GetTargetPose.idl
-srv/GetTargetPose.srv
-srv/GetTargetPose_Request.msg
-srv/GetTargetPose_Response.msg

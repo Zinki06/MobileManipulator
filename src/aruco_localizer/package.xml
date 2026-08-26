@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>aruco_localizer</name>
+  <version>0.0.1</version>
+  <description>ROS 2 Aruco Localization and Map/Marker Publisher Package in C++</description>
+  <maintainer email="user@todo.todo">User</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Core & ROS 2 Messages -->
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>visualization_msgs</depend>
+
+  <!-- TF2 Libraries -->
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_eigen</depend>
+
+  <!-- Vision & Image Transport -->
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+
+  <!-- 3rd Party Libraries -->
+  <depend>yaml-cpp</depend>
+  <depend>opencv</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

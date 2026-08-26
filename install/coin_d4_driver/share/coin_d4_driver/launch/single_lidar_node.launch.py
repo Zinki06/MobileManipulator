@@ -1,1 +1,0 @@
-/home/user/turtlebot3_ws/src/coin_d4_driver/launch/single_lidar_node.launch.py

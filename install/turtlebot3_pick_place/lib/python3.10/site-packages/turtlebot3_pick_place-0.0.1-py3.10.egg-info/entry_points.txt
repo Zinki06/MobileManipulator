@@ -1,2 +1,0 @@
-[console_scripts]
-segmentation_node = turtlebot3_pick_place.segmentation_node:main

@@ -1,3 +1,0 @@
-/home/user/turtlebot3_ws/install/coin_d4_driver/lib/libcoin_d4_driver_lib.so
-/home/user/turtlebot3_ws/install/coin_d4_driver/share/coin_d4_driver/cmake/export_coin_d4_driverExport.cmake
-/home/user/turtlebot3_ws/install/coin_d4_driver/share/coin_d4_driver/cmake/export_coin_d4_driverExport-noconfig.cmake

@@ -1,2 +1,0 @@
-[console_scripts]
-segmentation_node = segmentation.segmentation_node:main
