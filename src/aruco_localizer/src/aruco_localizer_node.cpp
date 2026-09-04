@@ -2,6 +2,8 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
+#include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/int32.hpp>
 #include <cv_bridge/cv_bridge.h>
 
 #include <tf2/LinearMath/Quaternion.h>
@@ -22,6 +24,7 @@
 #include <vector>
 #include <cmath>
 #include <chrono>
+#include <limits>
 
 struct MarkerInfo {
     double size;
@@ -30,26 +33,51 @@ struct MarkerInfo {
 
 class ArucoLocalizer : public rclcpp::Node {
 public:
-    ArucoLocalizer() : Node("aruco_localizer_node"), has_cam_info_(false), has_valid_map_odom_(false) {
+    ArucoLocalizer()
+    : Node("aruco_localizer_node"),
+      has_cam_info_(false),
+      has_valid_map_odom_(false),
+      relocalization_candidate_count_(0),
+      last_valid_marker_id_(-1)
+    {
         // 1. 파라미터 선언 및 취득
         this->declare_parameter<std::string>(
-            "marker_yaml_path", 
+            "marker_yaml_path",
             "/home/user/turtlebot3_ws/src/aruco_localizer/map/new_map_markers.yaml"
         );
         this->declare_parameter<std::string>("base_frame", "base_link");
         this->declare_parameter<std::string>("map_frame", "map");
         this->declare_parameter<std::string>("odom_frame", "odom");
+        this->declare_parameter<double>("filter_alpha", 0.15); // EMA 필터 계수 (0.05 ~ 0.3)
+        this->declare_parameter<double>("max_pos_jump", 0.40);  // 이상치 판정 위치 오차 (단위: m)
+        this->declare_parameter<double>("max_yaw_jump", 0.50);  // 이상치 판정 회전각 오차 (단위: rad, 약 28도)
+        this->declare_parameter<double>("marker_freshness_timeout", 1.0);
+        this->declare_parameter<int>("relocalization_consistency_count", 5);
+        this->declare_parameter<double>("min_marker_dist", 0.40); // 40cm 이내 근접 시 왜곡 방지 차단
+        this->declare_parameter<double>("max_marker_dist", 2.50);
 
         std::string yaml_path = this->get_parameter("marker_yaml_path").as_string();
         base_frame_ = this->get_parameter("base_frame").as_string();
         map_frame_ = this->get_parameter("map_frame").as_string();
         odom_frame_ = this->get_parameter("odom_frame").as_string();
+        filter_alpha_ = this->get_parameter("filter_alpha").as_double();
+        max_pos_jump_ = this->get_parameter("max_pos_jump").as_double();
+        max_yaw_jump_ = this->get_parameter("max_yaw_jump").as_double();
+        marker_freshness_timeout_ = this->get_parameter("marker_freshness_timeout").as_double();
+        relocalization_consistency_count_ =
+            this->get_parameter("relocalization_consistency_count").as_int();
+        min_marker_dist_ = this->get_parameter("min_marker_dist").as_double();
+        max_marker_dist_ = this->get_parameter("max_marker_dist").as_double();
 
         loadMarkerYaml(yaml_path);
 
-        // 2. ArUco 사전 및 파라미터 구성
+        // 2. ArUco 사전 및 서브픽셀 코너 검출 파라미터 구성 (지터 억제)
         dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
         detector_params_ = cv::aruco::DetectorParameters::create();
+        detector_params_->cornerRefinementMethod = cv::aruco::CORNER_REFINE_SUBPIX;
+        detector_params_->cornerRefinementWinSize = 5;
+        detector_params_->cornerRefinementMaxIterations = 30;
+        detector_params_->cornerRefinementMinAccuracy = 0.05;
 
         // 3. TF 버퍼, 리스너, 브로드캐스터 초기화
         tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
@@ -66,12 +94,21 @@ public:
             "/camera/camera/color/image_raw", qos,
             std::bind(&ArucoLocalizer::imageCallback, this, std::placeholders::_1));
 
-        // 5. 30Hz 주기로 map -> odom TF 지속 브로드캐스트 (마커 유실 시에도 TF 유지)
+        localization_fresh_pub_ = this->create_publisher<std_msgs::msg::Bool>(
+            "/aruco/localization_fresh", 10);
+        last_marker_id_pub_ = this->create_publisher<std_msgs::msg::Int32>(
+            "/aruco/last_marker_id", 10);
+
+        // 5. 30Hz 주기로 map -> odom TF 지속 브로드캐스트
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(33),
             std::bind(&ArucoLocalizer::publishMapToOdom, this));
 
-        RCLCPP_INFO(this->get_logger(), "Aruco Localization Node successfully initialized.");
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Aruco Localization Node Initialized. (EMA Filter Alpha: %.2f, SubPix: Enabled)",
+            filter_alpha_
+        );
     }
 
 private:
@@ -126,26 +163,39 @@ private:
 
         if (marker_ids.empty()) return;
 
-        // optical_frame -> base_link TF 조회
+        // 1. 카메라 시점 타임스탬프 기반 TF 동기화 조회
         Eigen::Isometry3d T_cam_to_base;
         try {
             auto tf_cam_msg = tf_buffer_->lookupTransform(
-                msg->header.frame_id, base_frame_, tf2::TimePointZero, tf2::durationFromSec(0.05));
+                msg->header.frame_id, base_frame_, msg->header.stamp, tf2::durationFromSec(0.05));
             T_cam_to_base = tf2::transformToEigen(tf_cam_msg);
-        } catch (const tf2::TransformException& ex) {
-            RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Cam->Base TF Lookup Failed: %s", ex.what());
-            return;
+        } catch (const tf2::TransformException&) {
+            // 타임스탬프 조회 실패 시 최신(TimePointZero)으로 폴백
+            try {
+                auto tf_cam_msg = tf_buffer_->lookupTransform(
+                    msg->header.frame_id, base_frame_, tf2::TimePointZero, tf2::durationFromSec(0.05));
+                T_cam_to_base = tf2::transformToEigen(tf_cam_msg);
+            } catch (const tf2::TransformException& ex) {
+                RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Cam->Base TF Lookup Failed: %s", ex.what());
+                return;
+            }
         }
 
-        // odom -> base_link TF 조회
+        // 2. 오도메트리 TF 동기화 조회
         Eigen::Isometry3d T_odom_to_base;
         try {
             auto tf_odom_msg = tf_buffer_->lookupTransform(
-                odom_frame_, base_frame_, tf2::TimePointZero, tf2::durationFromSec(0.05));
+                odom_frame_, base_frame_, msg->header.stamp, tf2::durationFromSec(0.05));
             T_odom_to_base = tf2::transformToEigen(tf_odom_msg);
-        } catch (const tf2::TransformException& ex) {
-            RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Odom->Base TF Lookup Failed: %s", ex.what());
-            return;
+        } catch (const tf2::TransformException&) {
+            try {
+                auto tf_odom_msg = tf_buffer_->lookupTransform(
+                    odom_frame_, base_frame_, tf2::TimePointZero, tf2::durationFromSec(0.05));
+                T_odom_to_base = tf2::transformToEigen(tf_odom_msg);
+            } catch (const tf2::TransformException& ex) {
+                RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "Odom->Base TF Lookup Failed: %s", ex.what());
+                return;
+            }
         }
 
         double total_weight = 0.0;
@@ -154,6 +204,8 @@ private:
         double weighted_cos = 0.0;
         double weighted_sin = 0.0;
         int valid_marker_count = 0;
+        int nearest_marker_id = -1;
+        double nearest_marker_dist = std::numeric_limits<double>::max();
 
         for (size_t i = 0; i < marker_ids.size(); ++i) {
             int id = marker_ids[i];
@@ -166,8 +218,15 @@ private:
             cv::aruco::estimatePoseSingleMarkers(single_corner, marker.size, camera_matrix_, dist_coeffs_, rvecs, tvecs);
 
             double dist = std::sqrt(tvecs[0][0]*tvecs[0][0] + tvecs[0][1]*tvecs[0][1] + tvecs[0][2]*tvecs[0][2]);
-            if (dist < 0.1) continue;
+            // 거리 기반 유효성 검사 (0.4m 이내 근접 시 왜곡이 크므로 오도메트리에 위임, 2.5m 이상 제외)
+            if (dist < min_marker_dist_ || dist > max_marker_dist_) continue;
 
+            if (dist < nearest_marker_dist) {
+                nearest_marker_dist = dist;
+                nearest_marker_id = id;
+            }
+
+            // 가까울수록 기하급수적으로 높은 가중치 부여 (1 / dist^2)
             double weight = 1.0 / (dist * dist);
 
             cv::Mat R_cv;
@@ -204,43 +263,146 @@ private:
 
         if (valid_marker_count == 0 || total_weight <= 0.0) return;
 
-        // 가중 평균 및 원형 각도 평균 계산
-        double avg_x = weighted_x / total_weight;
-        double avg_y = weighted_y / total_weight;
-        double avg_yaw = std::atan2(weighted_sin, weighted_cos);
+        // 마커 측정 가중 평균 계산
+        double meas_x = weighted_x / total_weight;
+        double meas_y = weighted_y / total_weight;
+        double meas_yaw = std::atan2(weighted_sin, weighted_cos);
 
-        tf2::Quaternion q;
-        q.setRPY(0.0, 0.0, avg_yaw);
+        Eigen::Vector2d meas_pos(meas_x, meas_y);
+        Eigen::Quaterniond meas_q(Eigen::AngleAxisd(meas_yaw, Eigen::Vector3d::UnitZ()));
 
+        // 3. 이상치(Outlier) 검사 및 EMA(Exponential Moving Average) 필터링
+        if (!has_valid_map_odom_) {
+            // 첫 초기화
+            smoothed_pos_ = meas_pos;
+            smoothed_q_ = meas_q;
+            has_valid_map_odom_ = true;
+            relocalization_candidate_count_ = 0;
+            RCLCPP_INFO(this->get_logger(), "[Initial Lock] Map->Odom initialized: (%.3f, %.3f, %.1f°)",
+                meas_x, meas_y, meas_yaw * 180.0 / M_PI);
+        } else {
+            // 이전 추정치 대비 점프 크기 검사
+            double pos_diff = (meas_pos - smoothed_pos_).norm();
+            double angle_diff = std::abs(meas_q.angularDistance(smoothed_q_));
+
+            if (pos_diff > max_pos_jump_ || angle_diff > max_yaw_jump_) {
+                // 같은 위치에서 반복되는 큰 보정만 재정합으로 인정한다.
+                const bool candidate_is_consistent =
+                    relocalization_candidate_count_ > 0 &&
+                    (meas_pos - relocalization_candidate_pos_).norm() < 0.15 &&
+                    std::abs(meas_q.angularDistance(relocalization_candidate_q_)) < 0.20;
+
+                if (candidate_is_consistent) {
+                    relocalization_candidate_pos_ =
+                        0.5 * relocalization_candidate_pos_ + 0.5 * meas_pos;
+                    relocalization_candidate_q_ =
+                        relocalization_candidate_q_.slerp(0.5, meas_q).normalized();
+                    relocalization_candidate_count_++;
+                } else {
+                    relocalization_candidate_pos_ = meas_pos;
+                    relocalization_candidate_q_ = meas_q;
+                    relocalization_candidate_count_ = 1;
+                }
+
+                if (relocalization_candidate_count_ >= relocalization_consistency_count_) {
+                    smoothed_pos_ = relocalization_candidate_pos_;
+                    smoothed_q_ = relocalization_candidate_q_;
+                    relocalization_candidate_count_ = 0;
+                    RCLCPP_WARN(
+                        this->get_logger(),
+                        "[Relocalized] Accepted %d consistent ArUco measurements.",
+                        relocalization_consistency_count_);
+                } else {
+                    RCLCPP_DEBUG(
+                        this->get_logger(),
+                        "Outlier pending: pos=%.3f yaw=%.2f rad consistency=%d/%d",
+                        pos_diff, angle_diff, relocalization_candidate_count_,
+                        relocalization_consistency_count_);
+                    return;
+                }
+            } else {
+                relocalization_candidate_count_ = 0;
+                // EMA 저주파 필터 (지터 90% 이상 제거)
+                smoothed_pos_ = (1.0 - filter_alpha_) * smoothed_pos_ + filter_alpha_ * meas_pos;
+                smoothed_q_ = smoothed_q_.slerp(filter_alpha_, meas_q);
+                smoothed_q_.normalize();
+            }
+        }
+
+        // 최신 평활화된 TF 업데이트
         latest_tf_map_odom_.header.frame_id = map_frame_;
         latest_tf_map_odom_.child_frame_id = odom_frame_;
-        latest_tf_map_odom_.transform.translation.x = avg_x;
-        latest_tf_map_odom_.transform.translation.y = avg_y;
+        latest_tf_map_odom_.transform.translation.x = smoothed_pos_.x();
+        latest_tf_map_odom_.transform.translation.y = smoothed_pos_.y();
         latest_tf_map_odom_.transform.translation.z = 0.0;
-        latest_tf_map_odom_.transform.rotation = tf2::toMsg(q);
+        latest_tf_map_odom_.transform.rotation.x = smoothed_q_.x();
+        latest_tf_map_odom_.transform.rotation.y = smoothed_q_.y();
+        latest_tf_map_odom_.transform.rotation.z = smoothed_q_.z();
+        latest_tf_map_odom_.transform.rotation.w = smoothed_q_.w();
 
-        has_valid_map_odom_ = true;
+        last_valid_marker_time_ = this->now();
+        last_valid_marker_id_ = nearest_marker_id;
+        publishLocalizationStatus(true);
+
+        double cur_yaw = std::atan2(
+            2.0 * (smoothed_q_.w() * smoothed_q_.z() + smoothed_q_.x() * smoothed_q_.y()),
+            1.0 - 2.0 * (smoothed_q_.y() * smoothed_q_.y() + smoothed_q_.z() * smoothed_q_.z()));
 
         RCLCPP_INFO_THROTTLE(
-            this->get_logger(), *this->get_clock(), 500,
-            "[Tracking] Fused %d markers | Map->Odom Offset: x = %.3f m, y = %.3f m, yaw = %.2f deg",
-            valid_marker_count, avg_x, avg_y, avg_yaw * 180.0 * M_1_PI
+            this->get_logger(), *this->get_clock(), 1000,
+            "[Aruco Track] Fused %d markers | Map->Odom: x=%.3f m, y=%.3f m, yaw=%.1f°",
+            valid_marker_count, smoothed_pos_.x(), smoothed_pos_.y(), cur_yaw * 180.0 / M_PI
         );
     }
 
     void publishMapToOdom() {
+        bool localization_fresh = false;
+        if (has_valid_map_odom_) {
+            localization_fresh =
+                (this->now() - last_valid_marker_time_).seconds() <= marker_freshness_timeout_;
+        }
+        publishLocalizationStatus(localization_fresh);
+
         if (!has_valid_map_odom_) return;
 
         latest_tf_map_odom_.header.stamp = this->get_clock()->now();
         tf_broadcaster_->sendTransform(latest_tf_map_odom_);
     }
 
+    void publishLocalizationStatus(bool fresh) {
+        std_msgs::msg::Bool fresh_msg;
+        fresh_msg.data = fresh;
+        localization_fresh_pub_->publish(fresh_msg);
+
+        if (fresh && last_valid_marker_id_ >= 0) {
+            std_msgs::msg::Int32 marker_msg;
+            marker_msg.data = last_valid_marker_id_;
+            last_marker_id_pub_->publish(marker_msg);
+        }
+    }
+
     // 멤버 변수
     std::string base_frame_;
     std::string map_frame_;
     std::string odom_frame_;
+    double filter_alpha_;
+    double max_pos_jump_;
+    double max_yaw_jump_;
+    double marker_freshness_timeout_;
+    int relocalization_consistency_count_;
+    double min_marker_dist_;
+    double max_marker_dist_;
+
     bool has_cam_info_;
     bool has_valid_map_odom_;
+    int relocalization_candidate_count_;
+    int last_valid_marker_id_;
+
+    Eigen::Vector2d smoothed_pos_;
+    Eigen::Quaterniond smoothed_q_;
+    Eigen::Vector2d relocalization_candidate_pos_;
+    Eigen::Quaterniond relocalization_candidate_q_;
+    rclcpp::Time last_valid_marker_time_;
 
     cv::Mat camera_matrix_;
     cv::Mat dist_coeffs_;
@@ -256,6 +418,8 @@ private:
     geometry_msgs::msg::TransformStamped latest_tf_map_odom_;
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub_;
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_sub_;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr localization_fresh_pub_;
+    rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr last_marker_id_pub_;
 };
 
 int main(int argc, char** argv) {

@@ -45,8 +45,17 @@ def generate_launch_description():
         }.items(),
     )
 
+    # 4. ArUco 직선 경로 네비게이터 노드
+    aruco_waypoint_navigator_node = Node(
+        package=pkg_name,
+        executable='aruco_waypoint_navigator_node',
+        name='aruco_waypoint_navigator',
+        output='screen',
+    )
+
     return LaunchDescription([
         aruco_localizer_node,
         map_marker_publisher_node,
+        aruco_waypoint_navigator_node,
         nav2_navigation
     ])

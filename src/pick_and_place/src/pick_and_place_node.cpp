@@ -46,14 +46,28 @@ public:
             "/object_centroid", 10,
             std::bind(&PickAndPlaceActionNode::targetCallback, this, std::placeholders::_1));
 
-        // 4. 파지 시퀀스 실행 서비스
+        // 4. 파지 시퀀스 실행 및 안전 주차(Park) 서비스
         execute_service_ = this->create_service<Trigger>(
             "/execute_pick_and_place",
-            std::bind(
-                &PickAndPlaceActionNode::handleExecuteRequest,
-                this,
-                std::placeholders::_1,
-                std::placeholders::_2),
+            std::bind(&PickAndPlaceActionNode::handleExecuteRequest, this, std::placeholders::_1, std::placeholders::_2),
+            rmw_qos_profile_services_default,
+            action_callback_group_);
+
+        park_service_ = this->create_service<Trigger>(
+            "/park_arm",
+            std::bind(&PickAndPlaceActionNode::handleParkRequest, this, std::placeholders::_1, std::placeholders::_2),
+            rmw_qos_profile_services_default,
+            action_callback_group_);
+
+        open_gripper_service_ = this->create_service<Trigger>(
+            "/open_gripper",
+            std::bind(&PickAndPlaceActionNode::handleOpenGripperRequest, this, std::placeholders::_1, std::placeholders::_2),
+            rmw_qos_profile_services_default,
+            action_callback_group_);
+
+        close_gripper_service_ = this->create_service<Trigger>(
+            "/close_gripper",
+            std::bind(&PickAndPlaceActionNode::handleCloseGripperRequest, this, std::placeholders::_1, std::placeholders::_2),
             rmw_qos_profile_services_default,
             action_callback_group_);
 
@@ -61,9 +75,7 @@ public:
         init_thread_ = std::thread(&PickAndPlaceActionNode::initializePoseOnStartup, this);
 
         RCLCPP_INFO(this->get_logger(), "Pick & Place Action Node Initialized.");
-        RCLCPP_INFO(
-            this->get_logger(),
-            "Waiting for /object_centroid. Call /execute_pick_and_place to start.");
+        RCLCPP_INFO(this->get_logger(), "Services ready: /execute_pick_and_place, /park_arm, /open_gripper, /close_gripper");
     }
 
     ~PickAndPlaceActionNode() override {
@@ -389,10 +401,58 @@ private:
         }
     }
 
+    void handleParkRequest(
+        const std::shared_ptr<Trigger::Request> request,
+        std::shared_ptr<Trigger::Response> response)
+    {
+        (void)request;
+        RCLCPP_INFO(this->get_logger(), "Parking robot arm to resting position...");
+        std::vector<double> park_joints = {0.0, -1.57, 1.37, 0.26};
+        if (sendArmGoal(park_joints, 3.0)) {
+            response->success = true;
+            response->message = "Arm safely parked in resting pose.";
+            RCLCPP_INFO(this->get_logger(), "Arm safely parked.");
+        } else {
+            response->success = false;
+            response->message = "Failed to park arm.";
+        }
+    }
+
+    void handleOpenGripperRequest(
+        const std::shared_ptr<Trigger::Request> request,
+        std::shared_ptr<Trigger::Response> response)
+    {
+        (void)request;
+        if (sendGripperGoal(0.019)) {
+            response->success = true;
+            response->message = "Gripper opened.";
+        } else {
+            response->success = false;
+            response->message = "Failed to open gripper.";
+        }
+    }
+
+    void handleCloseGripperRequest(
+        const std::shared_ptr<Trigger::Request> request,
+        std::shared_ptr<Trigger::Response> response)
+    {
+        (void)request;
+        if (sendGripperGoal(-0.010, 15.0)) {
+            response->success = true;
+            response->message = "Gripper closed.";
+        } else {
+            response->success = false;
+            response->message = "Failed to close gripper.";
+        }
+    }
+
     rclcpp_action::Client<FollowJointTrajectory>::SharedPtr arm_action_client_;
     rclcpp_action::Client<GripperCommand>::SharedPtr gripper_action_client_;
     rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr target_sub_;
     rclcpp::Service<Trigger>::SharedPtr execute_service_;
+    rclcpp::Service<Trigger>::SharedPtr park_service_;
+    rclcpp::Service<Trigger>::SharedPtr open_gripper_service_;
+    rclcpp::Service<Trigger>::SharedPtr close_gripper_service_;
     rclcpp::CallbackGroup::SharedPtr action_callback_group_;
 
     std::unique_ptr<tf2_ros::Buffer> tf_buffer_;

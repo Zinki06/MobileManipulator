@@ -26,9 +26,13 @@
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
 
-  <!-- 3rd Party Libraries -->
+  <!-- 3rd Party Libraries & Nav2 -->
   <depend>yaml-cpp</depend>
   <depend>opencv</depend>
+  <depend>rclcpp_action</depend>
+  <depend>std_srvs</depend>
+  <depend>std_msgs</depend>
+  <depend>nav2_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
