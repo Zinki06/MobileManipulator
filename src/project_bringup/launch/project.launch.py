@@ -45,6 +45,7 @@ def generate_launch_description():
     start_segmentation = LaunchConfiguration('start_segmentation')
     start_navigation = LaunchConfiguration('start_navigation')
     start_pick_and_place = LaunchConfiguration('start_pick_and_place')
+    start_cleanup_manager = LaunchConfiguration('start_cleanup_manager')
     use_fake_hardware = LaunchConfiguration('use_fake_hardware')
 
     declared_arguments = [
@@ -72,6 +73,11 @@ def generate_launch_description():
             'start_pick_and_place',
             default_value='true',
             description='Start the service-controlled pick-and-place node.',
+        ),
+        DeclareLaunchArgument(
+            'start_cleanup_manager',
+            default_value='true',
+            description='Start the high-level cleanup mission state machine.',
         ),
         DeclareLaunchArgument(
             'use_fake_hardware',
@@ -113,6 +119,21 @@ def generate_launch_description():
             name='pick_and_place_action_node',
             output='screen',
             condition=IfCondition(start_pick_and_place),
+            parameters=[{'target_topic': '/cleanup/pick_target'}],
+        ),
+        Node(
+            package='cleanup_task_manager',
+            executable='cleanup_task_manager_node',
+            name='cleanup_task_manager',
+            output='screen',
+            condition=IfCondition(start_cleanup_manager),
+            parameters=[{
+                'task_config_path': PathJoinSubstitution([
+                    FindPackageShare('cleanup_task_manager'),
+                    'config',
+                    'task_zones.yaml',
+                ]),
+            }],
         ),
     ]
 

@@ -8,7 +8,7 @@
 
 ```text
 nav_debug/
-├── run_YYYYMMDD_HHMMSS/      # 🚀 매 실행(노드 기동)마다 자동 생성되는 독립 세션 폴더
+├── run_YYYYMMDD_HHMMSS_PID/  # 매 실행마다 생성되는 독립 세션 폴더
 │   ├── navigation.log        # 해당 회차의 전체 주행 텍스트 로그
 │   ├── snap_001_....jpg      # 주행 상태 전환 시점의 카메라 화상 스냅샷
 │   └── ...
@@ -20,7 +20,7 @@ nav_debug/
 
 ## 🔍 실시간 모니터링 명령어
 
-주행 중 로봇의 위치, 마커 잠금 여부, 다음 스텝 진행 상황을 실시간으로 확인하려면:
+주행 중 로봇 위치, 최근 마커 보정 여부, 가상 웨이포인트 진행 상황을 확인하려면:
 
 ```bash
 tail -f /home/user/turtlebot3_ws/nav_debug/navigation.log
@@ -30,11 +30,23 @@ tail -f /home/user/turtlebot3_ws/nav_debug/navigation.log
 
 ## 📝 로그 이벤트 태그 설명
 
-- **`[NODE_INIT]`**: 네비게이터 노드 기동 완료
-- **`[ROUTE_START]`**: 웨이포인트 경로 주행 시작
-- **`[STEP_START]`**: 세부 단계(직진/회전/마커확인) 시작
-- **`[NAV_PROXIMITY_ARRIVED]`**: 목표 마커 근접 도달 완료 (다음 회전 단계로 바통 터치)
-- **`[ROTATE_INIT]` / `[ROTATE_DONE]`**: IMU 피벗 제자리 90도 회전 시작 및 완료
-- **`[MARKER_LOCKED]`**: 회전 후 다음 마커 시야 확보 및 확인 완료
-- **`[ROUTE_COMPLETE]`**: 전체 코리더 주행 완주 성공
-- **`[NAV_RETRY]` / `[NAV_FAILED]` / `[ROUTE_ABORTED]`**: Nav2 액션 재시도 및 실패/중단 진단 기록
+- **`[NODE_INIT]`**: 가상 웨이포인트 네비게이터 기동 완료
+- **`[ROUTE_START]`**: `routes.yaml`에 정의된 경로 시작
+- **`[WAYPOINT_START]`**: 이름, 좌표, yaw를 포함한 Nav2 목표 전송
+- **`[NAV_ACCEPTED]`**: Nav2가 목표를 수락함
+- **`[WAYPOINT_REACHED]`**: 위치와 yaw를 포함한 Nav2 목표 완료
+- **`[WAYPOINT_RECOVERY_REACHED]`**: Nav2가 중단됐지만 15cm 이내 도달을 확인함
+- **`[NAV_RETRY]`**: Nav2 거부·취소·중단 후 제한적 재시도
+- **`[TELEMETRY]`**: 주행 중 2초마다 `map`/`odom` 자세, `cmd_vel`,
+  위치 보정 모드, 웨이포인트 상태 기록
+- **`[ROUTE_COMPLETE]` / `[ROUTE_ABORTED]`**: 전체 경로 완료 또는 중단
+
+마커가 보이지 않을 때 `ArUcoRecent: NO`로 기록되는 것은 오류가 아닙니다.
+로컬라이저가 초기화된 상태라면 마지막 `map -> odom` 보정을 유지한 채 휠
+오도메트리로 이동합니다. 실시간 위치 모드는 다음 명령으로 확인할 수 있습니다.
+근접 마커와 제자리 회전 중 마커는 보정에 사용하지 않으며,
+`[Correction Frozen]` 로 로컬라이저 ROS 로그에 기록됩니다.
+
+```bash
+ros2 topic echo /aruco/localization_mode
+```

@@ -20,6 +20,8 @@ install_isolated/
 
 # Temporary and local test files
 temp/
+nav_debug/run_*/
+*.yaml.bak_*
 
 # IDE / Editor configuration
 .vscode/

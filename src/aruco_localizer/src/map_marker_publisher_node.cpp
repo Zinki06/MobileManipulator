@@ -21,12 +21,12 @@ public:
     MapMarkerPublisher() : Node("map_marker_publisher_node") {
         // 파라미터 선언
         this->declare_parameter<std::string>(
-            "map_yaml_path", 
-            "/home/user/turtlebot3_ws/src/aruco_localizer/map/new_map.yaml"
+            "map_yaml_path",
+            ""
         );
         this->declare_parameter<std::string>(
-            "marker_yaml_path", 
-            "/home/user/turtlebot3_ws/src/aruco_localizer/map/new_map_markers.yaml"
+            "marker_yaml_path",
+            ""
         );
         this->declare_parameter<std::string>("map_frame", "map");
 

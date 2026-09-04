@@ -27,7 +27,17 @@ public:
     using GripperCommand = control_msgs::action::GripperCommand;
     using Trigger = std_srvs::srv::Trigger;
 
-    PickAndPlaceActionNode() : Node("pick_and_place_action_node"), has_target_(false) {
+    PickAndPlaceActionNode()
+    : Node("pick_and_place_action_node"),
+      has_target_(false),
+      target_received_time_(0, 0, RCL_ROS_TIME)
+    {
+        this->declare_parameter<double>("target_max_age", 2.0);
+        this->declare_parameter<std::string>("target_topic", "/object_centroid");
+        target_max_age_ = this->get_parameter("target_max_age").as_double();
+        const std::string target_topic =
+            this->get_parameter("target_topic").as_string();
+
         action_callback_group_ = this->create_callback_group(
             rclcpp::CallbackGroupType::Reentrant);
 
@@ -43,7 +53,7 @@ public:
 
         // 3. 물체 맵 좌표 구독
         target_sub_ = this->create_subscription<geometry_msgs::msg::PointStamped>(
-            "/object_centroid", 10,
+            target_topic, 10,
             std::bind(&PickAndPlaceActionNode::targetCallback, this, std::placeholders::_1));
 
         // 4. 파지 시퀀스 실행 및 안전 주차(Park) 서비스
@@ -86,8 +96,13 @@ public:
 
 private:
     void targetCallback(const geometry_msgs::msg::PointStamped::SharedPtr msg) {
+        if (msg->header.frame_id.empty()) {
+            RCLCPP_WARN(this->get_logger(), "Ignoring /object_centroid without frame_id.");
+            return;
+        }
         std::lock_guard<std::mutex> lock(target_mutex_);
         latest_map_target_ = *msg;
+        target_received_time_ = this->now();
         has_target_ = true;
     }
 
@@ -122,8 +137,16 @@ private:
         {
             std::lock_guard<std::mutex> lock(target_mutex_);
             if (!has_target_) {
-                message = "No /object_centroid target has been received.";
+                message = "No pick target has been received.";
                 RCLCPP_WARN(this->get_logger(), "%s", message.c_str());
+                return false;
+            }
+            const double target_age = (this->now() - target_received_time_).seconds();
+            if (target_age > target_max_age_) {
+                has_target_ = false;
+                message = "The latest pick target is stale.";
+                RCLCPP_WARN(
+                    this->get_logger(), "%s Age: %.2fs", message.c_str(), target_age);
                 return false;
             }
             target_in_map = latest_map_target_;
@@ -243,6 +266,10 @@ private:
         }
 
         RCLCPP_INFO(this->get_logger(), "===> [SUCCESS] Pick & Place Sequence Completed Successfully!\n");
+        {
+            std::lock_guard<std::mutex> lock(target_mutex_);
+            has_target_ = false;
+        }
         message = "Pick-and-place sequence completed successfully.";
         return true;
     }
@@ -460,6 +487,8 @@ private:
 
     geometry_msgs::msg::PointStamped latest_map_target_;
     bool has_target_;
+    double target_max_age_{2.0};
+    rclcpp::Time target_received_time_;
     std::mutex target_mutex_;
     std::atomic_bool sequence_in_progress_{false};
     std::thread init_thread_;

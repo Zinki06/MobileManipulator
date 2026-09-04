@@ -1,62 +1,29 @@
-[1787745514.010] [NODE_INIT] Pose(map): (0.000, 0.000, 0.000°) | IMU_Yaw: 0.000° | ArucoLock: NO (ID: -1) | Aruco Corridor Navigator with Blackbox Diagnostic Logging Initialized.
-[1787745536.998] [ROUTE_START] Pose(map): (1.339, 2.479, 177.688°) | IMU_Yaw: -1.954° | ArucoLock: NO (ID: 4) | Starting route to Marker 0 (via 4, 3, 2, 1)
-[1787745537.029] [STEP_START] Pose(map): (1.339, 2.479, 177.688°) | IMU_Yaw: -1.954° | ArucoLock: NO (ID: 4) | Starting Step 1/7: Drive straight to Marker 4 (top hallway)
-[1787745542.559] [NAV_PROXIMITY_ARRIVED] Pose(map): (0.273, 2.501, 179.727°) | IMU_Yaw: 4.229° | ArucoLock: YES (ID: 4) | Arrived near waypoint (dist=0.272688m, elapsed=5.529952s). Advancing.
-[1787745542.614] [STEP_START] Pose(map): (0.274, 2.501, -179.595°) | IMU_Yaw: 4.229° | ArucoLock: YES (ID: 4) | Starting Step 2/7: In-place turn 90 deg at Marker 4 (facing Marker 3)
-[1787745542.646] [ROTATE_INIT] Pose(map): (0.272, 2.500, -179.595°) | IMU_Yaw: 4.229° | ArucoLock: YES (ID: 4) | Target IMU Yaw: 94.2294° (Delta: 90°)
-[1787745542.673] [NAV_RETRY] Pose(map): (0.266, 2.500, -179.595°) | IMU_Yaw: 4.208° | ArucoLock: YES (ID: 4) | Retrying Nav2 goal (trial 1/2)...
-[1787745548.109] [ROTATE_DONE] Pose(map): (0.338, 2.473, -72.059°) | IMU_Yaw: 92.387° | ArucoLock: YES (ID: 3) | In-place 90 deg rotation completed stably.
-[1787745548.151] [STEP_START] Pose(map): (0.338, 2.473, -72.024°) | IMU_Yaw: 92.387° | ArucoLock: YES (ID: 3) | Starting Step 3/7: Verify Marker 3 in view
-[1787745548.183] [MARKER_LOCKED] Pose(map): (0.338, 2.473, -72.024°) | IMU_Yaw: 92.387° | ArucoLock: YES (ID: 3) | Successfully verified ArUco marker 3
-[1787745548.207] [STEP_START] Pose(map): (0.338, 2.473, -70.972°) | IMU_Yaw: 92.387° | ArucoLock: YES (ID: 3) | Starting Step 4/7: Drive straight to Marker 1 (vertical hallway via 3, 2)
-[1787745548.239] [NAV_RETRY] Pose(map): (0.338, 2.473, -69.678°) | IMU_Yaw: 92.860° | ArucoLock: YES (ID: 3) | Retrying Nav2 goal (trial 1/2)...
-[1787745548.269] [NAV_RETRY] Pose(map): (0.338, 2.473, -69.078°) | IMU_Yaw: 92.959° | ArucoLock: YES (ID: 3) | Retrying Nav2 goal (trial 2/2)...
-[1787745548.299] [NAV_FAILED] Pose(map): (0.338, 2.473, -67.192°) | IMU_Yaw: 93.027° | ArucoLock: YES (ID: 3) | Nav2 straight navigation failed after retries.
-[1787745548.324] [ROUTE_ABORTED] Pose(map): (0.338, 2.473, -65.297°) | IMU_Yaw: 93.027° | ArucoLock: YES (ID: 3) | Nav2 failed straight navigation.
-[1788503008.977] [NODE_INIT] Pose(map): (0.000, 0.000, 0.000°) | IMU_Yaw: 0.000° | ArucoLock: NO (ID: -1) | Aruco Corridor Navigator with Blackbox Diagnostic Logging Initialized.
-[1788503127.042] [NODE_INIT] Pose(map): (0.000, 0.000, 0.000°) | IMU_Yaw: 0.000° | ArucoLock: NO (ID: -1) | Aruco Corridor Navigator with Blackbox Diagnostic Logging Initialized.
-[1788503174.497] [ROUTE_START] Pose(map): (1.691, -0.525, -176.242°) | IMU_Yaw: -13.287° | ArucoLock: YES (ID: 0) | Starting route to Marker 5 (via 1, 2, 3, 4)
-[1788503174.565] [STEP_START] Pose(map): (1.691, -0.525, -176.241°) | IMU_Yaw: -13.287° | ArucoLock: YES (ID: 0) | Starting Step 1/7: Drive straight to Marker 1 (bottom hallway)
-[1788503175.696] [NAV_RETRY] Pose(map): (1.522, -0.532, -179.037°) | IMU_Yaw: -12.830° | ArucoLock: YES (ID: 0) | Retrying Nav2 goal (trial 1/2) after 500ms cooldown...
-[1788503176.260] [NAV_RETRY] Pose(map): (1.427, -0.532, -178.745°) | IMU_Yaw: -11.679° | ArucoLock: YES (ID: 0) | Retrying Nav2 goal (trial 2/2) after 500ms cooldown...
-[1788503176.840] [NAV_FAILED] Pose(map): (1.312, -0.539, -178.341°) | IMU_Yaw: -11.550° | ArucoLock: YES (ID: 0) | Nav2 straight navigation failed after retries.
-[1788503176.870] [ROUTE_ABORTED] Pose(map): (1.314, -0.541, -177.734°) | IMU_Yaw: -11.550° | ArucoLock: YES (ID: 0) | Nav2 failed straight navigation.
-[1788504094.125] [NODE_INIT] Pose(map): (0.000, 0.000, 0.000°) | IMU_Yaw: 0.000° | ArucoLock: NO (ID: -1) | Aruco Corridor Navigator with Blackbox Diagnostic Logging Initialized.
-[1788504103.386] [NODE_INIT] Pose(map): (0.000, 0.000, 0.000°) | IMU_Yaw: 0.000° | ArucoLock: NO (ID: -1) | Aruco Corridor Navigator with Blackbox Diagnostic Logging Initialized.
-[1788504196.009] [ROUTE_START] Pose(map): (1.473, -0.522, -177.864°) | IMU_Yaw: -13.503° | ArucoLock: YES (ID: 0) | Starting route to Marker 5 (via 1, 2, 3, 4)
-[1788504196.009] [ROUTE_START] Pose(map): (1.473, -0.522, -177.864°) | IMU_Yaw: -13.503° | ArucoLock: YES (ID: 0) | Starting route to Marker 5 (via 1, 2, 3, 4)
-[1788504196.108] [STEP_START] Pose(map): (1.473, -0.523, -177.867°) | IMU_Yaw: -13.503° | ArucoLock: YES (ID: 0) | Starting Step 1/7: Drive straight to Marker 1 (bottom hallway)
-[1788504196.188] [STEP_START] Pose(map): (1.473, -0.522, -177.863°) | IMU_Yaw: -13.503° | ArucoLock: YES (ID: 0) | Starting Step 1/7: Drive straight to Marker 1 (bottom hallway)
-[1788504196.240] [NAV_RETRY] Pose(map): (1.473, -0.522, -177.863°) | IMU_Yaw: -13.503° | ArucoLock: YES (ID: 0) | Retrying Nav2 goal (trial 1/2) after 500ms cooldown...
-[1788504196.301] [NAV_RETRY] Pose(map): (1.473, -0.522, -177.863°) | IMU_Yaw: -13.502° | ArucoLock: YES (ID: 0) | Retrying Nav2 goal (trial 1/2) after 500ms cooldown...
-[1788504196.851] [NAV_RETRY] Pose(map): (1.473, -0.522, -177.859°) | IMU_Yaw: -13.503° | ArucoLock: YES (ID: 0) | Retrying Nav2 goal (trial 2/2) after 500ms cooldown...
-[1788504196.861] [NAV_RETRY] Pose(map): (1.473, -0.522, -177.859°) | IMU_Yaw: -13.503° | ArucoLock: YES (ID: 0) | Retrying Nav2 goal (trial 2/2) after 500ms cooldown...
-[1788504197.403] [NAV_FAILED] Pose(map): (1.473, -0.523, -177.867°) | IMU_Yaw: -13.503° | ArucoLock: YES (ID: 0) | Nav2 straight navigation failed after retries.
-[1788504197.422] [NAV_FAILED] Pose(map): (1.473, -0.522, -177.859°) | IMU_Yaw: -13.504° | ArucoLock: YES (ID: 0) | Nav2 straight navigation failed after retries.
-[1788504197.437] [ROUTE_ABORTED] Pose(map): (1.473, -0.522, -177.859°) | IMU_Yaw: -13.503° | ArucoLock: YES (ID: 0) | Nav2 failed straight navigation.
-[1788504197.457] [ROUTE_ABORTED] Pose(map): (1.473, -0.522, -177.859°) | IMU_Yaw: -13.504° | ArucoLock: YES (ID: 0) | Nav2 failed straight navigation.
-[1788504211.083] [ROUTE_START] Pose(map): (1.363, -0.497, -176.766°) | IMU_Yaw: -12.196° | ArucoLock: YES (ID: 0) | Starting route to Marker 5 (via 1, 2, 3, 4)
-[1788504211.204] [STEP_START] Pose(map): (1.363, -0.498, -176.760°) | IMU_Yaw: -12.196° | ArucoLock: YES (ID: 0) | Starting Step 1/7: Drive straight to Marker 1 (bottom hallway)
-[1788504211.941] [NAV_RETRY] Pose(map): (1.363, -0.497, -176.739°) | IMU_Yaw: -12.196° | ArucoLock: YES (ID: 0) | Retrying Nav2 goal (trial 1/2) after 500ms cooldown...
-[1788504212.521] [NAV_RETRY] Pose(map): (1.363, -0.498, -176.743°) | IMU_Yaw: -12.196° | ArucoLock: YES (ID: 0) | Retrying Nav2 goal (trial 2/2) after 500ms cooldown...
-[1788504213.129] [NAV_FAILED] Pose(map): (1.363, -0.497, -176.742°) | IMU_Yaw: -12.196° | ArucoLock: YES (ID: 0) | Nav2 straight navigation failed after retries.
-[1788504213.159] [ROUTE_ABORTED] Pose(map): (1.363, -0.497, -176.742°) | IMU_Yaw: -12.196° | ArucoLock: YES (ID: 0) | Nav2 failed straight navigation.
-[1788504511.793] [NODE_INIT] Pose(map): (0.000, 0.000, 0.000°) | IMU_Yaw: 0.000° | ArucoLock: NO (ID: -1) | Aruco Corridor Navigator with Blackbox Diagnostic Logging Initialized.
-[1788504541.952] [ROUTE_START] Pose(map): (1.370, -0.495, -177.466°) | IMU_Yaw: -9.386° | ArucoLock: YES (ID: 0) | Starting route to Marker 5 (via 1, 2, 3, 4)
-[1788504541.987] [STEP_START] Pose(map): (1.370, -0.495, -177.466°) | IMU_Yaw: -9.386° | ArucoLock: YES (ID: 0) | Starting Step 1/7: Drive straight to Marker 1 (bottom hallway)
-[1788504547.442] [NAV_PROXIMITY_ARRIVED] Pose(map): (0.349, -0.522, -176.399°) | IMU_Yaw: -6.846° | ArucoLock: YES (ID: 1) | Arrived near waypoint (dist=0.349916m, elapsed=5.455589s). Advancing to next step.
-[1788504547.471] [STEP_START] Pose(map): (0.344, -0.523, -176.434°) | IMU_Yaw: -6.846° | ArucoLock: YES (ID: 1) | Starting Step 2/7: In-place turn 90 deg at Marker 1 (facing Marker 2)
-[1788504547.500] [ROTATE_INIT] Pose(map): (0.342, -0.523, -176.261°) | IMU_Yaw: -6.846° | ArucoLock: YES (ID: 1) | Target IMU Yaw: -96.8465° (Delta: -90°)
-[1788504553.192] [ROTATE_DONE] Pose(map): (0.352, -0.463, 97.865°) | IMU_Yaw: -94.596° | ArucoLock: YES (ID: 2) | In-place 90 deg rotation completed stably.
-[1788504553.229] [STEP_START] Pose(map): (0.353, -0.462, 97.802°) | IMU_Yaw: -94.596° | ArucoLock: YES (ID: 2) | Starting Step 3/7: Verify Marker 2 in view
-[1788504553.258] [MARKER_LOCKED] Pose(map): (0.353, -0.462, 97.791°) | IMU_Yaw: -94.596° | ArucoLock: YES (ID: 2) | Successfully verified ArUco marker 2
-[1788504553.286] [STEP_START] Pose(map): (0.353, -0.462, 97.791°) | IMU_Yaw: -94.596° | ArucoLock: YES (ID: 2) | Starting Step 4/7: Drive straight to Marker 4 (vertical hallway via 2, 3)
-[1788504567.343] [NAV_PROXIMITY_ARRIVED] Pose(map): (-0.037, 2.159, 90.275°) | IMU_Yaw: -96.196° | ArucoLock: YES (ID: 4) | Arrived near waypoint (dist=0.343428m, elapsed=14.057015s). Advancing to next step.
-[1788504567.380] [STEP_START] Pose(map): (-0.037, 2.170, 90.030°) | IMU_Yaw: -96.196° | ArucoLock: YES (ID: 4) | Starting Step 5/7: In-place turn 90 deg at Marker 4 (facing Marker 5)
-[1788504567.410] [ROTATE_INIT] Pose(map): (-0.037, 2.171, 89.982°) | IMU_Yaw: -96.196° | ArucoLock: YES (ID: 4) | Target IMU Yaw: 173.804° (Delta: -90°)
-[1788504573.293] [ROTATE_DONE] Pose(map): (0.032, 2.150, 6.240°) | IMU_Yaw: 175.797° | ArucoLock: YES (ID: 5) | In-place 90 deg rotation completed stably.
-[1788504573.349] [STEP_START] Pose(map): (0.033, 2.149, 6.276°) | IMU_Yaw: 175.797° | ArucoLock: YES (ID: 5) | Starting Step 6/7: Verify Marker 5 in view
-[1788504573.381] [MARKER_LOCKED] Pose(map): (0.033, 2.149, 6.276°) | IMU_Yaw: 175.797° | ArucoLock: YES (ID: 5) | Successfully verified ArUco marker 5
-[1788504573.406] [STEP_START] Pose(map): (0.033, 2.149, 6.276°) | IMU_Yaw: 175.797° | ArucoLock: YES (ID: 5) | Starting Step 7/7: Drive straight to Marker 5 (top hallway)
-[1788504577.393] [NAV_PROXIMITY_ARRIVED] Pose(map): (0.722, 2.299, 25.847°) | IMU_Yaw: -166.495° | ArucoLock: YES (ID: 5) | Arrived near waypoint (dist=0.343354m, elapsed=3.987398s). Advancing to next step.
-[1788504577.442] [ROUTE_COMPLETE] Pose(map): (0.728, 2.302, 26.190°) | IMU_Yaw: -166.495° | ArucoLock: YES (ID: 5) | Corridor navigation completed successfully!
+[1788520205.133] [ROUTE_START] Pose(map): (1.677, -0.497, -176.893deg) | ArUcoRecent: YES (ID: 0) | Starting virtual route 'to_5'.
+[1788520205.166] [WAYPOINT_START] Pose(map): (1.677, -0.497, -176.893deg) | ArUcoRecent: YES (ID: 0) | Sending waypoint 1/3 'lower_corner_to_north' pose=(0, -0.5, 1.5708 rad), role=turn, goal_id=1
+[1788520205.188] [NAV_ACCEPTED] Pose(map): (1.677, -0.497, -176.894deg) | ArUcoRecent: YES (ID: 0) | Nav2 accepted goal_id=1
+[1788520205.519] [TELEMETRY] Pose(map): (1.617, -0.500, -177.313deg) | Odom: (0.065, -0.000, -0.468deg, wz=-0.026) | CmdVel: (vx=0.220, wz=-0.026) | Localization: MARKER_CORRECTED age=0.034s distance=0.013m | state=NAVIGATING;route=to_5;waypoint=lower_corner_to_north;index=0;count=3;retry=0
+[1788520207.519] [TELEMETRY] Pose(map): (1.228, -0.514, -178.922deg) | Odom: (0.496, -0.017, -4.058deg, wz=-0.026) | CmdVel: (vx=0.211, wz=-0.026) | Localization: MARKER_CORRECTED age=0.612s distance=0.143m | state=NAVIGATING;route=to_5;waypoint=lower_corner_to_north;index=0;count=3;retry=0
+[1788520209.519] [TELEMETRY] Pose(map): (0.840, -0.511, -177.507deg) | Odom: (0.927, -0.054, -6.160deg, wz=-0.026) | CmdVel: (vx=0.220, wz=-0.026) | Localization: MARKER_CORRECTED age=0.096s distance=0.026m | state=NAVIGATING;route=to_5;waypoint=lower_corner_to_north;index=0;count=3;retry=0
+[1788520211.519] [TELEMETRY] Pose(map): (0.464, -0.519, -178.483deg) | Odom: (1.348, -0.117, -10.543deg, wz=0.000) | CmdVel: (vx=0.211, wz=0.000) | Localization: MARKER_CORRECTED age=0.065s distance=0.019m | state=NAVIGATING;route=to_5;waypoint=lower_corner_to_north;index=0;count=3;retry=0
+[1788520213.519] [TELEMETRY] Pose(map): (0.139, -0.519, 177.521deg) | Odom: (1.668, -0.186, -15.168deg, wz=-0.026) | CmdVel: (vx=0.092, wz=-0.026) | Localization: DEAD_RECKONING age=1.557s distance=0.242m | state=NAVIGATING;route=to_5;waypoint=lower_corner_to_north;index=0;count=3;retry=0
+[1788520215.519] [TELEMETRY] Pose(map): (0.096, -0.516, 128.635deg) | Odom: (1.709, -0.198, -64.262deg, wz=-0.440) | CmdVel: (vx=0.000, wz=-0.440) | Localization: DEAD_RECKONING age=3.570s distance=0.287m | state=NAVIGATING;route=to_5;waypoint=lower_corner_to_north;index=0;count=3;retry=0
+[1788520217.405] [WAYPOINT_REACHED] Pose(map): (0.104, -0.529, 103.508deg) | ArUcoRecent: YES (ID: 2) | Nav2 completed waypoint 'lower_corner_to_north'.
+[1788520217.420] [WAYPOINT_START] Pose(map): (0.108, -0.527, 103.868deg) | ArUcoRecent: YES (ID: 2) | Sending waypoint 2/3 'upper_corner_to_east' pose=(0, 2.5, 0 rad), role=turn, goal_id=2
+[1788520217.432] [NAV_ACCEPTED] Pose(map): (0.109, -0.527, 104.133deg) | ArUcoRecent: YES (ID: 2) | Nav2 accepted goal_id=2
+[1788520217.519] [TELEMETRY] Pose(map): (0.107, -0.521, 103.673deg) | Odom: (1.709, -0.209, -92.721deg, wz=-0.233) | CmdVel: (vx=0.211, wz=-0.233) | Localization: MARKER_CORRECTED age=0.072s distance=0.005m | state=NAVIGATING;route=to_5;waypoint=upper_corner_to_east;index=1;count=3;retry=0
+[1788520219.519] [TELEMETRY] Pose(map): (0.070, -0.097, 96.003deg) | Odom: (1.623, -0.622, -109.265deg, wz=-0.129) | CmdVel: (vx=0.211, wz=-0.129) | Localization: MARKER_CORRECTED age=0.155s distance=0.039m | state=NAVIGATING;route=to_5;waypoint=upper_corner_to_east;index=1;count=3;retry=0
+[1788520221.519] [TELEMETRY] Pose(map): (0.047, 0.324, 91.707deg) | Odom: (1.443, -1.011, -116.740deg, wz=-0.026) | CmdVel: (vx=0.202, wz=-0.026) | Localization: DEAD_RECKONING age=1.429s distance=0.311m | state=NAVIGATING;route=to_5;waypoint=upper_corner_to_east;index=1;count=3;retry=0
+[1788520223.519] [TELEMETRY] Pose(map): (0.009, 0.694, 93.836deg) | Odom: (1.239, -1.390, -121.963deg, wz=-0.181) | CmdVel: (vx=0.220, wz=-0.181) | Localization: MARKER_CORRECTED age=0.015s distance=0.010m | state=NAVIGATING;route=to_5;waypoint=upper_corner_to_east;index=1;count=3;retry=0
+[1788520225.519] [TELEMETRY] Pose(map): (-0.019, 1.076, 93.699deg) | Odom: (0.982, -1.734, -129.926deg, wz=-0.026) | CmdVel: (vx=0.202, wz=-0.026) | Localization: MARKER_CORRECTED age=0.023s distance=0.008m | state=NAVIGATING;route=to_5;waypoint=upper_corner_to_east;index=1;count=3;retry=0
+[1788520227.520] [TELEMETRY] Pose(map): (-0.029, 1.496, 90.513deg) | Odom: (0.692, -2.049, -134.114deg, wz=0.000) | CmdVel: (vx=0.220, wz=-0.026) | Localization: MARKER_CORRECTED age=0.001s distance=0.000m | state=NAVIGATING;route=to_5;waypoint=upper_corner_to_east;index=1;count=3;retry=0
+[1788520229.520] [TELEMETRY] Pose(map): (-0.028, 1.857, 90.570deg) | Odom: (0.382, -2.342, -139.503deg, wz=-0.078) | CmdVel: (vx=0.220, wz=0.000) | Localization: MARKER_CORRECTED age=0.015s distance=0.008m | state=NAVIGATING;route=to_5;waypoint=upper_corner_to_east;index=1;count=3;retry=0
+[1788520231.520] [TELEMETRY] Pose(map): (-0.020, 2.248, 87.368deg) | Odom: (0.059, -2.598, -144.139deg, wz=-0.078) | CmdVel: (vx=0.183, wz=-0.078) | Localization: MARKER_CORRECTED age=0.630s distance=0.137m | state=NAVIGATING;route=to_5;waypoint=upper_corner_to_east;index=1;count=3;retry=0
+[1788520233.520] [TELEMETRY] Pose(map): (-0.010, 2.409, 61.162deg) | Odom: (-0.073, -2.690, -171.237deg, wz=-0.750) | CmdVel: (vx=0.000, wz=-0.750) | Localization: DEAD_RECKONING age=2.610s distance=0.298m | state=NAVIGATING;route=to_5;waypoint=upper_corner_to_east;index=1;count=3;retry=0
+[1788520235.520] [TELEMETRY] Pose(map): (-0.010, 2.409, 15.019deg) | Odom: (-0.073, -2.690, 143.451deg, wz=-0.181) | CmdVel: (vx=0.000, wz=-0.181) | Localization: DEAD_RECKONING age=4.623s distance=0.298m | state=NAVIGATING;route=to_5;waypoint=upper_corner_to_east;index=1;count=3;retry=0
+[1788520236.096] [WAYPOINT_REACHED] Pose(map): (-0.024, 2.384, 11.660deg) | ArUcoRecent: YES (ID: 5) | Nav2 completed waypoint 'upper_corner_to_east'.
+[1788520236.119] [WAYPOINT_START] Pose(map): (-0.024, 2.384, 11.456deg) | ArUcoRecent: YES (ID: 5) | Sending waypoint 3/3 'endpoint_5' pose=(1, 2.5, 0 rad), role=endpoint, goal_id=3
+[1788520236.133] [NAV_ACCEPTED] Pose(map): (-0.024, 2.384, 11.456deg) | ArUcoRecent: YES (ID: 5) | Nav2 accepted goal_id=3
+[1788520237.520] [TELEMETRY] Pose(map): (0.240, 2.376, 11.432deg) | Odom: (-0.271, -2.482, 129.503deg, wz=-0.129) | CmdVel: (vx=0.211, wz=-0.129) | Localization: MARKER_CORRECTED age=0.000s distance=0.000m | state=NAVIGATING;route=to_5;waypoint=endpoint_5;index=2;count=3;retry=0
+[1788520239.520] [TELEMETRY] Pose(map): (0.646, 2.458, 6.079deg) | Odom: (-0.502, -2.128, 115.760deg, wz=-0.129) | CmdVel: (vx=0.211, wz=-0.129) | Localization: MARKER_CORRECTED age=0.142s distance=0.034m | state=NAVIGATING;route=to_5;waypoint=endpoint_5;index=2;count=3;retry=0
+[1788520241.271] [WAYPOINT_REACHED] Pose(map): (0.883, 2.487, 7.402deg) | ArUcoRecent: NO (ID: 5) | Nav2 completed waypoint 'endpoint_5'.
+[1788520241.296] [ROUTE_COMPLETE] Pose(map): (0.883, 2.487, 7.402deg) | ArUcoRecent: NO (ID: 5) | Completed virtual route 'to_5'.

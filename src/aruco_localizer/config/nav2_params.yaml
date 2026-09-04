@@ -69,8 +69,9 @@ controller_server:
     controller_plugins: ["FollowPath"]
 
     progress_checker:
-      plugin: "nav2_controller::SimpleProgressChecker"
+      plugin: "nav2_controller::PoseProgressChecker"
       required_movement_radius: 0.05
+      required_movement_angle: 0.10
       movement_time_allowance: 12.0
     general_goal_checker:
       stateful: True
@@ -80,6 +81,13 @@ controller_server:
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
+      # Keep DWB's rotate-only window inside the goal checker's 0.12m
+      # position window. A wider DWB window deadlocks at its boundary:
+      # translation is forbidden before the goal checker can succeed.
+      xy_goal_tolerance: 0.10
+      trans_stopped_velocity: 0.05
+      short_circuit_trajectory_evaluation: True
+      stateful: True
       min_vel_x: 0.0
       min_vel_y: 0.0
       max_vel_x: 0.22
@@ -108,6 +116,8 @@ controller_server:
       GoalAlign.scale: 24.0
       GoalDist.scale: 24.0
       RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.lookahead_time: -1.0
 
 local_costmap:
   local_costmap:

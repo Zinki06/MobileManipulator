@@ -1,0 +1,51 @@
+# Physical ArUco landmark poses are intentionally not stored here.
+# These are robot base poses in the map frame and must be calibrated at the
+# intended safe pivots. Checked-in values preserve the old geometry only as
+# initial values; they are not derived from marker observations at runtime.
+waypoints:
+  endpoint_0:
+    x: 1.0
+    y: -0.5
+    yaw: 0.0
+    role: endpoint
+
+  lower_corner_to_north:
+    x: 0.0
+    y: -0.5
+    yaw: 1.5707963267948966
+    role: turn
+
+  lower_corner_to_east:
+    x: 0.0
+    y: -0.5
+    yaw: 0.0
+    role: turn
+
+  upper_corner_to_east:
+    x: 0.0
+    y: 2.5
+    yaw: 0.0
+    role: turn
+
+  upper_corner_to_south:
+    x: 0.0
+    y: 2.5
+    yaw: -1.5707963267948966
+    role: turn
+
+  endpoint_5:
+    x: 1.0
+    y: 2.5
+    yaw: 0.0
+    role: endpoint
+
+routes:
+  to_5:
+    - lower_corner_to_north
+    - upper_corner_to_east
+    - endpoint_5
+
+  to_0:
+    - upper_corner_to_south
+    - lower_corner_to_east
+    - endpoint_0

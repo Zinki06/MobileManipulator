@@ -26,6 +26,23 @@ find_package(std_srvs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
 
+# Route configuration is kept as a ROS-independent library so parsing and
+# validation can be tested without starting a node.
+add_library(route_config src/route_config.cpp)
+target_include_directories(route_config PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(route_config yaml-cpp)
+
+# Marker correction acceptance is isolated from camera/TF plumbing so the
+# near-field and motion gates can be regression tested independently.
+add_library(localization_policy src/localization_policy.cpp)
+target_include_directories(localization_policy PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
 # -------------------------------------------------------------
 # 1. 아루코 마커 기반 위치 추정 노드 (aruco_localizer_node)
 # -------------------------------------------------------------
@@ -36,9 +53,11 @@ target_include_directories(aruco_localizer_node PRIVATE
   ${EIGEN3_INCLUDE_DIRS}
 )
 target_link_libraries(aruco_localizer_node
+  localization_policy
   rclcpp::rclcpp
   ${sensor_msgs_TARGETS}
   ${geometry_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
   ${std_msgs_TARGETS}
   tf2::tf2
   tf2_ros::tf2_ros
@@ -75,23 +94,40 @@ target_link_libraries(map_marker_publisher_node
 # -------------------------------------------------------------
 add_executable(aruco_waypoint_navigator_node src/aruco_waypoint_navigator_node.cpp)
 target_include_directories(aruco_waypoint_navigator_node PRIVATE
-  ${OpenCV_INCLUDE_DIRS}
-  ${YAML_CPP_INCLUDE_DIRS}
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 target_link_libraries(aruco_waypoint_navigator_node
+  route_config
   rclcpp::rclcpp
   rclcpp_action::rclcpp_action
   ${geometry_msgs_TARGETS}
-  ${sensor_msgs_TARGETS}
   ${visualization_msgs_TARGETS}
   ${std_srvs_TARGETS}
   ${std_msgs_TARGETS}
   ${nav2_msgs_TARGETS}
   tf2::tf2
+  tf2_ros::tf2_ros
+  tf2_geometry_msgs::tf2_geometry_msgs
+)
+
+# -------------------------------------------------------------
+# 4. Navigation event/image blackbox recorder
+# -------------------------------------------------------------
+add_executable(navigation_debug_recorder_node src/navigation_debug_recorder_node.cpp)
+target_include_directories(navigation_debug_recorder_node PRIVATE
+  ${OpenCV_INCLUDE_DIRS}
+)
+target_link_libraries(navigation_debug_recorder_node
+  rclcpp::rclcpp
+  ${geometry_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
+  ${sensor_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  tf2::tf2
+  tf2_ros::tf2_ros
   tf2_geometry_msgs::tf2_geometry_msgs
   cv_bridge::cv_bridge
   ${OpenCV_LIBS}
-  yaml-cpp
 )
 
 # -------------------------------------------------------------
@@ -102,7 +138,13 @@ install(TARGETS
   aruco_localizer_node
   map_marker_publisher_node
   aruco_waypoint_navigator_node
+  navigation_debug_recorder_node
+  route_config
+  localization_policy
   DESTINATION lib/${PROJECT_NAME}
+)
+install(DIRECTORY include/
+  DESTINATION include
 )
 # launch, map, config 폴더를 모두 share 디렉터리로 복사
 install(DIRECTORY launch map config
@@ -113,5 +155,21 @@ install(PROGRAMS
   scripts/calibrate_waypoints.py
   DESTINATION lib/${PROJECT_NAME}
 )
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(test_route_config test/test_route_config.cpp)
+  target_link_libraries(test_route_config route_config)
+
+  ament_add_gtest(test_localization_policy test/test_localization_policy.cpp)
+  target_link_libraries(test_localization_policy localization_policy)
+
+  ament_add_gtest(test_nav2_config test/test_nav2_config.cpp)
+  target_compile_definitions(test_nav2_config PRIVATE
+    NAV2_PARAMS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/config/nav2_params.yaml"
+  )
+  target_link_libraries(test_nav2_config yaml-cpp)
+endif()
 
 ament_package()
