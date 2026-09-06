@@ -25,6 +25,16 @@ find_package(rclcpp_action REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+add_executable(motion_guard_node src/motion_guard_node.cpp)
+ament_target_dependencies(motion_guard_node rclcpp geometry_msgs std_msgs sensor_msgs
+  tf2 tf2_ros tf2_geometry_msgs)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/MarkerObservation.msg"
+  DEPENDENCIES std_msgs
+)
 
 # Route configuration is kept as a ROS-independent library so parsing and
 # validation can be tested without starting a node.
@@ -39,6 +49,13 @@ target_link_libraries(route_config yaml-cpp)
 # near-field and motion gates can be regression tested independently.
 add_library(localization_policy src/localization_policy.cpp)
 target_include_directories(localization_policy PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(motion_guard_node localization_policy)
+
+add_library(marker_guidance src/marker_guidance.cpp)
+target_include_directories(marker_guidance PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
@@ -68,6 +85,9 @@ target_link_libraries(aruco_localizer_node
   ${OpenCV_LIBS}
   yaml-cpp
 )
+rosidl_get_typesupport_target(aruco_typesupport_target
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(aruco_localizer_node "${aruco_typesupport_target}")
 
 # -------------------------------------------------------------
 # 2. 맵 PGM/YAML 및 마커 시각화 발행 노드 (map_marker_publisher_node)
@@ -98,6 +118,7 @@ target_include_directories(aruco_waypoint_navigator_node PRIVATE
 )
 target_link_libraries(aruco_waypoint_navigator_node
   route_config
+  marker_guidance
   rclcpp::rclcpp
   rclcpp_action::rclcpp_action
   ${geometry_msgs_TARGETS}
@@ -109,6 +130,8 @@ target_link_libraries(aruco_waypoint_navigator_node
   tf2_ros::tf2_ros
   tf2_geometry_msgs::tf2_geometry_msgs
 )
+target_link_libraries(
+  aruco_waypoint_navigator_node "${aruco_typesupport_target}")
 
 # -------------------------------------------------------------
 # 4. Navigation event/image blackbox recorder
@@ -129,25 +152,29 @@ target_link_libraries(navigation_debug_recorder_node
   cv_bridge::cv_bridge
   ${OpenCV_LIBS}
 )
+target_link_libraries(
+  navigation_debug_recorder_node "${aruco_typesupport_target}")
 
 # -------------------------------------------------------------
 # 설치 규칙
 # -------------------------------------------------------------
 # 1) 빌드된 C++ 실행 파일 설치
 install(TARGETS
+  motion_guard_node
   aruco_localizer_node
   map_marker_publisher_node
   aruco_waypoint_navigator_node
   navigation_debug_recorder_node
   route_config
   localization_policy
+  marker_guidance
   DESTINATION lib/${PROJECT_NAME}
 )
 install(DIRECTORY include/
   DESTINATION include
 )
 # launch, map, config 폴더를 모두 share 디렉터리로 복사
-install(DIRECTORY launch map config
+install(DIRECTORY launch map config behavior_trees
   DESTINATION share/${PROJECT_NAME}
 )
 # Python 스크립트 설치
@@ -158,12 +185,21 @@ install(PROGRAMS
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_navigation_trees test/test_navigation_trees.py)
+  ament_add_pytest_test(test_motion_safety test/test_motion_safety.py TIMEOUT 60)
 
   ament_add_gtest(test_route_config test/test_route_config.cpp)
+  target_compile_definitions(test_route_config PRIVATE
+    ROUTES_CONFIG_PATH="${CMAKE_CURRENT_SOURCE_DIR}/config/routes.yaml"
+  )
   target_link_libraries(test_route_config route_config)
 
   ament_add_gtest(test_localization_policy test/test_localization_policy.cpp)
   target_link_libraries(test_localization_policy localization_policy)
+
+  ament_add_gtest(test_marker_guidance test/test_marker_guidance.cpp)
+  target_link_libraries(test_marker_guidance marker_guidance)
 
   ament_add_gtest(test_nav2_config test/test_nav2_config.cpp)
   target_compile_definitions(test_nav2_config PRIVATE
@@ -172,4 +208,5 @@ if(BUILD_TESTING)
   target_link_libraries(test_nav2_config yaml-cpp)
 endif()
 
+ament_export_dependencies(rosidl_default_runtime)
 ament_package()

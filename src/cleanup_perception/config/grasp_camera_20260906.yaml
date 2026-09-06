@@ -1,0 +1,19 @@
+# Experimental floor calibration, second wrist sweep. Lateral translation uncalibrated.
+scan_perception_node:
+  ros__parameters:
+    use_grasp_camera_calibration: true
+    grasp_camera_frame: camera_color_optical_frame
+    grasp_camera_translation:
+    - 0.10229101273989573
+    - 0.03223191846162081
+    - 0.034080735911105914
+    grasp_camera_rotation:
+    - -0.01575923337649378
+    - -0.15802101863353826
+    - 0.9873099838619096
+    - -0.9997471028648348
+    - 0.018333597690168534
+    - -0.013023421559060222
+    - -0.01604296969875464
+    - -0.9872655351351803
+    - -0.15826997901526033

@@ -58,9 +58,22 @@ RouteConfig RouteConfig::loadFromFile(const std::string & path)
     waypoint.y = requiredFiniteDouble(value, "y", "Waypoint '" + name + "'");
     waypoint.yaw = requiredFiniteDouble(value, "yaw", "Waypoint '" + name + "'");
     waypoint.role = value["role"] ? value["role"].as<std::string>() : "transit";
+    waypoint.marker_id = value["marker_id"] ? value["marker_id"].as<int>() : -1;
+    if (waypoint.marker_id < -1) {
+      throw std::runtime_error(
+              "Waypoint '" + name + "' marker_id must be non-negative");
+    }
 
     if (!config.waypoints_.emplace(name, std::move(waypoint)).second) {
       throw std::runtime_error("Duplicate waypoint name: " + name);
+    }
+    const int marker_id = config.waypoints_.at(name).marker_id;
+    if (marker_id >= 0 &&
+      !config.marker_waypoints_.emplace(marker_id, name).second)
+    {
+      throw std::runtime_error(
+              "Duplicate marker_id in waypoint config: " +
+              std::to_string(marker_id));
     }
   }
 
@@ -119,6 +132,22 @@ const std::vector<std::string> & RouteConfig::route(const std::string & name) co
 bool RouteConfig::hasRoute(const std::string & name) const
 {
   return routes_.count(name) != 0U;
+}
+
+bool RouteConfig::hasMarkerWaypoint(int marker_id) const
+{
+  return marker_waypoints_.count(marker_id) != 0U;
+}
+
+const RouteWaypoint & RouteConfig::waypointForMarker(int marker_id) const
+{
+  const auto iterator = marker_waypoints_.find(marker_id);
+  if (iterator == marker_waypoints_.end()) {
+    throw std::out_of_range(
+            "No waypoint is associated with marker_id " +
+            std::to_string(marker_id));
+  }
+  return waypoint(iterator->second);
 }
 
 const std::unordered_map<std::string, RouteWaypoint> & RouteConfig::waypoints() const

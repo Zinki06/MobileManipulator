@@ -1,3 +1,5 @@
+#include "aruco_localizer/msg/marker_observation.hpp"
+
 #include <rclcpp/rclcpp.hpp>
 
 #include <geometry_msgs/msg/twist.hpp>
@@ -76,6 +78,14 @@ public:
       "/aruco/last_marker_id", 10,
       [this](const std_msgs::msg::Int32::SharedPtr message) {
         last_marker_id_ = message->data;
+      });
+    marker_observation_sub_ =
+      this->create_subscription<aruco_localizer::msg::MarkerObservation>(
+      "/aruco/marker_observation", rclcpp::SensorDataQoS(),
+      [this](const aruco_localizer::msg::MarkerObservation::SharedPtr message) {
+        raw_marker_id_ = message->marker_id;
+        raw_marker_bearing_ = message->bearing;
+        raw_marker_received_at_ = this->now();
       });
     localization_mode_sub_ = this->create_subscription<std_msgs::msg::String>(
       "/aruco/localization_mode", 10,
@@ -177,7 +187,16 @@ private:
       line << "unavailable";
     }
     line << " | ArUcoRecent: " << (localization_fresh_ ? "YES" : "NO") <<
-      " (ID: " << last_marker_id_ << ") | " << details;
+      " (ID: " << last_marker_id_ << ") | RawMarker: ";
+    if (raw_marker_received_at_.nanoseconds() != 0 &&
+      (this->now() - raw_marker_received_at_).seconds() <= 1.0)
+    {
+      line << "ID=" << raw_marker_id_ << " bearing=" <<
+        raw_marker_bearing_ * 180.0 / M_PI << "deg";
+    } else {
+      line << "none";
+    }
+    line << " | " << details;
 
     appendToLogs(line.str());
 
@@ -231,7 +250,16 @@ private:
 
     line << " | Localization: " << localization_mode_ <<
       " age=" << correction_age_ << "s distance=" <<
-      distance_since_correction_ << "m | " << route_status_;
+      distance_since_correction_ << "m | RawMarker: ";
+    if (raw_marker_received_at_.nanoseconds() != 0 &&
+      (this->now() - raw_marker_received_at_).seconds() <= 1.0)
+    {
+      line << "ID=" << raw_marker_id_ << " bearing=" <<
+        raw_marker_bearing_ * 180.0 / M_PI << "deg";
+    } else {
+      line << "none";
+    }
+    line << " | " << route_status_;
     appendToLogs(line.str());
   }
 
@@ -292,6 +320,7 @@ private:
   bool has_odom_{false};
   bool has_command_{false};
   int last_marker_id_{-1};
+  int raw_marker_id_{-1};
   int snapshot_counter_{0};
   double correction_age_{-1.0};
   double distance_since_correction_{0.0};
@@ -301,6 +330,8 @@ private:
   double odom_angular_speed_{0.0};
   double command_linear_speed_{0.0};
   double command_angular_speed_{0.0};
+  double raw_marker_bearing_{0.0};
+  rclcpp::Time raw_marker_received_at_{0, 0, RCL_ROS_TIME};
   cv::Mat latest_image_;
 
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
@@ -309,6 +340,8 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr route_status_sub_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr localization_fresh_sub_;
   rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr marker_id_sub_;
+  rclcpp::Subscription<aruco_localizer::msg::MarkerObservation>::SharedPtr
+    marker_observation_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr localization_mode_sub_;
   rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr correction_age_sub_;
   rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr correction_distance_sub_;

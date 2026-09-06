@@ -1,0 +1,133 @@
+1788607581.417404 [MISSION_START] Starting 0-to-5 station cleanup; drop zone=scan_station_2_collection, planner=gemini.
+1788607581.417681 [ARM_PARK_START] Parking the arm before station scanning.
+1788607584.475029 [NAVIGATION_START] purpose=station, operation=2, goal=(1.000000,-0.500000), yaw=3.141593.
+1788607587.188367 [STATION_SCAN_START] station=scan_station_0, four-heading scan starting.
+1788607587.539047 [SCAN_TURN_START] station=scan_station_0, turn=1/4, command=-1.565152rad.
+1788607593.043546 [SCAN_TURN_COMPLETE] station=scan_station_0, heading=0 ready after settling.
+1788607593.394145 [SCAN_CAPTURE_START] station=scan_station_0, heading=0.
+1788607593.854105 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607593.854357 [SCAN_TURN_START] station=scan_station_0, turn=2/4, command=-1.487315rad.
+1788607599.159341 [SCAN_TURN_COMPLETE] station=scan_station_0, heading=1 ready after settling.
+1788607599.509951 [SCAN_CAPTURE_START] station=scan_station_0, heading=1.
+1788607600.090664 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607600.090925 [SCAN_TURN_START] station=scan_station_0, turn=3/4, command=-1.483028rad.
+1788607605.093205 [SCAN_TURN_COMPLETE] station=scan_station_0, heading=2 ready after settling.
+1788607605.443995 [SCAN_CAPTURE_START] station=scan_station_0, heading=2.
+1788607606.079040 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607606.079337 [SCAN_TURN_START] station=scan_station_0, turn=4/4, command=-1.476625rad.
+1788607610.982984 [SCAN_TURN_COMPLETE] station=scan_station_0, heading=3 ready after settling.
+1788607611.333684 [SCAN_CAPTURE_START] station=scan_station_0, heading=3.
+1788607611.541455 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607611.541649 [STATION_SCAN_COMPLETE] station=scan_station_0, confirmed_objects=0.
+1788607611.542044 [PLANNING_NOT_REQUIRED] No eligible confirmed candidates; Gemini not called at scan_station_0
+1788607611.542133 [NAVIGATION_START] purpose=station, operation=16, goal=(0.000000,-0.500000), yaw=1.570796.
+1788607629.715590 [STATION_SCAN_START] station=scan_station_1, four-heading scan starting.
+1788607630.066302 [SCAN_TURN_START] station=scan_station_1, turn=1/4, command=-1.536931rad.
+1788607635.169860 [SCAN_TURN_COMPLETE] station=scan_station_1, heading=0 ready after settling.
+1788607635.520602 [SCAN_CAPTURE_START] station=scan_station_1, heading=0.
+1788607635.867222 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607635.867490 [SCAN_TURN_START] station=scan_station_1, turn=2/4, command=-1.485551rad.
+1788607640.869355 [SCAN_TURN_COMPLETE] station=scan_station_1, heading=1 ready after settling.
+1788607641.220105 [SCAN_CAPTURE_START] station=scan_station_1, heading=1.
+1788607641.631103 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607641.631414 [SCAN_TURN_START] station=scan_station_1, turn=3/4, command=-1.486379rad.
+1788607646.633670 [SCAN_TURN_COMPLETE] station=scan_station_1, heading=2 ready after settling.
+1788607646.984283 [SCAN_CAPTURE_START] station=scan_station_1, heading=2.
+1788607649.396439 [SCAN_CAPTURE_COMPLETE] captured 3 frames and confirmed 1 objects; evidence=/home/user/turtlebot3_ws/cleanup_debug/run_20260905_202621_36808/scan_station_1/heading_2_capture_007.jpg.
+1788607649.396745 [SCAN_TURN_START] station=scan_station_1, turn=4/4, command=-1.483504rad.
+1788607654.399562 [SCAN_TURN_COMPLETE] station=scan_station_1, heading=3 ready after settling.
+1788607654.750441 [SCAN_CAPTURE_START] station=scan_station_1, heading=3.
+1788607655.194579 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607655.194815 [STATION_SCAN_COMPLETE] station=scan_station_1, confirmed_objects=1.
+1788607655.195443 [OBSERVATION_ALIGN_START] UUID=56c022c6-5a61-4ae4-af9e-21852b704299, yaw_error=1.308932
+1788607660.498237 [OBSERVATION_CAPTURE_START] UUID=56c022c6-5a61-4ae4-af9e-21852b704299
+1788607662.505290 [OBSERVATION_COMPLETE] UUID=56c022c6-5a61-4ae4-af9e-21852b704299; captured 3 frames and confirmed 1 objects; evidence=/home/user/turtlebot3_ws/cleanup_debug/run_20260905_202621_36808/scan_station_1_observation/heading_249_capture_009_object_0.jpg
+1788607662.505922 [PLANNING_START] Sending 1 validated candidates to the bounded planner.
+1788607665.706627 [PLAN_ACCEPTED] planner=gemini:gemini-3.5-flash-lite, fallback=false, UUID=56c022c6-5a61-4ae4-af9e-21852b704299, reason=바닥에 안전하게 위치한 바나나입니다..
+1788607665.706829 [GRASP_REACHABILITY_START] UUID=56c022c6-5a61-4ae4-af9e-21852b704299; attempt=0
+1788607665.708187 [GRASP_REACHABILITY_RESULT] link1 target x=0.393066, y=0.011587, z=-0.047498; feasible base standoff=0.240000
+1788607665.708384 [OBJECT_REAPPROACH_START] attempt=1; goal=(0.064008,-0.449145); link1 target x=0.393066, y=0.011587, z=-0.047498; feasible base standoff=0.240000
+1788607665.708467 [NAVIGATION_START] purpose=object, operation=36, goal=(0.064008,-0.449145), yaw=-3.019559.
+1788607670.757086 [TARGET_REACQUIRE_START] Re-detecting reserved UUID 56c022c6-5a61-4ae4-af9e-21852b704299 before pick.
+1788607672.550493 [OBJECT_FAILED] No verified object-body centroid: Object clipped by image boundary; this object is skipped without aborting the station route.
+1788607675.606658 [NAVIGATION_START] purpose=return_station, operation=39, goal=(0.000000,-0.500000), yaw=1.570796.
+1788607681.169066 [PLANNING_NOT_REQUIRED] No eligible confirmed candidates; Gemini not called at scan_station_1
+1788607681.169361 [NAVIGATION_START] purpose=station, operation=40, goal=(0.000000,0.500000), yaw=1.570796.
+1788607691.541910 [STATION_SCAN_START] station=scan_station_2, four-heading scan starting.
+1788607691.892596 [SCAN_TURN_START] station=scan_station_2, turn=1/4, command=-1.570796rad.
+1788607697.195154 [SCAN_TURN_COMPLETE] station=scan_station_2, heading=0 ready after settling.
+1788607697.545858 [SCAN_CAPTURE_START] station=scan_station_2, heading=0.
+1788607697.948124 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607697.948454 [SCAN_TURN_START] station=scan_station_2, turn=2/4, command=-1.472322rad.
+1788607702.951110 [SCAN_TURN_COMPLETE] station=scan_station_2, heading=1 ready after settling.
+1788607703.301676 [SCAN_CAPTURE_START] station=scan_station_2, heading=1.
+1788607703.901074 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607703.901337 [SCAN_TURN_START] station=scan_station_2, turn=3/4, command=-1.469623rad.
+1788607708.804017 [SCAN_TURN_COMPLETE] station=scan_station_2, heading=2 ready after settling.
+1788607709.155060 [SCAN_CAPTURE_START] station=scan_station_2, heading=2.
+1788607709.715963 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607709.716290 [SCAN_TURN_START] station=scan_station_2, turn=4/4, command=-1.485091rad.
+1788607714.718693 [SCAN_TURN_COMPLETE] station=scan_station_2, heading=3 ready after settling.
+1788607715.069381 [SCAN_CAPTURE_START] station=scan_station_2, heading=3.
+1788607715.411035 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607715.411271 [STATION_SCAN_COMPLETE] station=scan_station_2, confirmed_objects=0.
+1788607715.412042 [PLANNING_NOT_REQUIRED] No eligible confirmed candidates; Gemini not called at scan_station_2
+1788607715.412130 [NAVIGATION_START] purpose=station, operation=54, goal=(0.000000,1.500000), yaw=1.570796.
+1788607727.844851 [STATION_SCAN_START] station=scan_station_3, four-heading scan starting.
+1788607728.195539 [SCAN_TURN_START] station=scan_station_3, turn=1/4, command=-1.580321rad.
+1788607733.497938 [SCAN_TURN_COMPLETE] station=scan_station_3, heading=0 ready after settling.
+1788607733.848683 [SCAN_CAPTURE_START] station=scan_station_3, heading=0.
+1788607734.277740 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607734.278052 [SCAN_TURN_START] station=scan_station_3, turn=2/4, command=-1.471793rad.
+1788607764.280589 [SCAN_RECENTER_START] Nav2 scan spin failed; recenter=1.
+1788607764.280881 [NAVIGATION_START] purpose=scan_recovery, operation=60, goal=(0.000000,1.500000), yaw=1.570796.
+1788607772.203754 [SCAN_TURN_START] station=scan_station_3, turn=2/4, command=-2.858501rad.
+1788607781.610867 [SCAN_TURN_COMPLETE] station=scan_station_3, heading=1 ready after settling.
+1788607781.961858 [SCAN_CAPTURE_START] station=scan_station_3, heading=1.
+1788607782.218208 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607782.218491 [SCAN_TURN_START] station=scan_station_3, turn=3/4, command=-1.482323rad.
+1788607787.221194 [SCAN_TURN_COMPLETE] station=scan_station_3, heading=2 ready after settling.
+1788607787.572000 [SCAN_CAPTURE_START] station=scan_station_3, heading=2.
+1788607789.581870 [SCAN_CAPTURE_COMPLETE] captured 3 frames and confirmed 1 objects; evidence=/home/user/turtlebot3_ws/cleanup_debug/run_20260905_202621_36808/scan_station_3/heading_2_capture_017.jpg.
+1788607789.582267 [SCAN_TURN_START] station=scan_station_3, turn=4/4, command=-1.487208rad.
+1788607794.584644 [SCAN_TURN_COMPLETE] station=scan_station_3, heading=3 ready after settling.
+1788607794.935290 [SCAN_CAPTURE_START] station=scan_station_3, heading=3.
+1788607797.058232 [SCAN_CAPTURE_COMPLETE] captured 3 frames and confirmed 1 objects; evidence=/home/user/turtlebot3_ws/cleanup_debug/run_20260905_202621_36808/scan_station_3/heading_3_capture_018.jpg.
+1788607797.058504 [STATION_SCAN_COMPLETE] station=scan_station_3, confirmed_objects=1.
+1788607797.059391 [OBSERVATION_ALIGN_START] UUID=8548e26f-04b5-4e3a-b9c8-39eb52761b16, yaw_error=0.887746
+1788607801.062202 [OBSERVATION_CAPTURE_START] UUID=8548e26f-04b5-4e3a-b9c8-39eb52761b16
+1788607803.450695 [OBSERVATION_COMPLETE] UUID=8548e26f-04b5-4e3a-b9c8-39eb52761b16; captured 3 frames and confirmed 1 objects; evidence=/home/user/turtlebot3_ws/cleanup_debug/run_20260905_202621_36808/scan_station_3_observation/heading_249_capture_019_object_0.jpg
+1788607803.451265 [PLANNING_START] Sending 1 validated candidates to the bounded planner.
+1788607806.686700 [PLAN_ACCEPTED] planner=gemini:gemini-3.5-flash-lite, fallback=false, UUID=8548e26f-04b5-4e3a-b9c8-39eb52761b16, reason=바나나가 바닥에 안전하게 위치해 있으며 수집 가능합니다..
+1788607806.686909 [GRASP_REACHABILITY_START] UUID=8548e26f-04b5-4e3a-b9c8-39eb52761b16; attempt=0
+1788607806.688260 [GRASP_REACHABILITY_RESULT] link1 target x=0.408005, y=0.006337, z=-0.053535; feasible base standoff=0.240000
+1788607806.688557 [OBJECT_REAPPROACH_START] attempt=1; goal=(-0.024450,1.374817); link1 target x=0.408005, y=0.006337, z=-0.053535; feasible base standoff=0.240000
+1788607806.688677 [NAVIGATION_START] purpose=object, operation=77, goal=(-0.024450,1.374817), yaw=2.655352.
+1788607813.097803 [TARGET_REACQUIRE_START] Re-detecting reserved UUID 8548e26f-04b5-4e3a-b9c8-39eb52761b16 before pick.
+1788607814.805012 [GRASP_REACHABILITY_START] UUID=8548e26f-04b5-4e3a-b9c8-39eb52761b16; attempt=1
+1788607814.806802 [GRASP_REACHABILITY_RESULT] link1 target x=0.355895, y=-0.003364, z=-0.054047
+1788607814.807023 [PICK_START] Published fresh target for UUID 8548e26f-04b5-4e3a-b9c8-39eb52761b16.
+1788607825.278029 [PICK_VERIFY_START] Checking whether UUID 8548e26f-04b5-4e3a-b9c8-39eb52761b16 remains on the floor.
+1788607827.245233 [PICK_RETRY] Object still detected; retry=1.
+1788607827.245438 [OBJECT_FAILED] No verified object-body centroid: Object clipped by image boundary; this object is skipped without aborting the station route.
+1788607827.245496 [RECOVERY_RELEASE_START] Opening the gripper because the failed pick may still be held.
+1788607831.202517 [NAVIGATION_START] purpose=return_station, operation=85, goal=(0.000000,1.500000), yaw=1.570796.
+1788607835.093815 [PLANNING_NOT_REQUIRED] No eligible confirmed candidates; Gemini not called at scan_station_3
+1788607835.094038 [NAVIGATION_START] purpose=station, operation=86, goal=(0.000000,2.500000), yaw=0.000000.
+1788607852.066263 [STATION_SCAN_START] station=scan_station_4, four-heading scan starting.
+1788607852.417143 [SCAN_TURN_START] station=scan_station_4, turn=1/4, command=-1.538519rad.
+1788607857.520358 [SCAN_TURN_COMPLETE] station=scan_station_4, heading=0 ready after settling.
+1788607857.870999 [SCAN_CAPTURE_START] station=scan_station_4, heading=0.
+1788607858.554042 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607858.554348 [SCAN_TURN_START] station=scan_station_4, turn=2/4, command=-1.482729rad.
+1788607863.556401 [SCAN_TURN_COMPLETE] station=scan_station_4, heading=1 ready after settling.
+1788607863.907097 [SCAN_CAPTURE_START] station=scan_station_4, heading=1.
+1788607864.974025 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607864.974362 [SCAN_TURN_START] station=scan_station_4, turn=3/4, command=-1.457629rad.
+1788607869.876666 [SCAN_TURN_COMPLETE] station=scan_station_4, heading=2 ready after settling.
+1788607870.227388 [SCAN_CAPTURE_START] station=scan_station_4, heading=2.
+1788607870.732662 [SCAN_CAPTURE_COMPLETE] YOLO preview: no target in 2 frames; no photos saved; evidence=.
+1788607870.733087 [SCAN_TURN_START] station=scan_station_4, turn=4/4, command=-1.470628rad.
+1788607875.636369 [SCAN_TURN_COMPLETE] station=scan_station_4, heading=3 ready after settling.
+1788607875.987121 [SCAN_CAPTURE_START] station=scan_station_4, heading=3.
+1788607876.442379 [MISSION_FAILED] Localization became DEGRADED during cleanup.

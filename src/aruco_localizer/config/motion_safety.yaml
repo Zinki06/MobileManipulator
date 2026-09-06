@@ -1,0 +1,38 @@
+collision_monitor:
+  ros__parameters:
+    use_sim_time: false
+    base_frame_id: base_link
+    odom_frame_id: odom
+    cmd_vel_in_topic: /cmd_vel_smoothed
+    cmd_vel_out_topic: /cmd_vel_collision_checked
+    transform_tolerance: 0.2
+    source_timeout: 0.6
+    base_shift_correction: true
+    # Keep the zero-output heartbeat while a commanded motion is collision-blocked.
+    # The separate guard still stops on genuinely missing input after 0.25 seconds.
+    stop_pub_timeout: 3600.0
+    polygons: [StopFootprint, ApproachFootprint]
+    StopFootprint:
+      type: circle
+      radius: 0.22
+      action_type: stop
+      max_points: 1
+      visualize: true
+      polygon_pub_topic: /safety/stop_footprint
+    ApproachFootprint:
+      type: circle
+      radius: 0.20
+      action_type: approach
+      time_before_collision: 1.5
+      simulation_time_step: 0.05
+      max_points: 1
+      visualize: false
+    observation_sources: [scan, depth_points]
+    scan:
+      type: scan
+      topic: /scan
+    depth_points:
+      type: pointcloud
+      topic: /cleanup/obstacle_points
+      min_height: 0.08
+      max_height: 1.5

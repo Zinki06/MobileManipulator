@@ -1,0 +1,9 @@
+# Floor location of the collection point, in a transformable world frame.
+geometry_msgs/PointStamped floor_target
+# Nominal TCP height above that floor when opening (metres).
+float64 release_height
+---
+bool success
+# True once opening was confirmed, even if the subsequent arm retreat failed.
+bool released
+string message

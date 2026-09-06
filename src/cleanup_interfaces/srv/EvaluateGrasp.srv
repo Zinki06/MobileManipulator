@@ -1,0 +1,9 @@
+# Read-only reachability check. No base or arm motion is commanded here.
+geometry_msgs/PointStamped target
+bool require_candidate
+---
+bool success
+bool reachable
+bool approach_available
+geometry_msgs/PoseStamped approach_pose
+string message

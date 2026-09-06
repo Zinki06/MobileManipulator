@@ -1,14 +1,48 @@
 cleanup:
-  # Set this to true only after teaching a safe base pose beside the collection bin.
+  # ID 3 is at map (0, 1.5). The sketch's outer/green side is negative map X.
+  # Base stopping pose, distinct from the object collection point below.
   drop_pose:
-    configured: false
-    x: 1.0
-    y: -0.5
-    yaw: 0.0
+    configured: true
+    name: marker_3_outer_collection
+    x: -0.16
+    y: 1.5
+    yaw: 3.141592653589793
+    exclusion_radius: 0.20
+    # Provisional 40cm offset from marker 3; update from measured green-point distance.
+    placement:
+      x: -0.40
+      y: 1.5
+      floor_height: 0.0
+      release_height: 0.035
+
+  scan:
+    # RGB horizontal field of view is ~70 degrees: overlap adjacent captures.
+    turns: 8
+    turn_angle: -0.7853981633974483
+    settle_seconds: 0.35
+    burst_frames: 5
+    min_confirmations: 3
+    capture_retries: 1
+
+  # Independent, collision-free base poses. They intentionally mirror the
+  # currently calibrated navigation dry-run poses, not physical marker poses.
+  stations:
+    - {name: scan_station_0, x: 1.0, y: -0.5, yaw: 3.141592653589793}
+    - {name: scan_station_1, x: 0.0, y: -0.5, yaw: 1.5707963267948966}
+    - {name: scan_station_2, x: 0.0, y: 0.5, yaw: 1.5707963267948966}
+    - {name: scan_station_3, x: 0.0, y: 1.5, yaw: 1.5707963267948966}
+    - {name: scan_station_4, x: 0.0, y: 2.5, yaw: 0.0}
+    - {name: scan_station_5, x: 1.0, y: 2.5, yaw: 0.0}
+
+  association:
+    xy_gate: 0.25
+    min_confidence: 0.45
+
+  task_policy:
+    planner: gemini
+    allowed_classes: [banana]
 
   # The mobile base stops this far from the detected object before grasping.
-  approach_standoff: 0.24
-  target_max_age: 1.0
+  # Approach distance is computed by pick_and_place from grasp/lift IK and TF.
   target_min_distance: 0.15
   target_max_distance: 2.0
-  target_cooldown: 5.0

@@ -1,9 +1,46 @@
 #include "aruco_localizer/localization_policy.hpp"
 
 #include <cmath>
+#include <algorithm>
 
 namespace aruco_localizer
 {
+
+namespace
+{
+Pose2D apply(const Pose2D & transform, double x, double y)
+{
+  return {transform.x + std::cos(transform.yaw) * x - std::sin(transform.yaw) * y,
+    transform.y + std::sin(transform.yaw) * x + std::cos(transform.yaw) * y, transform.yaw};
+}
+}
+
+double correctionDisplacement(const Pose2D & before, const Pose2D & after,
+  double odom_x, double odom_y)
+{
+  const auto old_point = apply(before, odom_x, odom_y);
+  const auto new_point = apply(after, odom_x, odom_y);
+  return std::hypot(new_point.x - old_point.x, new_point.y - old_point.y);
+}
+
+Pose2D boundedCorrection(const Pose2D & before, const Pose2D & measured,
+  double odom_x, double odom_y, double alpha, double translation_limit, double yaw_limit)
+{
+  const auto old_point = apply(before, odom_x, odom_y);
+  const auto new_point = apply(measured, odom_x, odom_y);
+  double dx = alpha * (new_point.x - old_point.x);
+  double dy = alpha * (new_point.y - old_point.y);
+  const double distance = std::hypot(dx, dy);
+  if (distance > translation_limit) {
+    dx *= translation_limit / distance;
+    dy *= translation_limit / distance;
+  }
+  const double error = std::atan2(std::sin(measured.yaw - before.yaw),
+    std::cos(measured.yaw - before.yaw));
+  const double yaw = before.yaw + std::clamp(alpha * error, -yaw_limit, yaw_limit);
+  return {old_point.x + dx - std::cos(yaw) * odom_x + std::sin(yaw) * odom_y,
+    old_point.y + dy - std::sin(yaw) * odom_x - std::cos(yaw) * odom_y, yaw};
+}
 
 CorrectionDecision evaluateMarkerCorrection(
   double planar_distance, double spatial_distance, double angular_speed,
@@ -24,6 +61,11 @@ CorrectionDecision evaluateMarkerCorrection(
     return CorrectionDecision::TOO_FAR;
   }
   return CorrectionDecision::ACCEPT;
+}
+
+bool markerAuthorizedForCorrection(int expected_marker_id, int observed_marker_id)
+{
+  return expected_marker_id < 0 || expected_marker_id == observed_marker_id;
 }
 
 const char * correctionDecisionName(CorrectionDecision decision)

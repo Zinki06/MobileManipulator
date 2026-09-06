@@ -1,0 +1,80 @@
+ping result=0 model=20480 error=0
+sample=0
+millis address=10 raw=9749231 result=0 error=0
+connect_ros address=15 raw=0 result=0 error=0
+connect_manipulator address=16 raw=1 result=0 error=0
+device_status address=18 raw=0 result=0 error=0
+heartbeat address=19 raw=1 result=0 error=0
+battery address=42 raw=1881 result=0 error=0 float=2.63584e-42
+connect_wheels address=148 raw=1 result=0 error=0
+torque_wheels address=149 raw=0 result=0 error=0
+torque_joints address=199 raw=0 result=0 error=0
+goal_j1 address=200 raw=2048 result=0 error=0
+goal_j2 address=204 raw=750 result=0 error=0
+goal_j3 address=208 raw=3040 result=0 error=0
+goal_j4 address=212 raw=2500 result=0 error=0
+goal_gripper address=216 raw=2048 result=0 error=0
+trigger_gripper address=221 raw=0 result=0 error=0
+present_j1 address=224 raw=2017 result=0 error=0
+present_j2 address=228 raw=695 result=0 error=0
+present_j3 address=232 raw=2994 result=0 error=0
+present_j4 address=236 raw=2568 result=0 error=0
+present_gripper address=240 raw=2172 result=0 error=0
+velocity_gripper address=260 raw=0 result=0 error=0
+current_gripper address=272 raw=65535 result=0 error=0 signed=-1
+accel_gripper address=300 raw=20 result=0 error=0
+profile_gripper address=324 raw=200 result=0 error=0
+goal_current_gripper address=340 raw=80 result=0 error=0
+sample=1
+millis address=10 raw=9749771 result=0 error=0
+connect_ros address=15 raw=0 result=0 error=0
+connect_manipulator address=16 raw=1 result=0 error=0
+device_status address=18 raw=0 result=0 error=0
+heartbeat address=19 raw=1 result=0 error=0
+battery address=42 raw=1881 result=0 error=0 float=2.63584e-42
+connect_wheels address=148 raw=1 result=0 error=0
+torque_wheels address=149 raw=0 result=0 error=0
+torque_joints address=199 raw=0 result=0 error=0
+goal_j1 address=200 raw=2048 result=0 error=0
+goal_j2 address=204 raw=750 result=0 error=0
+goal_j3 address=208 raw=3040 result=0 error=0
+goal_j4 address=212 raw=2500 result=0 error=0
+goal_gripper address=216 raw=2048 result=0 error=0
+trigger_gripper address=221 raw=0 result=0 error=0
+present_j1 address=224 raw=2017 result=0 error=0
+present_j2 address=228 raw=695 result=0 error=0
+present_j3 address=232 raw=2994 result=0 error=0
+present_j4 address=236 raw=2568 result=0 error=0
+present_gripper address=240 raw=2172 result=0 error=0
+velocity_gripper address=260 raw=0 result=0 error=0
+current_gripper address=272 raw=65535 result=0 error=0 signed=-1
+accel_gripper address=300 raw=20 result=0 error=0
+profile_gripper address=324 raw=200 result=0 error=0
+goal_current_gripper address=340 raw=80 result=0 error=0
+sample=2
+millis address=10 raw=9750311 result=0 error=0
+connect_ros address=15 raw=0 result=0 error=0
+connect_manipulator address=16 raw=1 result=0 error=0
+device_status address=18 raw=0 result=0 error=0
+heartbeat address=19 raw=1 result=0 error=0
+battery address=42 raw=1881 result=0 error=0 float=2.63584e-42
+connect_wheels address=148 raw=1 result=0 error=0
+torque_wheels address=149 raw=0 result=0 error=0
+torque_joints address=199 raw=0 result=0 error=0
+goal_j1 address=200 raw=2048 result=0 error=0
+goal_j2 address=204 raw=750 result=0 error=0
+goal_j3 address=208 raw=3040 result=0 error=0
+goal_j4 address=212 raw=2500 result=0 error=0
+goal_gripper address=216 raw=2048 result=0 error=0
+trigger_gripper address=221 raw=0 result=0 error=0
+present_j1 address=224 raw=2018 result=0 error=0
+present_j2 address=228 raw=695 result=0 error=0
+present_j3 address=232 raw=2994 result=0 error=0
+present_j4 address=236 raw=2568 result=0 error=0
+present_gripper address=240 raw=2172 result=0 error=0
+velocity_gripper address=260 raw=0 result=0 error=0
+current_gripper address=272 raw=65535 result=0 error=0 signed=-1
+accel_gripper address=300 raw=20 result=0 error=0
+profile_gripper address=324 raw=200 result=0 error=0
+goal_current_gripper address=340 raw=80 result=0 error=0
+direct_id15 result=-3001 error=0

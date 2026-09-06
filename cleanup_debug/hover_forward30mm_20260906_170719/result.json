@@ -1,0 +1,73 @@
+{
+  "image": "/home/user/turtlebot3_ws/cleanup_debug/hover_forward30mm_20260906_170719/station_0_arm_only/heading_249_capture_007_object_0.jpg",
+  "pixel": [
+    851.0,
+    534.0
+  ],
+  "observed_target_link1": [
+    0.3129270166745959,
+    -0.05595868746047816,
+    -0.07098283438406165
+  ],
+  "alignment_offset_link1": [
+    0.03,
+    0.0,
+    0.0
+  ],
+  "target_link1": [
+    0.3429270166745959,
+    -0.05595868746047816,
+    -0.07098283438406165
+  ],
+  "start_joints": [
+    0.0,
+    -0.5154175447295755,
+    -0.5154175447295755,
+    1.7717478100079156
+  ],
+  "plan": {
+    "joints": [
+      -0.167512160135,
+      1.09793167987,
+      -0.902014926803,
+      0.58948141033
+    ],
+    "pitch_degrees": -45,
+    "tcp_height_above_surface": 0.0711900244753,
+    "finger_height_above_surface": 0.05,
+    "minimum_path_floor_clearance": 0.0800171656159
+  },
+  "actual_joints": {
+    "wheel_right_joint": 138.63811564752848,
+    "joint2": 1.1152040327928612,
+    "wheel_left_joint": 559.2341719547409,
+    "joint1": -0.16873788666742054,
+    "joint4": 0.5936505649117432,
+    "gripper_left_joint": 0.019006021961903093,
+    "gripper_right_joint": 0.019006021961903093,
+    "joint3": -0.8774370106705868
+  },
+  "hover_complete": true,
+  "base_delta": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "rgb_stamp": [
+    1788682051,
+    248300781
+  ],
+  "wrist_at_depth": {
+    "translation": [
+      0.25452133163432217,
+      -0.041315400526890846,
+      0.0820611534476383
+    ],
+    "quaternion": [
+      0.03403101758663004,
+      0.40240202491120824,
+      -0.07709173274894504,
+      0.9115763077938912
+    ]
+  }
+}

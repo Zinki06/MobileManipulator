@@ -1,0 +1,29 @@
+{
+  "frames": 3,
+  "grounded_detections": 3,
+  "confirmed_objects": 1,
+  "image_reference": "/home/user/turtlebot3_ws/cleanup_debug/run_20260905_205744_3446/scan_station_3_approach/heading_250_capture_021.jpg",
+  "objects": [
+    {
+      "uuid": "3745d67c-bd66-4533-a79f-a0cb6d3b4ced",
+      "bbox": [
+        643,
+        502,
+        798,
+        717
+      ],
+      "class_name": "banana",
+      "grasp_valid": true,
+      "grasp_reason": "Reobserved odom-anchored body center with matching mask/depth",
+      "grasp_pixel": [
+        713.363037109375,
+        627.50732421875
+      ],
+      "centroid": [
+        -0.2500122523469186,
+        1.4918388625711592,
+        0.04878840291072939
+      ]
+    }
+  ]
+}

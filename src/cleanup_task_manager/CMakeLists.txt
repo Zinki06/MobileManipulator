@@ -9,8 +9,10 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
+find_package(cleanup_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
@@ -25,15 +27,18 @@ target_include_directories(task_config PUBLIC
 )
 target_link_libraries(task_config yaml-cpp)
 
-add_executable(cleanup_task_manager_node src/cleanup_task_manager_node.cpp)
+add_executable(cleanup_task_manager_node
+  src/cleanup_task_manager_node.cpp src/navigation_evidence.cpp)
 target_include_directories(cleanup_task_manager_node PRIVATE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 ament_target_dependencies(cleanup_task_manager_node
   rclcpp
   rclcpp_action
+  cleanup_interfaces
   geometry_msgs
   nav2_msgs
+  nav_msgs
   std_msgs
   std_srvs
   tf2
@@ -50,7 +55,7 @@ install(TARGETS
 install(DIRECTORY include/
   DESTINATION include
 )
-install(DIRECTORY config
+install(DIRECTORY config behavior_trees
   DESTINATION share/${PROJECT_NAME}
 )
 install(FILES README.md
@@ -59,8 +64,10 @@ install(FILES README.md
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_pytest REQUIRED)
   ament_add_gtest(test_task_config test/test_task_config.cpp)
   target_link_libraries(test_task_config task_config)
+  ament_add_pytest_test(test_mission_flow test/test_mission_flow.py TIMEOUT 180)
 endif()
 
 ament_package()

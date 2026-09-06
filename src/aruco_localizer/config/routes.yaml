@@ -39,6 +39,52 @@ waypoints:
     yaw: 0.0
     role: endpoint
 
+  # Station-scan poses are independently named so hardware calibration does
+  # not change the already validated to_0/to_5 transit routes. These initial
+  # values match the current marker-map geometry; teach collision-free base
+  # poses before using them around real furniture or objects.
+  scan_station_0:
+    x: 1.0
+    y: -0.5
+    yaw: 3.141592653589793
+    role: scan
+    marker_id: 0
+
+  scan_station_1:
+    x: 0.0
+    y: -0.5
+    yaw: 1.5707963267948966
+    role: scan
+    marker_id: 1
+
+  scan_station_2:
+    x: 0.0
+    y: 0.5
+    yaw: 1.5707963267948966
+    role: scan
+    marker_id: 2
+
+  scan_station_3:
+    x: 0.0
+    y: 1.5
+    yaw: 1.5707963267948966
+    role: scan
+    marker_id: 3
+
+  scan_station_4:
+    x: 0.0
+    y: 2.5
+    yaw: 0.0
+    role: scan
+    marker_id: 4
+
+  scan_station_5:
+    x: 1.0
+    y: 2.5
+    yaw: 0.0
+    role: scan
+    marker_id: 5
+
 routes:
   to_5:
     - lower_corner_to_north
@@ -49,3 +95,13 @@ routes:
     - upper_corner_to_south
     - lower_corner_to_east
     - endpoint_0
+
+  # Navigation-only cleanup dry run. The /start_station_scan_test service
+  # enables four right-angle Nav2 Spin actions after every listed pose.
+  station_scan_0_to_5:
+    - scan_station_0
+    - scan_station_1
+    - scan_station_2
+    - scan_station_3
+    - scan_station_4
+    - scan_station_5

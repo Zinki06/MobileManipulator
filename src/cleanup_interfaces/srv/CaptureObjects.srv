@@ -1,0 +1,10 @@
+string mission_id
+string station_name
+uint8 heading_index
+uint16 burst_frames
+uint16 min_confirmations
+---
+bool success
+string message
+cleanup_interfaces/ObjectObservation[] observations
+string image_reference

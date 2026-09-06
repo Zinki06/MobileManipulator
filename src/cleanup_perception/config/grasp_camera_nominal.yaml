@@ -1,0 +1,3 @@
+scan_perception_node:
+  ros__parameters:
+    use_grasp_camera_calibration: false

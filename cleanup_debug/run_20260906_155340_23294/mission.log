@@ -1,0 +1,4 @@
+1788677620.498150 [MISSION_START] Starting 0-to-5 station cleanup; drop zone=scan_station_2_collection, planner=gemini.
+1788677620.500505 [ARM_PARK_START] Parking the arm before station scanning.
+1788677623.556285 [NAVIGATION_START] purpose=station, operation=2, goal=(1.000000,-0.500000), yaw=3.141593.
+1788677629.243252 [MISSION_FAILED] Localization became DEGRADED during cleanup.

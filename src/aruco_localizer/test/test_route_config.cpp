@@ -108,4 +108,38 @@ routes:
     std::runtime_error);
 }
 
+TEST(RouteConfig, StationScanRouteVisitsSixOrderedScanPoses)
+{
+  const auto config = aruco_localizer::RouteConfig::loadFromFile(
+    ROUTES_CONFIG_PATH);
+  ASSERT_TRUE(config.hasRoute("station_scan_0_to_5"));
+
+  const auto & route = config.route("station_scan_0_to_5");
+  ASSERT_EQ(route.size(), 6U);
+  for (size_t index = 0; index < route.size(); ++index) {
+    EXPECT_EQ(route[index], "scan_station_" + std::to_string(index));
+    EXPECT_EQ(config.waypoint(route[index]).role, "scan");
+    EXPECT_EQ(config.waypoint(route[index]).marker_id, static_cast<int>(index));
+    ASSERT_TRUE(config.hasMarkerWaypoint(static_cast<int>(index)));
+    EXPECT_EQ(
+      config.waypointForMarker(static_cast<int>(index)).name,
+      route[index]);
+  }
+}
+
+TEST(RouteConfig, RejectsDuplicateMarkerAssociations)
+{
+  TemporaryYaml yaml(R"(
+waypoints:
+  first: {x: 0.0, y: 0.0, yaw: 0.0, marker_id: 2}
+  second: {x: 1.0, y: 0.0, yaw: 0.0, marker_id: 2}
+routes:
+  route: [first, second]
+)");
+
+  EXPECT_THROW(
+    aruco_localizer::RouteConfig::loadFromFile(yaml.path()),
+    std::runtime_error);
+}
+
 }  // namespace

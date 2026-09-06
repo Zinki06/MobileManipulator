@@ -1,0 +1,23 @@
+{
+  "pixel": [
+    800.0,
+    533.0
+  ],
+  "target_link1": [
+    0.31462897784202243,
+    -0.03526846002949116,
+    -0.07217087996424221
+  ],
+  "depth": 0.37608594657375105,
+  "body_axis_angle_degrees": 50.186141110107386,
+  "approach_yaw_degrees": -6.052425349430864,
+  "body_vs_approach_angle_degrees": 56.23856645953824,
+  "local_cross_section_10mm_band_width_m": 0.047673198547370434,
+  "local_sides_m": [
+    -0.03545337916616102,
+    0.012219819381209413
+  ],
+  "whole_mask_projected_width_m": 0.12228885637430459,
+  "sample_count": 24082,
+  "note": "Approximate surface footprint from unvalidated extrinsic model; not full finger collision proof"
+}

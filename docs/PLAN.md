@@ -1,5 +1,22 @@
 # 바닥 정리 태스크 구현 계획
 
+> 2026-09-06 수정: [파지·위치 보정 및 영상 기록](GRASP_AND_LOCALIZATION_20260906.md).
+> 로봇 위치 기준 SE(2) 보정, 제한된 삽입 계획, 임시 관측 자세와 선택 물체 영상 기록.
+
+> 공통 실행 계층 개편: [MOTION_ARCHITECTURE.md](MOTION_ARCHITECTURE.md).
+> 두 모드의 이동/회전 실행, 안전 대기·취소, 하드웨어 속도 하한, 파지 앵커와 검증 범위.
+> 이 문서의 회전 재시도/재중심 이동 관련 초기 설계보다 새 정책을 우선 적용한다.
+
+> 현재 시험 설정: [STATIC_MAP_TEST_MODE.md](STATIC_MAP_TEST_MODE.md).
+> 전역/지역 경로 지도에서 실시간 장애물 반영을 제외하고 충돌 정지는 유지한다.
+
+> 최신 주행 실패 대응: [NAVIGATION_RETRY_FIX.md](NAVIGATION_RETRY_FIX.md).
+> 스테이션 이동의 정지 후 제한적 재시도와 costmap 증거 저장을 추가했다.
+
+> 최신 충돌·파지점 수정: [COLLISION_AND_GRASP_FIX.md](COLLISION_AND_GRASP_FIX.md).
+> 엔코더 기반 odometry, 최종 속도 안전 계층, 검출 시에만 이미지 저장,
+> 전체 마스크 몸통 중심 파지 검증이 아래 초기 계획보다 우선한다.
+
 ## 1. 목표와 이번 MVP의 범위
 
 최종 목표는 ArUco 마커를 따라가는 로봇이 아니라, 마커로 전역 위치를
@@ -17,10 +34,19 @@
 - ArUco 마커 좌표, 로봇 스캔 좌표, 물체 접근 좌표, 배출 좌표는 서로
   독립적으로 관리한다.
 
-이번 MVP에서 VLM은 기본 경로에 넣지 않는다. `banana`가 검출되면 수행할
-행동은 항상 `collect_to_drop_zone`이므로, VLM 호출은 결과를 더 좋게 만들지
-않으면서 지연·네트워크·비결정성이라는 실패 지점만 추가한다. VLM은 여러
-물체 종류와 여러 정리 규칙이 생기는 다음 단계에서 선택적으로 연결한다.
+사용자 요구에 따라 이번 MVP부터 Gemini VLM을 태스크 플래너로 연결한다.
+다만 VLM은 검증된 물체 UUID와 allowlist 행동 중 하나만 선택하는 advisory
+계층이며 좌표나 제어 명령을 만들지 않는다. 지연·네트워크·비결정성은 strict
+JSON schema, manager의 2차 검증, 결정론적 banana 정책 fallback으로 격리한다.
+
+> 구현 상태(2026-09-05): 단계 A~C와 Gemini 경계가 코드에 반영되었다.
+> 하드웨어에서 세 바나나를 사용하는 단계 D의 합격 시험은 남아 있다.
+> 2026-09-05 추가 수정: YOLO 초기 로딩과 Gemini REST 응답 형식 오류 복구,
+> 스캔 후 후보별 정면 재관찰, 이미지/UUID 대응 및 호출 감사 기록을 추가했다.
+> 19:04 실험 후 추가 수정: 팔 TF/파지·인양 IK 기반 접근 자세 계산,
+> 접근 전용 Nav2 정밀 제어 및 재접근, 절대 방향 스캔 보정과 제한된 회전
+> 복구를 추가했다. 기본 모델은 `gemini-3.5-flash-lite`로 변경했다.
+> 수정·검증 상세는 [CLEANUP_DEBUGGING.md](CLEANUP_DEBUGGING.md)를 참고한다.
 
 ## 2. 현재 코드에서 확인한 사실
 
@@ -40,7 +66,7 @@
 - `pick_and_place`
   - 전달받은 3차원 목표를 팔 좌표계로 변환해 집기 시퀀스를 수행한다.
 
-### 2.2 현재 구조로는 부족한 부분
+### 2.2 최초 계획 수립 시 구조의 부족한 부분 (개편 전 기록)
 
 현재 인식 파이프라인은 다중 물체 목록이나 안정적인 물체 ID를 제공하지
 않는다.
@@ -149,6 +175,11 @@ ArUco 관측 -> aruco_localizer -> map/odom TF
 5. 다시 완전히 정지한 뒤 짧은 프레임 묶음을 수집한다.
 6. 4~5를 네 번 반복해 총 360도를 회전하고 원래 방향으로 돌아온다.
 7. 네 방향의 관측을 하나의 스테이션 관측 집합으로 병합한다.
+8. 확인된 후보별로 map 좌표 방향을 바라보도록 Nav2 Spin을 실행한다.
+   회전 후 TF 각도 오차를 확인해 최대 세 번 보정하고 안정화 후 재촬영한다.
+   동일 UUID가 재확인되면 confidence가 조금 낮아도 최신 관측과 이미지를
+   채택한다. 재확인 실패는 해당 UUID만 제외한다.
+9. 재관찰된 후보와 각 bbox의 실제 원본 프레임을 Gemini에 보낸다.
 
 한 장만 저장하지 않고 기본 0.5~1.0초 동안 5~10프레임을 사용한다. 최소
 3프레임에서 공간적으로 일치하고 유효한 깊이가 있는 후보만 `CONFIRMED`로
@@ -184,6 +215,8 @@ ArUco 관측 -> aruco_localizer -> map/odom TF
 - `cleanup_perception` (`ament_python` 권장)
   - 스캔 요청이 왔을 때만 RGB·aligned depth·camera info를 묶어 처리
   - YOLO의 모든 `banana` bbox, confidence와 3차원 위치를 반환
+  - 프레임 묶음에서 확인된 bbox만 기존 `sam2_t.pt`로 분할해 최종 집기
+    좌표를 mask 기반으로 정밀화
   - 디버그 원본/주석 이미지를 실행별 디렉터리에 저장
 
 개념적인 원시 관측 필드는 다음과 같다.
@@ -202,20 +235,22 @@ image_reference        저장된 증거 영상의 경로 또는 세션 키
 detector_track_id      존재할 때만 진단용으로 보존
 ```
 
-`cleanup_perception`은 bbox 전체의 raw depth 평균을 쓰지 않는다. 바닥과
-배경이 섞이지 않도록 bbox 내부 중심 영역이나 마스크에서 유효 depth의
-median과 이상치 제거를 사용한다. 카메라 점은 영상 header 시각의 TF를
-사용해 `map`으로 변환한다. 회전 직후에도 최신 TF(`TimePointZero`)를
-무조건 사용하는 방식은 피한다.
+`cleanup_perception`은 bbox 전체의 raw depth 평균을 쓰지 않는다. YOLO
+후보의 시간·공간 확인에는 bbox 중심 영역의 robust depth를 사용하고, 최종
+확정 후보에는 SAM2 mask 안의 유효 depth median과 MAD 이상치 제거를
+적용한다. SAM2가 없거나 mask가 불량하면 bbox 방식으로 제한적으로
+fallback한다. 카메라 점은 영상 header 시각의 TF를 사용해 `map`으로
+변환한다. 회전 직후에도 최신 TF(`TimePointZero`)를 무조건 사용하는 방식은
+피한다.
 
 ### 6.2 기존 단일 표적 파이프라인과의 관계
 
-- 스캔·후보 목록 생성은 `cleanup_perception`이 담당한다.
-- 실제 집기 직전의 세밀한 target은 기존 `/object_mask`와
-  `/object_centroid`를 이용해 다시 확인할 수 있다.
-- 두 YOLO 모델을 동시에 GPU에 올렸을 때 메모리 부족이나 프레임 저하가
-  발생하면, 스캔 detector와 EfficientTAM tracker의 활성 구간을 서비스로
-  나누거나 장기적으로 하나의 인식 노드로 통합한다.
+- 스캔·후보 목록 생성과 확정 bbox의 SAM2 정밀화는 `cleanup_perception`이
+  담당하며 기존 `best.pt`, `sam2_t.pt` 자산을 재사용한다.
+- 기존 연속 `segmentation_node`는 단일 최고-confidence 물체만 추적하고
+  선택 UUID 입력 인터페이스가 없으므로 정리 임무에서는 기본 비활성화한다.
+- 따라서 두 YOLO 모델을 동시에 GPU에 올리지 않으며, SAM2도 8프레임 전체가
+  아니라 burst 확인을 통과한 대표 프레임에만 실행한다.
 - 보호된 `segmentation`을 변경하는 통합안은 유지관리자 승인 없이는
   실행하지 않는다.
 
@@ -287,19 +322,18 @@ CANDIDATE -> CONFIRMED -> RESERVED -> APPROACHING -> REACQUIRING
 이 배출 구역 exclusion이 없으면 내려놓은 바나나를 YOLO가 다시 발견해
 무한히 집는 루프가 생긴다.
 
-## 8. VLM 연결 원칙
+## 8. Gemini VLM 연결 원칙
 
-바나나 MVP의 정책은 설정 파일로 고정한다.
+바나나 MVP의 플래너와 안전 정책은 설정 파일로 고정한다.
 
 ```yaml
 task_policy:
   allowed_classes: [banana]
   banana: collect_to_drop_zone
-  planner: deterministic
+  planner: gemini
 ```
 
-다중 물체 단계에서만 `planner: vlm`을 선택할 수 있게 한다. VLM에는 전체
-ROS 제어권이 아니라 다음 정보만 준다.
+Gemini에는 전체 ROS 제어권이 아니라 다음 정보만 준다.
 
 - 원본 또는 crop 이미지
 - 안정화된 물체 UUID, class, confidence, map 위치
@@ -317,9 +351,13 @@ ROS 제어권이 아니라 다음 정보만 준다.
 }
 ```
 
-허용되지 않은 action, 없는 UUID, timeout, JSON 파싱 실패는 모두 거부하고
-결정론적 정책으로 fallback한다. VLM은 물체의 실제 3차원 좌표를 만들거나
-Nav2/팔 명령을 직접 생성하지 않는다.
+프롬프트는 “후보 목록 밖의 UUID·class·좌표·station·drop zone·action을
+만들지 말 것”, “이미지는 보조 증거이며 YOLO/depth 구조화 후보가 기준일 것”,
+“명확한 바닥의 banana만 수집하고 위험하거나 모호하면 skip할 것”을 명시한다.
+응답은 추가 필드를 금지한 schema로 제한하며 manager가 UUID와 action을 다시
+검사한다. 허용되지 않은 action, 없는 UUID, timeout, HTTP 오류, JSON 파싱
+실패는 모두 거부하고 결정론적 정책으로 fallback한다. VLM은 물체의 실제
+3차원 좌표를 만들거나 Nav2/팔 명령을 직접 생성하지 않는다.
 
 ## 9. 정리 태스크 상태 머신 개편
 
@@ -393,7 +431,7 @@ cleanup:
     min_confidence: 0.0  # 모델 측정 후 결정
 
   task_policy:
-    planner: deterministic
+    planner: gemini
     allowed_classes: [banana]
 ```
 
@@ -436,10 +474,11 @@ cleanup:
 - 한 바나나의 집기를 실패시켜도 나머지 스테이션 순회가 계속되는지
   확인한다.
 
-### 단계 E: 선택적 VLM과 경로 최적화
+### 단계 E: VLM 확장과 경로 최적화
 
-- 여러 class와 정리 규칙이 생긴 뒤 schema 기반 VLM planner를 feature
-  flag로 추가한다.
+- schema 기반 Gemini planner는 banana MVP에서 먼저 연결한다.
+- 여러 class와 정리 규칙이 생기면 prompt의 정책과 allowlist를 확장하되
+  동일한 검증 경계를 유지한다.
 - 전체 조사 후 수집, 가장 가까운 물체 우선, 배출 왕복 비용을 포함한 순서
   최적화를 비교한다.
 
@@ -473,6 +512,7 @@ cleanup:
 cleanup_debug/run_YYYYMMDD_HHMMSS_PID/
 ├── mission.log
 ├── object_registry.json
+├── planner.jsonl
 └── scan_0/
     ├── heading_0.jpg
     ├── heading_1.jpg
@@ -480,15 +520,18 @@ cleanup_debug/run_YYYYMMDD_HHMMSS_PID/
     └── heading_3.jpg
 ```
 
-## 13. 구현 전에 확정할 사항
+현재 파일명은 `heading_N_capture_CCC.jpg`, 원본은 `*_raw.jpg`, 개별 후보
+증거는 `*_object_N.jpg`이다. 캡처별 JSON에 grounded detection/confirmed
+개수와 UUID/bbox를 기록한다. 검출이 없어도 성공한 캡처는 이미지를 저장한다.
+`planner.jsonl`에는 API 키를 제외한 요청 프롬프트·이미지 경로/개수·HTTP 상태·
+결정과 폴백 사유가 남는다.
 
-1. 배출 대상이 바닥의 한 지점인지, 상자·트레이인지와 안전한 base pose,
-   물체 release pose를 실제 로봇으로 교시해야 한다.
-2. 첫 MVP에서 VLM 호출을 반드시 시연해야 하는지 결정해야 한다. 권장은
-   `planner: deterministic`으로 성공시킨 뒤 VLM을 feature flag로 추가하는
-   것이다.
-3. “세 개 웨이포인트에 바나나”가 각 위치에 정확히 하나씩이며, 같은 카메라
-   화면에 바나나 둘이 동시에 들어올 가능성이 없는지 확인해야 한다.
+## 13. 확정 사항과 현장 확인 사항
 
-이 세 항목 중 배출 위치는 안전 때문에 구현 시작 전 필수이며, 나머지 두
-항목은 위의 권장 기본값으로 진행할 수 있다.
+1. MVP 배출 base pose는 `scan_station_2_collection`으로 확정했다. 현재
+   스테이션 2 좌표를 사용하므로 물리 배치나 트레이가 바뀌면 다시 교시한다.
+2. Gemini 호출은 MVP 시연 경로에 포함한다. API key 또는 네트워크가 없을
+   때는 같은 후보에 대해 결정론적 fallback을 사용한다.
+3. 첫 하드웨어 시험은 서로 다른 세 스테이션 부근에 banana 하나씩 배치한다.
+   같은 화면에 여러 개가 들어오더라도 인식 인터페이스는 후보 배열을
+   반환하지만, 집기 가능 거리와 association gate는 현장 로그로 조정한다.

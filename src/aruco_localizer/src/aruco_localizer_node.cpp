@@ -1,4 +1,5 @@
 #include "aruco_localizer/localization_policy.hpp"
+#include "aruco_localizer/msg/marker_observation.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
@@ -32,6 +33,7 @@
 #include <chrono>
 #include <limits>
 #include <stdexcept>
+#include <sstream>
 
 struct MarkerInfo
 {
@@ -136,6 +138,15 @@ public:
     odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
       "/odom", qos,
       std::bind(&ArucoLocalizer::odomCallback, this, std::placeholders::_1));
+    expected_marker_sub_ = this->create_subscription<std_msgs::msg::Int32>(
+      "/aruco/expected_marker_id", rclcpp::QoS(1).transient_local().reliable(),
+      [this](const std_msgs::msg::Int32::SharedPtr message) {
+        expected_marker_id_ = message->data;
+        relocalization_candidate_count_ = 0;
+        RCLCPP_INFO(
+          this->get_logger(), "Expected correction marker changed to ID %d",
+          expected_marker_id_);
+      });
 
     localization_fresh_pub_ = this->create_publisher<std_msgs::msg::Bool>(
       "/aruco/localization_fresh", 10);
@@ -147,8 +158,13 @@ public:
       "/aruco/localization_mode", 10);
     correction_age_pub_ = this->create_publisher<std_msgs::msg::Float64>(
       "/aruco/correction_age", 10);
+    correction_diagnostics_pub_ = this->create_publisher<std_msgs::msg::String>(
+      "/aruco/correction_diagnostics", 10);
     distance_since_correction_pub_ = this->create_publisher<std_msgs::msg::Float64>(
       "/aruco/distance_since_correction", 10);
+    marker_observation_pub_ =
+      this->create_publisher<aruco_localizer::msg::MarkerObservation>(
+      "/aruco/marker_observation", rclcpp::SensorDataQoS());
 
     // 5. 30Hz 주기로 map -> odom TF 지속 브로드캐스트
     timer_ = this->create_wall_timer(
@@ -243,17 +259,9 @@ private:
         msg->header.frame_id, base_frame_, msg->header.stamp, tf2::durationFromSec(0.05));
       T_cam_to_base = tf2::transformToEigen(tf_cam_msg);
     } catch (const tf2::TransformException &) {
-      // 타임스탬프 조회 실패 시 최신(TimePointZero)으로 폴백
-      try {
-        auto tf_cam_msg = tf_buffer_->lookupTransform(
-          msg->header.frame_id, base_frame_, tf2::TimePointZero, tf2::durationFromSec(0.05));
-        T_cam_to_base = tf2::transformToEigen(tf_cam_msg);
-      } catch (const tf2::TransformException & ex) {
-        RCLCPP_WARN_THROTTLE(
-          this->get_logger(),
-          *this->get_clock(), 2000, "Cam->Base TF Lookup Failed: %s", ex.what());
-        return;
-      }
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
+        "[CORRECTION_REJECTED] Timestamped camera TF unavailable; no latest-TF fallback");
+      return;
     }
 
     // 2. 오도메트리 TF 동기화 조회
@@ -263,16 +271,9 @@ private:
         odom_frame_, base_frame_, msg->header.stamp, tf2::durationFromSec(0.05));
       T_odom_to_base = tf2::transformToEigen(tf_odom_msg);
     } catch (const tf2::TransformException &) {
-      try {
-        auto tf_odom_msg = tf_buffer_->lookupTransform(
-          odom_frame_, base_frame_, tf2::TimePointZero, tf2::durationFromSec(0.05));
-        T_odom_to_base = tf2::transformToEigen(tf_odom_msg);
-      } catch (const tf2::TransformException & ex) {
-        RCLCPP_WARN_THROTTLE(
-          this->get_logger(),
-          *this->get_clock(), 2000, "Odom->Base TF Lookup Failed: %s", ex.what());
-        return;
-      }
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
+        "[CORRECTION_REJECTED] Timestamped odom TF unavailable; no latest-TF fallback");
+      return;
     }
 
     double total_weight = 0.0;
@@ -314,6 +315,30 @@ private:
       const auto correction_decision =
         aruco_localizer::evaluateMarkerCorrection(
         planar_dist, dist, latest_odom_angular_speed_, correction_policy);
+      const double bearing = std::atan2(marker_in_base.y(), marker_in_base.x());
+      const bool marker_is_expected =
+        aruco_localizer::markerAuthorizedForCorrection(expected_marker_id_, id);
+      const bool correction_accepted =
+        marker_is_expected &&
+        correction_decision == aruco_localizer::CorrectionDecision::ACCEPT;
+
+      aruco_localizer::msg::MarkerObservation observation;
+      observation.header = msg->header;
+      observation.marker_id = id;
+      observation.bearing = bearing;
+      observation.planar_distance = planar_dist;
+      observation.spatial_distance = dist;
+      observation.correction_accepted = correction_accepted;
+      marker_observation_pub_->publish(observation);
+
+      if (!marker_is_expected) {
+        RCLCPP_INFO_THROTTLE(
+          this->get_logger(), *this->get_clock(), 2000,
+          "[Correction Frozen] reason=UNEXPECTED_MARKER marker=%d expected=%d "
+          "bearing=%.1fdeg",
+          id, expected_marker_id_, bearing * 180.0 / M_PI);
+        continue;
+      }
       if (correction_decision != aruco_localizer::CorrectionDecision::ACCEPT) {
         RCLCPP_INFO_THROTTLE(
           this->get_logger(), *this->get_clock(), 2000,
@@ -377,7 +402,33 @@ private:
     double meas_x = weighted_x / total_weight;
     double meas_y = weighted_y / total_weight;
     double meas_yaw = std::atan2(weighted_sin, weighted_cos);
+    if (!std::isfinite(meas_x) || !std::isfinite(meas_y) || !std::isfinite(meas_yaw)) {return;}
 
+    std::ostringstream diagnostic;
+    diagnostic << "{\"image_stamp\":" << std::fixed << rclcpp::Time(msg->header.stamp).seconds()
+               << ",\"marker_id\":" << nearest_marker_id
+               << ",\"marker_count\":" << valid_marker_count
+               << ",\"measured_map_odom\":[" << meas_x << "," << meas_y << "," << meas_yaw
+               << "],\"odom_yaw_rate\":" << latest_odom_angular_speed_
+               << ",\"initialized\":" << (has_valid_map_odom_ ? "true" : "false");
+    if (has_valid_map_odom_) {
+      const double prior_yaw = std::atan2(
+        smoothed_q_.toRotationMatrix()(1, 0), smoothed_q_.toRotationMatrix()(0, 0));
+      diagnostic << ",\"robot_position_error\":" << aruco_localizer::correctionDisplacement(
+        {smoothed_pos_.x(), smoothed_pos_.y(), prior_yaw}, {meas_x, meas_y, meas_yaw},
+        T_odom_to_base.translation().x(), T_odom_to_base.translation().y())
+                 << ",\"offset_translation_error\":" <<
+        std::hypot(meas_x - smoothed_pos_.x(), meas_y - smoothed_pos_.y());
+      diagnostic << ",\"filtered_map_odom\":[" << smoothed_pos_.x() << ","
+                 << smoothed_pos_.y() << "," << std::atan2(
+        smoothed_q_.toRotationMatrix()(1, 0), smoothed_q_.toRotationMatrix()(0, 0)) << "]";
+    }
+    diagnostic << "}";
+    std_msgs::msg::String diagnostic_message;
+    diagnostic_message.data = diagnostic.str();
+    correction_diagnostics_pub_->publish(diagnostic_message);
+
+    if (localization_fault_) {return;}
     Eigen::Vector2d meas_pos(meas_x, meas_y);
     Eigen::Quaterniond meas_q(Eigen::AngleAxisd(meas_yaw, Eigen::Vector3d::UnitZ()));
 
@@ -393,14 +444,25 @@ private:
         meas_x, meas_y, meas_yaw * 180.0 / M_PI);
     } else {
       // 이전 추정치 대비 점프 크기 검사
-      double pos_diff = (meas_pos - smoothed_pos_).norm();
+      const double current_yaw = std::atan2(
+        smoothed_q_.toRotationMatrix()(1, 0), smoothed_q_.toRotationMatrix()(0, 0));
+      const aruco_localizer::Pose2D before{smoothed_pos_.x(), smoothed_pos_.y(), current_yaw};
+      const aruco_localizer::Pose2D measured{meas_x, meas_y, meas_yaw};
+      const double robot_odom_x = T_odom_to_base.translation().x();
+      const double robot_odom_y = T_odom_to_base.translation().y();
+      const double pos_diff = aruco_localizer::correctionDisplacement(
+        before, measured, robot_odom_x, robot_odom_y);
       double angle_diff = std::abs(meas_q.angularDistance(smoothed_q_));
 
       if (pos_diff > max_pos_jump_ || angle_diff > max_yaw_jump_) {
         // 같은 위치에서 반복되는 큰 보정만 재정합으로 인정한다.
         const bool candidate_is_consistent =
           relocalization_candidate_count_ > 0 &&
-          (meas_pos - relocalization_candidate_pos_).norm() < 0.15 &&
+          aruco_localizer::correctionDisplacement(measured,
+          {relocalization_candidate_pos_.x(), relocalization_candidate_pos_.y(), std::atan2(
+            relocalization_candidate_q_.toRotationMatrix()(1, 0),
+            relocalization_candidate_q_.toRotationMatrix()(0, 0))},
+          robot_odom_x, robot_odom_y) < 0.15 &&
           std::abs(meas_q.angularDistance(relocalization_candidate_q_)) < 0.20;
 
         if (candidate_is_consistent) {
@@ -416,13 +478,15 @@ private:
         }
 
         if (relocalization_candidate_count_ >= relocalization_consistency_count_) {
-          smoothed_pos_ = relocalization_candidate_pos_;
-          smoothed_q_ = relocalization_candidate_q_;
-          relocalization_candidate_count_ = 0;
-          RCLCPP_WARN(
+          // Repeated observations alone do not make a discontinuous map safe.
+          // Preserve the last transform and require an operator restart/re-localization.
+          localization_fault_ = true;
+          publishLocalizationStatus(false);
+          RCLCPP_ERROR(
             this->get_logger(),
-            "[Relocalized] Accepted %d consistent ArUco measurements.",
-            relocalization_consistency_count_);
+            "[LOCALIZATION_FAULT] Rejected robot-pose correction: translation=%.3fm yaw=%.3frad. "
+            "Motion inhibited; inspect localization before restarting.", pos_diff, angle_diff);
+          return;
         } else {
           RCLCPP_DEBUG(
             this->get_logger(),
@@ -433,27 +497,13 @@ private:
         }
       } else {
         relocalization_candidate_count_ = 0;
-        // EMA 보정량에 상한을 두어 Nav2가 보는 map pose가 한 프레임에
-        // 급격히 이동하지 않도록 한다.
-        Eigen::Vector2d position_step =
-          filter_alpha_ * (meas_pos - smoothed_pos_);
-        const double position_step_norm = position_step.norm();
-        if (position_step_norm > max_translation_correction_step_) {
-          position_step *= max_translation_correction_step_ / position_step_norm;
-        }
-        smoothed_pos_ += position_step;
-
-        const double current_yaw = std::atan2(
-          smoothed_q_.toRotationMatrix()(1, 0),
-          smoothed_q_.toRotationMatrix()(0, 0));
-        const double yaw_error = std::atan2(
-          std::sin(meas_yaw - current_yaw),
-          std::cos(meas_yaw - current_yaw));
-        const double yaw_step = std::clamp(
-          filter_alpha_ * yaw_error,
-          -max_yaw_correction_step_, max_yaw_correction_step_);
+        // Bound movement at the robot, then reconstruct the coupled SE(2) transform.
+        const auto corrected = aruco_localizer::boundedCorrection(
+          before, measured, robot_odom_x, robot_odom_y, filter_alpha_,
+          max_translation_correction_step_, max_yaw_correction_step_);
+        smoothed_pos_ = Eigen::Vector2d(corrected.x, corrected.y);
         smoothed_q_ = Eigen::Quaterniond(
-          Eigen::AngleAxisd(current_yaw + yaw_step, Eigen::Vector3d::UnitZ()));
+          Eigen::AngleAxisd(corrected.yaw, Eigen::Vector3d::UnitZ()));
       }
     }
 
@@ -502,7 +552,7 @@ private:
   void publishLocalizationStatus(bool fresh)
   {
     std_msgs::msg::Bool fresh_msg;
-    fresh_msg.data = fresh;
+    fresh_msg.data = fresh && !localization_fault_;
     localization_fresh_pub_->publish(fresh_msg);
 
     std_msgs::msg::Bool initialized_msg;
@@ -518,6 +568,8 @@ private:
     std_msgs::msg::String mode_msg;
     if (!has_valid_map_odom_) {
       mode_msg.data = "UNINITIALIZED";
+    } else if (localization_fault_) {
+      mode_msg.data = "DEGRADED";
     } else if (fresh) {
       mode_msg.data = "MARKER_CORRECTED";
     } else if (degraded) {
@@ -566,6 +618,8 @@ private:
   bool has_last_odom_position_{false};
   double distance_since_correction_{0.0};
   double latest_odom_angular_speed_{0.0};
+  bool localization_fault_{false};
+  int expected_marker_id_{-1};
 
   Eigen::Vector2d smoothed_pos_;
   Eigen::Quaterniond smoothed_q_;
@@ -589,12 +643,16 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub_;
   rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_sub_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
+  rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr expected_marker_sub_;
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr localization_fresh_pub_;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr last_marker_id_pub_;
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr localization_initialized_pub_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr localization_mode_pub_;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr correction_age_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr correction_diagnostics_pub_;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr distance_since_correction_pub_;
+  rclcpp::Publisher<aruco_localizer::msg::MarkerObservation>::SharedPtr
+    marker_observation_pub_;
 };
 
 int main(int argc, char ** argv)

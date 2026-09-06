@@ -15,6 +15,7 @@ struct RouteWaypoint
   double y{0.0};
   double yaw{0.0};
   std::string role{"transit"};
+  int marker_id{-1};
 };
 
 class RouteConfig
@@ -25,12 +26,15 @@ public:
   const RouteWaypoint & waypoint(const std::string & name) const;
   const std::vector<std::string> & route(const std::string & name) const;
   bool hasRoute(const std::string & name) const;
+  bool hasMarkerWaypoint(int marker_id) const;
+  const RouteWaypoint & waypointForMarker(int marker_id) const;
 
   const std::unordered_map<std::string, RouteWaypoint> & waypoints() const;
 
 private:
   std::unordered_map<std::string, RouteWaypoint> waypoints_;
   std::unordered_map<std::string, std::vector<std::string>> routes_;
+  std::unordered_map<int, std::string> marker_waypoints_;
 };
 
 }  // namespace aruco_localizer

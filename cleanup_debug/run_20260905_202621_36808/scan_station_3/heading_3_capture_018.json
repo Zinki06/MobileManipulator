@@ -1,0 +1,29 @@
+{
+  "frames": 3,
+  "grounded_detections": 3,
+  "confirmed_objects": 1,
+  "image_reference": "/home/user/turtlebot3_ws/cleanup_debug/run_20260905_202621_36808/scan_station_3/heading_3_capture_018.jpg",
+  "objects": [
+    {
+      "uuid": "8548e26f-04b5-4e3a-b9c8-39eb52761b16",
+      "bbox": [
+        0,
+        666,
+        138,
+        720
+      ],
+      "class_name": "banana",
+      "grasp_valid": false,
+      "grasp_reason": "Object clipped by image boundary",
+      "grasp_pixel": [
+        -1.0,
+        -1.0
+      ],
+      "centroid": [
+        -0.2647428288198385,
+        1.5249414214532302,
+        0.04519413881967882
+      ]
+    }
+  ]
+}

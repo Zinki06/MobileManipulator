@@ -1,0 +1,29 @@
+{
+  "frames": 3,
+  "grounded_detections": 3,
+  "confirmed_objects": 1,
+  "image_reference": "/home/user/turtlebot3_ws/cleanup_debug/run_20260906_155850_26634/scan_station_1/heading_2_capture_007.jpg",
+  "objects": [
+    {
+      "uuid": "2255d155-1613-485f-b9dc-96f07d0bdbeb",
+      "bbox": [
+        891,
+        360,
+        1031,
+        526
+      ],
+      "class_name": "banana",
+      "grasp_valid": true,
+      "grasp_reason": "Full-mask body centroid with local depth",
+      "grasp_pixel": [
+        940.0,
+        437.0
+      ],
+      "centroid": [
+        -0.17329292396768475,
+        -0.46455743822519,
+        0.05421431380378772
+      ]
+    }
+  ]
+}

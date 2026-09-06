@@ -1,0 +1,18 @@
+{
+  "frames": 8,
+  "grounded_detections": 8,
+  "confirmed_objects": 1,
+  "image_reference": "/home/user/turtlebot3_ws/cleanup_debug/run_20260905_192727_54450/scan_station_3/heading_2_capture_022.jpg",
+  "objects": [
+    {
+      "uuid": "f3f470f4-55df-4289-a7c8-358b4177194d",
+      "bbox": [
+        842,
+        482,
+        1000,
+        720
+      ],
+      "class_name": "banana"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "frames": 3,
+  "grounded_detections": 3,
+  "confirmed_objects": 1,
+  "image_reference": "/home/user/turtlebot3_ws/cleanup_debug/hover_diagonal_forward30mm_20260906_171829/station_0_arm_only/heading_249_capture_010.jpg",
+  "objects": [
+    {
+      "uuid": "acd02ab7-1a05-46bc-af95-2715d3bbb3ca",
+      "bbox": [
+        604,
+        433,
+        933,
+        655
+      ],
+      "class_name": "banana",
+      "grasp_valid": true,
+      "grasp_reason": "Central body (ends excluded), fitted local depth",
+      "grasp_pixel": [
+        801.0,
+        530.0
+      ],
+      "centroid": [
+        1.1042865025217705,
+        -0.5000095329472791,
+        0.0288946239078679
+      ]
+    }
+  ]
+}

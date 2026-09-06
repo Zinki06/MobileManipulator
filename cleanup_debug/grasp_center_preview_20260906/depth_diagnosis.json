@@ -1,0 +1,50 @@
+[
+  {
+    "file": "cleanup_debug/grasp_trial_20260906_164603/station_0_arm_only/heading_249_capture_003_object_0.npz",
+    "sample_depth_m": 0.3741546203110705,
+    "floor_on_same_ray_m": 0.40789418718106063,
+    "surface_above_fitted_floor_m": 0.029988586964115105,
+    "floor_fit_rms_m": 0.0010562357530186416,
+    "support": 13715,
+    "calibrated_target_link1": [
+      0.31023528667019573,
+      -0.053413551886985156,
+      -0.07365731286835614
+    ],
+    "joint_stamp_difference": 0.025490999221801758,
+    "depth_error_10mm_effect_link1": [
+      0.004758421576433984,
+      -0.0022890394959549265,
+      -0.008932427685391067
+    ],
+    "encoder_model_tcp_at_close": [
+      0.31258853950633353,
+      -0.053583147360598715,
+      -0.06753683368291942
+    ],
+    "tcp_minus_surface": [
+      0.002353252836137798,
+      -0.00016959547361355964,
+      0.00612047918543672
+    ]
+  },
+  {
+    "file": "cleanup_debug/grasp_center_preview_20260906/station_0_arm_only/heading_249_capture_005_object_0.npz",
+    "sample_depth_m": 0.37450045413260713,
+    "floor_on_same_ray_m": 0.4060545909727688,
+    "surface_above_fitted_floor_m": 0.028186762648638175,
+    "floor_fit_rms_m": 0.0010414773449520828,
+    "support": 13666,
+    "calibrated_target_link1": [
+      0.3109967549461192,
+      -0.054673799077415874,
+      -0.07247954642472276
+    ],
+    "joint_stamp_difference": 0.09839820861816406,
+    "depth_error_10mm_effect_link1": [
+      0.004779438840665244,
+      -0.0023205770935664657,
+      -0.008936144140358765
+    ]
+  }
+]
