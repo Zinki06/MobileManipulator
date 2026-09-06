@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "aruco_localizer/carry_state.hpp"
 #include "aruco_localizer/localization_policy.hpp"
 #include <chrono>
 #include <cmath>
@@ -20,22 +21,35 @@
 class MotionGuard : public rclcpp::Node
 {
 public:
-  MotionGuard() : Node("motion_guard")
+  MotionGuard() : Node("motion_guard"), carry_(*this)
   {
+    max_linear_ = declare_parameter<double>("max_linear_velocity", 0.10);
+    max_reverse_ = declare_parameter<double>("max_reverse_velocity", 0.05);
+    max_angular_ = declare_parameter<double>("max_angular_velocity", 0.35);
+    linear_accel_ = declare_parameter<double>("linear_acceleration", 0.15);
+    angular_accel_ = declare_parameter<double>("angular_acceleration", 0.4);
+    for (double value : {max_linear_, max_reverse_, max_angular_, linear_accel_, angular_accel_}) {
+      if (!std::isfinite(value) || value <= 0.0) {
+        throw std::invalid_argument("Invalid guard motion limit");
+      }
+    }
+    if (max_linear_ > 0.26 || max_reverse_ > 0.10 || max_angular_ > 1.82) {
+      throw std::invalid_argument("Guard exceeds mobile manipulator speed envelope");
+    }
     buffer_ = std::make_unique<tf2_ros::Buffer>(get_clock());
     listener_ = std::make_shared<tf2_ros::TransformListener>(*buffer_);
-    output_ = create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
+    output_ = create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 1);
     status_ = create_publisher<std_msgs::msg::String>(
       "/motion_guard/status", rclcpp::QoS(1).transient_local());
     input_ = create_subscription<geometry_msgs::msg::Twist>(
-      "/cmd_vel_collision_checked", 10,
+      "/cmd_vel_collision_checked", 1,
       [this](geometry_msgs::msg::Twist::ConstSharedPtr msg) {
         command_ = *msg;
         command_time_ = std::chrono::steady_clock::now();
         command_received_ = true;
       });
     intent_sub_ = create_subscription<geometry_msgs::msg::Twist>(
-      "/cmd_vel_smoothed", 10, [this](geometry_msgs::msg::Twist::ConstSharedPtr msg) {
+      "/cmd_vel_smoothed", 1, [this](geometry_msgs::msg::Twist::ConstSharedPtr msg) {
         intent_ = *msg;
         intent_time_ = std::chrono::steady_clock::now();
       });
@@ -64,12 +78,17 @@ public:
     depth_ = create_subscription<sensor_msgs::msg::PointCloud2>(
       "/cleanup/obstacle_points", rclcpp::SensorDataQoS(),
       [this](sensor_msgs::msg::PointCloud2::ConstSharedPtr msg) {
-        if (msg->width * msg->height >= 20) {depth_header_ = msg->header;}
+        if (msg->width * msg->height >= 20 ||
+          (carry_.active() && msg->height == 1 && msg->point_step == 12 &&
+          msg->fields.size() == 3 && msg->data.size() == msg->width * 12)) {
+          depth_header_ = msg->header;
+        }
       });
     timer_ = create_wall_timer(std::chrono::milliseconds(20), [this]() {tick();});
   }
 
 private:
+  aruco_localizer::CarryState carry_;
   std::string sourceIssue(const std_msgs::msg::Header & header, std::string & detail)
   {
     if (header.frame_id.empty()) {detail = "no valid message received"; return "missing";}
@@ -91,6 +110,9 @@ private:
   void tick()
   {
     const auto now = std::chrono::steady_clock::now();
+    const double dt = std::clamp(std::chrono::duration<double>(now - last_tick_).count(),
+      0.0, 0.05);
+    last_tick_ = now;
     std::string blocked = fault_;
     if (blocked.empty() && (mode_value_.empty() || mode_value_ == "UNINITIALIZED" ||
       std::chrono::duration<double>(now - mode_time_).count() > 0.5))
@@ -159,12 +181,12 @@ private:
     geometry_msgs::msg::Twist next;
     if (blocked.empty()) {
       // Limit acceleration, but never delay collision-monitor braking to zero.
-      const double desired = std::clamp(command_.linear.x, -0.05, 0.10);
-      const double angular = std::clamp(command_.angular.z, -0.35, 0.35);
+      const double desired = std::clamp(command_.linear.x, -max_reverse_, max_linear_);
+      const double angular = std::clamp(command_.angular.z, -max_angular_, max_angular_);
       next.linear.x = std::abs(desired) < std::abs(previous_.linear.x) ? desired :
-        std::clamp(desired, previous_.linear.x - 0.003, previous_.linear.x + 0.003);
+        std::clamp(desired, previous_.linear.x - linear_accel_ * dt, previous_.linear.x + linear_accel_ * dt);
       next.angular.z = std::abs(angular) < std::abs(previous_.angular.z) ? angular :
-        std::clamp(angular, previous_.angular.z - 0.008, previous_.angular.z + 0.008);
+        std::clamp(angular, previous_.angular.z - angular_accel_ * dt, previous_.angular.z + angular_accel_ * dt);
       if (desired * previous_.linear.x < 0.0) {next.linear.x = 0.0;}
       if (angular * previous_.angular.z < 0.0) {next.angular.z = 0.0;}
     }
@@ -187,6 +209,8 @@ private:
 
   using Steady = std::chrono::steady_clock;
   Steady::time_point command_time_{Steady::now()}, mode_time_{Steady::now()};
+  Steady::time_point last_tick_{Steady::now()};
+  double max_linear_, max_reverse_, max_angular_, linear_accel_, angular_accel_;
   bool command_received_{false}, have_transform_{false};
   double x_{0.0}, y_{0.0}, yaw_{0.0};
   std::string fault_, mode_value_, last_status_;

@@ -71,6 +71,24 @@ def test_no_reachable_candidate_requires_reapproach(monkeypatch):
         choose_candidate(candidates, -0.101, [0., 0., 0., 0.], 'unused')
 
 
+def test_quality_threshold_reaches_cpp_without_changing_targets(monkeypatch):
+    """Perception must use the same configured 4mm requirement as the executor."""
+    candidates = body_candidates(*scene())
+
+    def run(command, **kwargs):
+        assert command == ['fixture_planner', '--min-body-depth', '0.004']
+        rows = [list(map(float, row.split())) for row in kwargs['input'].splitlines()]
+        assert rows[0][:3] == candidates[0]['target_link1']
+        return SimpleNamespace(stdout='{"feasible":false}\n' * len(candidates))
+
+    monkeypatch.setattr('cleanup_perception.grasp_candidates.subprocess.run', run)
+    with pytest.raises(ValueError, match='reapproach'):
+        choose_candidate(candidates, -0.101, [0.] * 4, 'fixture_planner', min_body_depth=0.004)
+    for invalid in (0., 0.003, float('nan'), 0.021):
+        with pytest.raises(ValueError, match='Minimum body depth'):
+            choose_candidate(candidates, -0.101, [0.] * 4, 'fixture_planner', invalid)
+
+
 def test_recording_failure_keeps_completed_hover():
     """An image timeout must not report the already completed motion as failed."""
     from cleanup_perception.candidate_hover_trial import HoverTrial

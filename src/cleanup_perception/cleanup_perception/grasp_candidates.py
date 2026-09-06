@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 from cleanup_perception.depth_geometry import DepthSample
-from cleanup_perception.jaw_geometry import jaw_center_sample
+from cleanup_perception.jaw_geometry import jaw_center_sample, prepare_jaw_geometry
 
 
 class NoFeasibleCandidate(ValueError):
@@ -52,6 +52,7 @@ def body_candidates(mask, depth, k, rotation, translation, forward_offset=0.0):
         axis = -axis
     longitudinal = (points[:, :2] - center) @ axis
     ends = np.percentile(longitudinal, [2, 98])
+    prepared = prepare_jaw_geometry(mask, depth, k, rotation, translation)
     candidates, pixels = [], set()
     for percentile in range(30, 71, 5):
         section = np.percentile(longitudinal, percentile)
@@ -64,7 +65,7 @@ def body_candidates(mask, depth, k, rotation, translation, forward_offset=0.0):
                            float(metres[yy[index], xx[index]]), 0., int(band.sum()))
         try:
             sample, detail = jaw_center_sample(
-                mask, depth, k, rotation, translation, seed, forward_offset)
+                mask, depth, k, rotation, translation, seed, forward_offset, prepared=prepared)
         except ValueError:
             continue
         pixel = (sample.u, sample.v)
@@ -100,13 +101,16 @@ def body_candidates(mask, depth, k, rotation, translation, forward_offset=0.0):
     return candidates
 
 
-def choose_candidate(candidates, floor, start, planner):
+def choose_candidate(candidates, floor, start, planner, min_body_depth=0.006):
     """Rank candidates only after the read-only planner validates hover and descent."""
     if not candidates:
         raise ValueError('No body section fits width, end-margin and depth constraints')
+    if not np.isfinite(min_body_depth) or not 0.004 <= min_body_depth <= 0.020:
+        raise ValueError('Minimum body depth must be within 4..20mm')
     request = ''.join(' '.join(map(str, c['target_link1'] + [floor] + list(start))) + '\n'
                       for c in candidates)
-    completed = subprocess.run([str(planner)], input=request, text=True,
+    completed = subprocess.run([str(planner), '--min-body-depth', str(min_body_depth)],
+                               input=request, text=True,
                                capture_output=True, check=True, timeout=5)
     plans = [json.loads(line) for line in completed.stdout.splitlines()]
     if len(plans) != len(candidates):

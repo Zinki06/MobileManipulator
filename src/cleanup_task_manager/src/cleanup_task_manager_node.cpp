@@ -77,7 +77,12 @@ public:
       "/cleanup/capture_objects");
     planner_client_ = this->create_client<PlanCleanup>(
       "/cleanup/plan_objects");
+    verify_pick_with_camera_ = declare_parameter<bool>("verify_pick_with_camera", true);
     require_candidate_grasp_ = declare_parameter<bool>("require_candidate_grasp", false);
+    target_max_age_ = declare_parameter<double>("target_max_age", 6.0);
+    if (!std::isfinite(target_max_age_) || target_max_age_ <= 0.0 || target_max_age_ > 10.0) {
+      throw std::invalid_argument("target_max_age must be within 0..10 seconds");
+    }
     pick_client_ = this->create_client<Trigger>("/execute_pick_and_place");
     grasp_check_client_ = this->create_client<EvaluateGrasp>("/cleanup/evaluate_grasp");
     open_gripper_client_ = this->create_client<Trigger>("/open_gripper");
@@ -146,6 +151,7 @@ private:
     RECOVERING_RELEASE,
     RECOVERING_ARM,
     RETURNING_TO_STATION,
+    FINISHING,
     COMPLETE
   };
 
@@ -222,6 +228,11 @@ private:
     }
     try {
       config_ = TaskConfig::loadFromFile(task_config_path_);
+      const double settle = declare_parameter<double>("scan_settle_seconds", -1.0);
+      if (!std::isfinite(settle) || (settle != -1.0 && (settle < 0.05 || settle > 2.0))) {
+        throw std::invalid_argument("Invalid scan settling override");
+      }
+      if (settle >= 0.0) {config_.scan.settle_seconds = settle;}
       config_loaded_ = true;
       RCLCPP_INFO(
         this->get_logger(), "Loaded %zu cleanup stations from %s",
@@ -258,6 +269,7 @@ private:
       case State::RECOVERING_RELEASE: return "RECOVERING_RELEASE";
       case State::RECOVERING_ARM: return "RECOVERING_ARM";
       case State::RETURNING_TO_STATION: return "RETURNING_TO_STATION";
+      case State::FINISHING: return "FINISHING";
       case State::COMPLETE: return "COMPLETE";
     }
     return "UNKNOWN";
@@ -374,12 +386,7 @@ private:
       response->message = "Cleanup is not active.";
       return;
     }
-    cancelActiveOperations();
-    state_ = State::IDLE;
-    navigation_purpose_ = NavigationPurpose::NONE;
-    emitEvent(
-      "MISSION_STOPPED",
-      "Cleanup stopped; an already-running arm service cannot be preempted.");
+    finishMission("MISSION_STOPPED", "Cleanup stopped; manipulation canceled and gripper opened.");
     response->success = true;
     response->message = "Cleanup stop requested.";
   }
@@ -1152,8 +1159,16 @@ private:
           return;
         }
         if (!response->approach_available || approach_attempts_ >= max_approach_attempts_) {
-          recoverFromObjectFailure("No reachable grasp after bounded approaches: " +
-            response->message);
+          if (!response->approach_available && !after_reacquisition) {
+            emitEvent("GRASP_REOBSERVE_REQUIRED",
+              "Initial geometry rejected; refresh body and floor from observation pose once: " +
+              response->message);
+            requestTargetReacquisition(true);
+            return;
+          }
+          recoverFromObjectFailure("No safe grasp; approaches_executed=" +
+            std::to_string(approach_attempts_) + "; fresh_reobservation=" +
+            std::string(after_reacquisition ? "true" : "false") + "; " + response->message);
           return;
         }
         double x = 0.0, y = 0.0, yaw = 0.0;
@@ -1258,8 +1273,12 @@ private:
     target.header = active_observation_.header;
     target.header.frame_id = map_frame_;
     const double age = (this->now() - rclcpp::Time(target.header.stamp)).seconds();
-    if (age < 0.0 || age > 2.0) {
-      recoverFromObjectFailure("Reacquired pick observation is stale");
+    emitEvent("PICK_OBSERVATION_AGE", "UUID=" + active_object_uuid_ +
+      "; capture_age=" + std::to_string(age) +
+      "s; limit=" + std::to_string(target_max_age_) + "s");
+    if (age < 0.0 || age > target_max_age_) {
+      recoverFromObjectFailure("Reacquired pick observation outside processing budget: age=" +
+        std::to_string(age) + "s; limit=" + std::to_string(target_max_age_) + "s");
       return;
     }
     target.point = active_observation_.centroid;
@@ -1314,6 +1333,11 @@ private:
 
   void verifyPick()
   {
+    if (!verify_pick_with_camera_) {
+      emitEvent("PICK_VERIFIED", "Executor confirmed finger hold after lift/park; carrying on odometry");
+      sendNavigationGoal(poseMessage(config_.drop_pose), NavigationPurpose::DROP_ZONE);
+      return;
+    }
     state_ = State::VERIFYING_PICK;
     const uint64_t session = mission_session_;
     const uint64_t operation = ++operation_id_;
@@ -1493,16 +1517,10 @@ private:
 
   void completeMission()
   {
-    state_ = State::COMPLETE;
-    emitEvent(
-      "MISSION_COMPLETE",
+    finishMission("MISSION_COMPLETE",
       "collected=" + std::to_string(collected_objects_.size()) +
       ", failed=" + std::to_string(failed_objects_.size()) +
       ", incomplete_scans=" + std::to_string(incomplete_scan_count_) + ".");
-    writeRegistrySnapshot();
-    state_ = State::IDLE;
-    navigation_purpose_ = NavigationPurpose::NONE;
-    publishStatus();
   }
 
   const TaskStation & currentStation() const
@@ -1551,11 +1569,48 @@ private:
 
   void failMission(const std::string & reason)
   {
+    finishMission("MISSION_FAILED", reason);
+  }
+
+  void finishMission(const std::string & event, const std::string & reason)
+  {
+    if (state_ == State::FINISHING) {return;}
     cancelActiveOperations();
-    state_ = State::IDLE;
+    state_ = State::FINISHING;
     navigation_purpose_ = NavigationPurpose::NONE;
-    emitEvent("MISSION_FAILED", reason);
+    terminal_event_ = event;
+    terminal_reason_ = reason;
+    emitEvent("MISSION_RELEASE_START", "Opening fingers before ending cleanup");
+    const auto session = mission_session_;
+    terminal_timer_ = create_wall_timer(30s, [this, session]() {
+      if (state_ == State::FINISHING && session == mission_session_) {
+        terminal_timer_->cancel();
+        emitEvent("MISSION_RELEASE_TIMEOUT", "Waiting for outstanding release; new mission blocked");
+      }
+    });
+    if (!open_gripper_client_->service_is_ready()) {
+      finishRelease(false, "Gripper opening service unavailable");
+      return;
+    }
+    open_gripper_client_->async_send_request(std::make_shared<Trigger::Request>(),
+      [this, session](rclcpp::Client<Trigger>::SharedFuture future) {
+        if (state_ != State::FINISHING || session != mission_session_) {return;}
+        const auto response = future.get();
+        finishRelease(response->success, response->message);
+      });
+  }
+
+  void finishRelease(bool opened, const std::string & detail)
+  {
+    if (terminal_timer_) {terminal_timer_->cancel();}
+    emitEvent(opened ? "MISSION_RELEASE_COMPLETE" : "MISSION_RELEASE_FAILED", detail);
+    if (opened) {gripper_may_hold_object_ = false;}
+    // Never report successful completion when the requested final opening failed.
+    emitEvent(!opened && terminal_event_ == "MISSION_COMPLETE" ? "MISSION_FAILED" :
+      terminal_event_, terminal_reason_ + (opened ? "" : "; final release failed: " + detail));
     writeRegistrySnapshot();
+    state_ = State::IDLE;
+    publishStatus();
   }
 
   static std::string jsonEscape(const std::string & input)
@@ -1693,13 +1748,17 @@ private:
   TaskConfig config_;
   bool config_loaded_{false};
   bool gripper_may_hold_object_{false};
+  bool verify_pick_with_camera_{true};
   State state_{State::IDLE};
+  rclcpp::TimerBase::SharedPtr terminal_timer_;
+  std::string terminal_event_, terminal_reason_;
   NavigationPurpose navigation_purpose_{NavigationPurpose::NONE};
   uint64_t mission_session_{0U};
   uint64_t operation_id_{0U};
   size_t station_index_{0U};
   int heading_index_{0};
   bool require_candidate_grasp_{false};
+  double target_max_age_{6.0};
   int capture_retry_count_{0};
   int pick_retry_count_{0};
   std::string active_object_uuid_;

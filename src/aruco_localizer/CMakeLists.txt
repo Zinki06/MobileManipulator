@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.8)
 project(aruco_localizer)
 
+# Keep real-time projection/IK optimized in a fresh workspace; Debug stays opt-in.
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -159,7 +164,13 @@ target_link_libraries(
 # 설치 규칙
 # -------------------------------------------------------------
 # 1) 빌드된 C++ 실행 파일 설치
+add_executable(obstacle_depth_node src/obstacle_depth_node.cpp)
+target_include_directories(obstacle_depth_node PRIVATE include)
+ament_target_dependencies(obstacle_depth_node rclcpp sensor_msgs std_msgs tf2 tf2_ros
+  tf2_geometry_msgs)
+
 install(TARGETS
+  obstacle_depth_node
   motion_guard_node
   aruco_localizer_node
   map_marker_publisher_node
@@ -186,8 +197,13 @@ install(PROGRAMS
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
+  ament_add_pytest_test(test_carry_localization test/test_carry_localization.py TIMEOUT 30)
+  ament_add_pytest_test(test_obstacle_depth_node test/test_obstacle_depth_node.py TIMEOUT 30)
   ament_add_pytest_test(test_navigation_trees test/test_navigation_trees.py)
   ament_add_pytest_test(test_motion_safety test/test_motion_safety.py TIMEOUT 60)
+
+  ament_add_gtest(test_depth_projection test/test_depth_projection.cpp)
+  target_include_directories(test_depth_projection PRIVATE include)
 
   ament_add_gtest(test_route_config test/test_route_config.cpp)
   target_compile_definitions(test_route_config PRIVATE

@@ -1,0 +1,451 @@
+{
+  "selected": {
+    "pixel": [
+      687.0,
+      433.0
+    ],
+    "depth_m": 0.5119896907216496,
+    "observed_link1": [
+      0.5060705925007638,
+      0.0036062654719368377,
+      -0.06976364249243716
+    ],
+    "target_link1": [
+      0.5360705925007638,
+      0.0036062654719368377,
+      -0.06976364249243716
+    ],
+    "forward_offset_m": 0.03,
+    "body_percentile": 50,
+    "width_m": 0.03606064266839021,
+    "end_margin_m": 0.05170345715896149,
+    "local_axis_mismatch_degrees": 15.955961756688822,
+    "local_axis_confidence_ratio": 2.539076609383792,
+    "depth_uncertainty_m": 0.0015789852070742525,
+    "raw_observed_link1": [
+      0.5060705925007638,
+      0.0036062654719368377,
+      -0.07862318201355717
+    ],
+    "floor_correction_m": 0.008859539521120008,
+    "observed_floor_link1": -0.10985953952112001,
+    "plan": {
+      "feasible": false,
+      "rejections": {
+        "insufficient_body_depth": 21,
+        "hover_unreachable": 6,
+        "approach_clearance": 0,
+        "descent_unreachable": 0
+      }
+    }
+  },
+  "evaluated": [
+    {
+      "pixel": [
+        683.0,
+        465.0
+      ],
+      "depth_m": 0.4927422680412372,
+      "observed_link1": [
+        0.4809905444157507,
+        0.0071549065287060745,
+        -0.06982778995656534
+      ],
+      "target_link1": [
+        0.5109905444157506,
+        0.0071549065287060745,
+        -0.06982778995656534
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 30,
+      "width_m": 0.030363559919585805,
+      "end_margin_m": 0.027695727210989222,
+      "local_axis_mismatch_degrees": 12.663557727092906,
+      "local_axis_confidence_ratio": 2.718341621429386,
+      "depth_uncertainty_m": 0.0015789852070742525,
+      "raw_observed_link1": [
+        0.4809905444157507,
+        0.0071549065287060745,
+        -0.07821749936377603
+      ],
+      "floor_correction_m": 0.008389709407210691,
+      "observed_floor_link1": -0.1093897094072107,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 21,
+          "hover_unreachable": 6,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        683.0,
+        457.0
+      ],
+      "depth_m": 0.49604123711340226,
+      "observed_link1": [
+        0.4861327764595551,
+        0.006910101536831994,
+        -0.06883561743678367
+      ],
+      "target_link1": [
+        0.5161327764595551,
+        0.006910101536831994,
+        -0.06883561743678367
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 35,
+      "width_m": 0.03073304501852524,
+      "end_margin_m": 0.032401573383101734,
+      "local_axis_mismatch_degrees": 16.389500447077392,
+      "local_axis_confidence_ratio": 2.6616491230215624,
+      "depth_uncertainty_m": 0.0015789852070742525,
+      "raw_observed_link1": [
+        0.4861327764595551,
+        0.006910101536831994,
+        -0.07732170056832549
+      ],
+      "floor_correction_m": 0.008486083131541824,
+      "observed_floor_link1": -0.10948608313154183,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 18,
+          "hover_unreachable": 9,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        683.0,
+        450.0
+      ],
+      "depth_m": 0.4999896907216495,
+      "observed_link1": [
+        0.49140996703138345,
+        0.00664030528079947,
+        -0.06867589448401167
+      ],
+      "target_link1": [
+        0.5214099670313834,
+        0.00664030528079947,
+        -0.06867589448401167
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 40,
+      "width_m": 0.031056093409399486,
+      "end_margin_m": 0.03723925197968002,
+      "local_axis_mismatch_degrees": 17.87237783504449,
+      "local_axis_confidence_ratio": 2.623387564655977,
+      "depth_uncertainty_m": 0.0015789852070742525,
+      "raw_observed_link1": [
+        0.49140996703138345,
+        0.00664030528079947,
+        -0.07726087902105677
+      ],
+      "floor_correction_m": 0.008584984537045107,
+      "observed_floor_link1": -0.10958498453704511,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 18,
+          "hover_unreachable": 9,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        685.0,
+        442.0
+      ],
+      "depth_m": 0.5055876288659799,
+      "observed_link1": [
+        0.49823659868552544,
+        0.0051639378554216644,
+        -0.06919683086300506
+      ],
+      "target_link1": [
+        0.5282365986855254,
+        0.0051639378554216644,
+        -0.06919683086300506
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 45,
+      "width_m": 0.03164336397929115,
+      "end_margin_m": 0.044002939302528424,
+      "local_axis_mismatch_degrees": 16.42972232157194,
+      "local_axis_confidence_ratio": 2.5342995415744927,
+      "depth_uncertainty_m": 0.0015789852070742525,
+      "raw_observed_link1": [
+        0.49823659868552544,
+        0.0051639378554216644,
+        -0.07790965458629079
+      ],
+      "floor_correction_m": 0.008712823723285731,
+      "observed_floor_link1": -0.10971282372328574,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 19,
+          "hover_unreachable": 8,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        687.0,
+        433.0
+      ],
+      "depth_m": 0.5119896907216496,
+      "observed_link1": [
+        0.5060705925007638,
+        0.0036062654719368377,
+        -0.06976364249243716
+      ],
+      "target_link1": [
+        0.5360705925007638,
+        0.0036062654719368377,
+        -0.06976364249243716
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 50,
+      "width_m": 0.03606064266839021,
+      "end_margin_m": 0.05170345715896149,
+      "local_axis_mismatch_degrees": 15.955961756688822,
+      "local_axis_confidence_ratio": 2.539076609383792,
+      "depth_uncertainty_m": 0.0015789852070742525,
+      "raw_observed_link1": [
+        0.5060705925007638,
+        0.0036062654719368377,
+        -0.07862318201355717
+      ],
+      "floor_correction_m": 0.008859539521120008,
+      "observed_floor_link1": -0.10985953952112001,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 21,
+          "hover_unreachable": 6,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        690.0,
+        427.0
+      ],
+      "depth_m": 0.5164742268041238,
+      "observed_link1": [
+        0.5114756094089646,
+        0.0015930217348266267,
+        -0.07024074715769321
+      ],
+      "target_link1": [
+        0.5414756094089647,
+        0.0015930217348266267,
+        -0.07024074715769321
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 55,
+      "width_m": 0.037607270358559666,
+      "end_margin_m": 0.057437312007903696,
+      "local_axis_mismatch_degrees": 20.738225913269652,
+      "local_axis_confidence_ratio": 2.242547259160457,
+      "depth_uncertainty_m": 0.0015789852070742525,
+      "raw_observed_link1": [
+        0.5114756094089646,
+        0.0015930217348266267,
+        -0.07920142847908868
+      ],
+      "floor_correction_m": 0.008960681321395464,
+      "observed_floor_link1": -0.10996068132139547,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 22,
+          "hover_unreachable": 5,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        698.0,
+        418.0
+      ],
+      "depth_m": 0.5228764044943826,
+      "observed_link1": [
+        0.5193782108425363,
+        -0.003473131257443418,
+        -0.07066420426250705
+      ],
+      "target_link1": [
+        0.5493782108425364,
+        -0.003473131257443418,
+        -0.07066420426250705
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 60,
+      "width_m": 0.03508620721169367,
+      "end_margin_m": 0.06677268525947459,
+      "local_axis_mismatch_degrees": 31.694592044742837,
+      "local_axis_confidence_ratio": 2.0822868554672556,
+      "depth_uncertainty_m": 0.0015789852070742525,
+      "raw_observed_link1": [
+        0.5193782108425363,
+        -0.003473131257443418,
+        -0.07977257392013548
+      ],
+      "floor_correction_m": 0.009108369657628429,
+      "observed_floor_link1": -0.11010836965762844,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 23,
+          "hover_unreachable": 4,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        703.0,
+        412.0
+      ],
+      "depth_m": 0.5264948453608249,
+      "observed_link1": [
+        0.5242211250043409,
+        -0.006673049250773597,
+        -0.07045669069330976
+      ],
+      "target_link1": [
+        0.554221125004341,
+        -0.006673049250773597,
+        -0.07045669069330976
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 65,
+      "width_m": 0.03688848452305034,
+      "end_margin_m": 0.0663019951649767,
+      "local_axis_mismatch_degrees": 38.165208486175196,
+      "local_axis_confidence_ratio": 2.0724145610269793,
+      "depth_uncertainty_m": 0.0015789852070742525,
+      "raw_observed_link1": [
+        0.5242211250043409,
+        -0.006673049250773597,
+        -0.07965555898806609
+      ],
+      "floor_correction_m": 0.00919886829475633,
+      "observed_floor_link1": -0.11019886829475634,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 22,
+          "hover_unreachable": 5,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        706.0,
+        407.0
+      ],
+      "depth_m": 0.5281855670103094,
+      "observed_link1": [
+        0.5273222967560184,
+        -0.008589270874050627,
+        -0.06937056770562894
+      ],
+      "target_link1": [
+        0.5573222967560184,
+        -0.008589270874050627,
+        -0.06937056770562894
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 70,
+      "width_m": 0.03705677255863831,
+      "end_margin_m": 0.06267079761179042,
+      "local_axis_mismatch_degrees": 43.45334457479991,
+      "local_axis_confidence_ratio": 2.163635592702616,
+      "depth_uncertainty_m": 0.0015789852070742525,
+      "raw_observed_link1": [
+        0.5273222967560184,
+        -0.008589270874050627,
+        -0.07862739889451853
+      ],
+      "floor_correction_m": 0.009256831188889592,
+      "observed_floor_link1": -0.1102568311888896,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 20,
+          "hover_unreachable": 7,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    }
+  ],
+  "rotation": [
+    [
+      -0.020318576661011504,
+      -0.6552269162780139,
+      0.7551588201347283
+    ],
+    [
+      -0.9997794474476537,
+      0.017328512970910037,
+      -0.01186503685126428
+    ],
+    [
+      -0.005311487902223138,
+      -0.7552333485903688,
+      -0.6554344950284836
+    ]
+  ],
+  "translation": [
+    0.1398873256740769,
+    0.03242813323854676,
+    0.2801025125477849
+  ],
+  "floor_link1": -0.101,
+  "start_joints": [
+    0.0015339807878856412,
+    -0.5154175447295755,
+    -0.5016117176386047,
+    1.5723303075827821
+  ],
+  "floor_alignment": {
+    "applied": true,
+    "reason": "surrounding floor supports bounded upward alignment",
+    "plane_link1": [
+      -0.018745868135070093,
+      -8.937514628391818e-05,
+      -0.10037248461655982
+    ],
+    "residual_m": 0.0005789852070742525,
+    "tilt_degrees": 1.0739455461016587,
+    "inliers": 2966,
+    "inlier_fraction": 0.994634473507713,
+    "correction_range_m": [
+      0.008389709407210691,
+      0.009256831188889592
+    ]
+  },
+  "min_body_depth_m": 0.004
+}

@@ -2,6 +2,7 @@
 #define PICK_AND_PLACE__CANDIDATE_GRASP_HPP_
 
 #include "pick_and_place/grasp_kinematics.hpp"
+#include <string>
 
 namespace pick_and_place
 {
@@ -17,21 +18,34 @@ struct CandidateGrasp
 
 struct CandidateDiagnostics
 {
+  int invalid_input{0};
   int insufficient_body_depth{0};
   int hover_unreachable{0};
   int approach_clearance{0};
   int descent_unreachable{0};
 };
 
+inline std::string candidateRejectionSummary(const CandidateDiagnostics & counts)
+{
+  return "invalid_input=" + std::to_string(counts.invalid_input) +
+    ", insufficient_body_depth=" + std::to_string(counts.insufficient_body_depth) +
+    ", hover_unreachable=" + std::to_string(counts.hover_unreachable) +
+    ", approach_clearance=" + std::to_string(counts.approach_clearance) +
+    ", descent_unreachable=" + std::to_string(counts.descent_unreachable);
+}
+
 inline bool planCandidateGrasp(double x, double y, double surface, double floor,
   const std::vector<double> & start, CandidateGrasp & result,
-  CandidateDiagnostics * diagnostics = nullptr)
+  CandidateDiagnostics * diagnostics = nullptr, double min_body_depth = 0.006)
 {
   CandidateDiagnostics counts;
   if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(surface) ||
     !std::isfinite(floor) || surface - floor < 0.020 || surface - floor > 0.150 ||
-    start.size() != 4)
+    start.size() != 4 || !std::isfinite(min_body_depth) ||
+    min_body_depth < 0.004 || min_body_depth > 0.020)
   {
+    counts.invalid_input = 1;
+    if (diagnostics) {*diagnostics = counts;}
     return false;
   }
   const std::array<double, 4> lower{{-2.8, -1.75, -0.92, -1.75}};
@@ -43,7 +57,11 @@ inline bool planCandidateGrasp(double x, double y, double surface, double floor,
       }
       return true;
     };
-  if (!within_limits(start, 0.0)) {return false;}
+  if (!within_limits(start, 0.0)) {
+    counts.invalid_input = 1;
+    if (diagnostics) {*diagnostics = counts;}
+    return false;
+  }
   double best_score = -std::numeric_limits<double>::infinity();
   for (double pitch = -80.0; pitch <= -15.0; pitch += 2.5) {
     const double offset = fingerOffsetZ(pitch * M_PI / 180.0);
@@ -51,7 +69,8 @@ inline bool planCandidateGrasp(double x, double y, double surface, double floor,
     const double body_z = std::max(surface - std::min(0.020, (surface - floor) * 0.4),
       floor + 0.008 - offset);
     const double body_depth = surface - body_z;
-    if (body_depth < 0.006) {++counts.insufficient_body_depth; continue;}
+    // Body penetration is a grasp-quality requirement, separate from floor clearance.
+    if (body_depth < min_body_depth) {++counts.insufficient_body_depth; continue;}
     CandidateGrasp plan;
     if (!solve4DofIK(x, y, hover_z, plan.hover, pitch, false) ||
       !within_limits(plan.hover, 0.025)) {++counts.hover_unreachable; continue;}
@@ -92,10 +111,12 @@ inline bool planCandidateGrasp(double x, double y, double surface, double floor,
 }
 
 inline bool planCandidateExecution(double x, double y, double surface, double floor,
-  const std::vector<double> & start, GraspPlan & result)
+  const std::vector<double> & start, GraspPlan & result,
+  CandidateDiagnostics * diagnostics = nullptr, double min_body_depth = 0.006)
 {
   CandidateGrasp candidate;
-  if (!planCandidateGrasp(x, y, surface, floor, start, candidate)) {return false;}
+  if (!planCandidateGrasp(x, y, surface, floor, start, candidate, diagnostics,
+      min_body_depth)) {return false;}
   result = GraspPlan{};
   result.pitch_degrees = candidate.pitch_degrees;
   result.surface_to_body_depth = candidate.body_depth;

@@ -1,0 +1,14 @@
+{
+  "description": "50Hz centi-unit encoder/slew model; no chassis inertia or DDS delay, not a hardware result",
+  "old": {
+    "active": 4.1,
+    "total": 4.6499999999999995,
+    "angle": 0.7634000000000025
+  },
+  "balanced": {
+    "active": 2.48,
+    "total": 2.63,
+    "angle": 0.7630000000000012
+  },
+  "eight_heading_station_estimate": 39.181200000000004
+}

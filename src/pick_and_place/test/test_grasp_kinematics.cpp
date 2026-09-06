@@ -58,6 +58,55 @@ TEST(CandidateGrasp, RejectedLiveCaptureRetainsDiagnosticReasons)
   EXPECT_GT(counts.descent_unreachable + counts.hover_unreachable, 0);
 }
 
+TEST(CandidateGrasp, RelaxedQualityAcceptsRecordedBodyWithoutReducingFloorClearance)
+{
+  const std::vector<double> start{0, -0.514, -0.512, 1.772};
+  pick_and_place::GraspPlan plan;
+  EXPECT_FALSE(pick_and_place::planCandidateExecution(
+    0.337221, -0.047522, -0.069773, -0.101, start, plan, nullptr, 0.006));
+  ASSERT_TRUE(pick_and_place::planCandidateExecution(
+    0.337221, -0.047522, -0.069773, -0.101, start, plan, nullptr, 0.004));
+  EXPECT_GE(plan.surface_to_body_depth, 0.004);
+  EXPECT_LT(plan.surface_to_body_depth, 0.006);
+  EXPECT_GE(pick_and_place::fingerFloorClearance(plan.descent.back(), -0.101), 0.00799);
+  EXPECT_TRUE(pick_and_place::fingerPathClear(plan.descent.back(), plan.lift, -0.101));
+  // The quality setting must not allow floor contact, zero support or invalid feedback.
+  EXPECT_FALSE(pick_and_place::planCandidateExecution(
+    0.322, 0, -0.098, -0.101, start, plan, nullptr, 0.004));
+  EXPECT_FALSE(pick_and_place::planCandidateExecution(
+    0.322, 0, -0.072, -0.101, {}, plan, nullptr, 0.004));
+  EXPECT_FALSE(pick_and_place::planCandidateExecution(
+    0.322, 0, -0.072, -0.101, start, plan, nullptr, 0.0));
+}
+
+TEST(CandidateGrasp, StationFloorBiasBlocksEveryApproachUntilHeightIsReobserved)
+{
+  const std::vector<double> start{0.001534, -0.513884, -0.497010, 1.575398};
+  for (const auto & heights : {std::pair<double, double>{0.0213585, 0.0324071},
+      {0.0231518, 0.0323211}})
+  {
+    for (double standoff = 0.30; standoff >= 0.179; standoff -= 0.02) {
+      pick_and_place::GraspPlan plan;
+      pick_and_place::CandidateDiagnostics counts;
+      EXPECT_FALSE(pick_and_place::planCandidateExecution(
+        standoff + 0.122, 0, heights.first - 0.101, -0.101, start, plan, &counts));
+      EXPECT_EQ(counts.insufficient_body_depth, 27);
+      EXPECT_EQ(counts.hover_unreachable, 0);
+      EXPECT_NE(pick_and_place::candidateRejectionSummary(counts).find(
+        "insufficient_body_depth=27"), std::string::npos);
+    }
+    // 20cm base standoff, including the existing 2cm arrival tolerance.
+    for (double x : {0.322, 0.342}) {
+      pick_and_place::GraspPlan plan;
+      ASSERT_TRUE(pick_and_place::planCandidateExecution(
+        x, 0, heights.second - 0.101, -0.101, start, plan));
+      EXPECT_GE(plan.surface_to_body_depth, 0.006);
+      EXPECT_GE(pick_and_place::fingerFloorClearance(plan.descent.back(), -0.101), 0.00799);
+      EXPECT_TRUE(pick_and_place::fingerPathClear(plan.descent.back(), plan.lift, -0.101));
+    }
+  }
+}
+
 TEST(GraspKinematics, LoggedTargetRequiresBaseApproach)
 {
   EXPECT_FALSE(pick_and_place::graspAndLiftReachable(0.434, -0.034, -0.053));

@@ -1,0 +1,97 @@
+F...                                                                     [100%]
+=================================== FAILURES ===================================
+_________________________________ test_flake8 __________________________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff9d4d7070>
+
+    @pytest.mark.flake8
+    @pytest.mark.linter
+    def test_flake8(monkeypatch):
+        # rclpy has native worker state after executor tests; do not fork it for lint.
+        import ament_flake8.main as flake8_main
+        original = flake8_main.get_flake8_style_guide
+        monkeypatch.setattr(flake8_main, 'get_flake8_style_guide',
+                            lambda argv: original([*argv, '--jobs=1']))
+        rc, errors = main_with_errors(argv=[])
+>       assert rc == 0, \
+            'Found %d code style errors / warnings:\n' % len(errors) + \
+            '\n'.join(errors)
+E       AssertionError: Found 3 code style errors / warnings:
+E         ./test/test_controlled_hardware.py:7:1: F401 'pathlib.Path' imported but unused
+E         ./robot_motion/controlled_hardware.py:45:50: E128 continuation line under-indented for visual indent
+E         ./robot_motion/controlled_hardware.py:54:100: E501 line too long (101 > 99 characters)
+E       assert 1 == 0
+
+test/test_flake8.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+./test/test_controlled_hardware.py:7:1: F401 'pathlib.Path' imported but unused
+from pathlib import Path
+^
+
+./robot_motion/controlled_hardware.py:45:50: E128 continuation line under-indented for visual indent
+                                                 durability=DurabilityPolicy.TRANSIENT_LOCAL))
+                                                 ^
+
+./robot_motion/controlled_hardware.py:54:100: E501 line too long (101 > 99 characters)
+        age = (self.get_clock().now() - rclpy.time.Time.from_msg(msg.header.stamp)).nanoseconds / 1e9
+                                                                                                   ^
+
+1     E128 continuation line under-indented for visual indent
+1     E501 line too long (101 > 99 characters)
+1     F401 'pathlib.Path' imported but unused
+
+18 files checked
+3 errors
+
+'E'-type errors: 2
+'F'-type errors: 1
+
+Checked files:
+
+* ./setup.py
+* ./test/test_copyright.py
+* ./test/test_controlled_hardware.py
+* ./test/test_executor.py
+* ./test/test_policy.py
+* ./test/test_video_recorder.py
+* ./test/test_process_metrics.py
+* ./test/test_flake8.py
+* ./test/test_performance.py
+* ./test/test_pep257.py
+* ./robot_motion/__init__.py
+* ./robot_motion/diagnostics_node.py
+* ./robot_motion/video_recorder.py
+* ./robot_motion/executor_node.py
+* ./robot_motion/performance.py
+* ./robot_motion/controlled_hardware.py
+* ./robot_motion/process_metrics.py
+* ./robot_motion/policy.py
+------------------------------ Captured log call -------------------------------
+WARNING  flake8.options.manager:manager.py:217 option --max-complexity: please update from optparse string `type=` to argparse callable `type=` -- this will be an error in the future
+=============================== warnings summary ===============================
+test/test_flake8.py:19
+  /home/user/turtlebot3_ws/src/robot_motion/test/test_flake8.py:19: PytestUnknownMarkWarning: Unknown pytest.mark.flake8 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/mark.html
+    @pytest.mark.flake8
+
+test/test_flake8.py:20
+  /home/user/turtlebot3_ws/src/robot_motion/test/test_flake8.py:20: PytestUnknownMarkWarning: Unknown pytest.mark.linter - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/mark.html
+    @pytest.mark.linter
+
+test/test_pep257.py:19
+  /home/user/turtlebot3_ws/src/robot_motion/test/test_pep257.py:19: PytestUnknownMarkWarning: Unknown pytest.mark.linter - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/mark.html
+    @pytest.mark.linter
+
+test/test_pep257.py:20
+  /home/user/turtlebot3_ws/src/robot_motion/test/test_pep257.py:20: PytestUnknownMarkWarning: Unknown pytest.mark.pep257 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/mark.html
+    @pytest.mark.pep257
+
+test/test_flake8.py::test_flake8
+test/test_flake8.py::test_flake8
+  /usr/lib/python3/dist-packages/flake8/plugins/manager.py:261: DeprecationWarning: SelectableGroups dict interface is deprecated. Use select.
+    eps = importlib_metadata.entry_points().get(self.namespace, ())
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+=========================== short test summary info ============================
+FAILED test/test_flake8.py::test_flake8 - AssertionError: Found 3 code style ...
+1 failed, 3 passed, 6 warnings in 7.04s

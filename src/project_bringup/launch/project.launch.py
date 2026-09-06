@@ -101,7 +101,10 @@ def generate_launch_description():
     gemini_model = LaunchConfiguration('gemini_model')
     gemini_env_file = LaunchConfiguration('gemini_env_file')
 
+    profile = LaunchConfiguration('performance_config_file')
     declared_arguments = [
+        DeclareLaunchArgument('performance_config_file', default_value=PathJoinSubstitution([
+            FindPackageShare('aruco_localizer'), 'config', 'performance.yaml'])),
         DeclareLaunchArgument(
             'use_sim',
             default_value='false',
@@ -194,6 +197,7 @@ def generate_launch_description():
             IfCondition(start_robot),
             {
                 'start_rviz': 'false',
+                'performance_config_file': profile,
                 'use_fake_hardware': use_fake_hardware,
                 'use_sim': use_sim,
             },
@@ -216,7 +220,7 @@ def generate_launch_description():
             name='scan_perception_node',
             output='screen',
             condition=IfCondition(start_cleanup_perception),
-            parameters=[{
+            parameters=[profile, {
                 'model_path': cleanup_model_path,
                 'sam_model_path': cleanup_sam_model_path,
                 'use_sam_refinement': True,
@@ -234,6 +238,7 @@ def generate_launch_description():
             'aruco_launcher.launch.py',
             IfCondition(start_navigation),
             {'spin_command_scale': spin_command_scale,
+             'performance_config_file': profile,
              'record_grasp_video': LaunchConfiguration('record_grasp_video')},
         ),
         Node(
@@ -242,8 +247,10 @@ def generate_launch_description():
             name='pick_and_place_action_node',
             output='screen',
             condition=IfCondition(start_pick_and_place),
-            parameters=[{'target_topic': '/cleanup/pick_target',
-                         'use_candidate_grasp': True, 'grasp_forward_offset': 0.030}],
+            parameters=[profile, {
+                'target_topic': '/cleanup/pick_target',
+                'use_candidate_grasp': True, 'grasp_forward_offset': 0.030,
+            }],
         ),
         Node(
             package='cleanup_task_manager',
@@ -251,7 +258,7 @@ def generate_launch_description():
             name='cleanup_task_manager',
             output='screen',
             condition=IfCondition(start_cleanup_manager),
-            parameters=[{
+            parameters=[profile, {
                 'task_config_path': PathJoinSubstitution([
                     FindPackageShare('cleanup_task_manager'),
                     'config',

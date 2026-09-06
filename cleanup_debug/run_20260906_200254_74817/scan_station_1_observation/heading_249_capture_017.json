@@ -1,0 +1,30 @@
+{
+  "frames": 3,
+  "grounded_detections": 3,
+  "confirmed_objects": 1,
+  "image_reference": "/home/user/turtlebot3_ws/cleanup_debug/run_20260906_200254_74817/scan_station_1_observation/heading_249_capture_017.jpg",
+  "objects": [
+    {
+      "uuid": "2593883f-34f6-461e-9d25-5e58b198ecbf",
+      "bbox": [
+        651,
+        370,
+        805,
+        527
+      ],
+      "class_name": "banana",
+      "grasp_valid": true,
+      "grasp_reason": "candidate_approach; forward=0.030; body=50%; width=0.036; pitch=unreachable; floor_z_correction=0.0089",
+      "grasp_strategy": "candidate_approach",
+      "grasp_pixel": [
+        687.0,
+        433.0
+      ],
+      "centroid": [
+        -0.2720652851057953,
+        -0.4448504655488684,
+        0.03123635750756283
+      ]
+    }
+  ]
+}

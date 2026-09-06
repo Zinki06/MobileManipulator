@@ -1,0 +1,9 @@
+{
+  "mission_id": "run_20260906_204117_2760",
+  "collected_count": 0,
+  "failed_count": 0,
+  "incomplete_scan_count": 0,
+  "objects": [
+    {"uuid": "721c5725-61f4-487a-8feb-5ad677887dd0", "class": "banana", "state": "CONFIRMED", "x": -0.182821, "y": -0.478734, "z": 0.0309841}
+  ]
+}

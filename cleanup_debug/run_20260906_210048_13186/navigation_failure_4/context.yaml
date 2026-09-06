@@ -1,0 +1,41 @@
+stamp: 1788696078.3470724
+reason: Nav2 cleanup goal ABORTED
+motion_guard: "BLOCKED: command timeout"
+goal_frame: map
+goal:
+  position:
+    - 1
+    - -0.5
+    - 0
+  quaternion_xyzw:
+    - 0
+    - 0
+    - 1
+    - 6.123233995736766e-17
+robot_pose_available: true
+robot_frame: map
+robot_pose_stamp: 1788696078.2950692
+robot:
+  position:
+    - 1.2744526566877736
+    - -0.48594372718369067
+    - 0.01
+  quaternion_xyzw:
+    - 0
+    - 0
+    - 0.99986743587494142
+    - -0.01628221965427265
+stationary: true
+odom_pose:
+  position:
+    - 0.038163443136717518
+    - -0.0069411097606478156
+    - 0
+  quaternion_xyzw:
+    - 0
+    - 0
+    - -0.17993089334682097
+    - 0.98367925342533014
+odom_stamp: 1788696078.341192
+linear_velocity: -2.3852447794681099e-19
+angular_velocity: -1.3877787807814458e-18

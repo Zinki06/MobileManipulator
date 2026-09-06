@@ -6,6 +6,7 @@
 #include <trajectory_msgs/msg/joint_trajectory_point.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <cleanup_interfaces/srv/evaluate_grasp.hpp>
 #include <cleanup_interfaces/srv/place_object.hpp>
@@ -18,7 +19,10 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 #include <atomic>
+#include <algorithm>
+#include <limits>
 #include <chrono>
+#include <condition_variable>
 #include <cmath>
 #include <vector>
 #include <mutex>
@@ -41,24 +45,47 @@ public:
       has_target_(false),
       target_received_time_(0, 0, RCL_ROS_TIME)
     {
-        this->declare_parameter<double>("target_max_age", 2.0);
+        this->declare_parameter<double>("target_max_age", 6.0);
         this->declare_parameter<std::string>("target_topic", "/object_centroid");
+        reached_joint_tolerance_ = declare_parameter<double>("reached_joint_tolerance", 0.0);
+        if (!std::isfinite(reached_joint_tolerance_) || reached_joint_tolerance_ < 0.0 ||
+            reached_joint_tolerance_ > 0.015) {
+            throw std::invalid_argument("Reached joint tolerance must be within 0..0.015 rad");
+        }
         insertion_depth_ = this->declare_parameter<double>("grasp_insertion_depth", 0.012);
         floor_height_ = this->declare_parameter<double>("floor_height", 0.0);
         use_candidate_grasp_ = declare_parameter<bool>("use_candidate_grasp", false);
         forward_offset_ = declare_parameter<double>("grasp_forward_offset", 0.0);
+        min_body_depth_ = declare_parameter<double>("grasp_min_body_depth", 0.006);
+        approach_error_margin_ = declare_parameter<double>("approach_error_margin", 0.02);
+        approach_goal_tolerance_ = declare_parameter<double>("approach_goal_tolerance", 0.02);
+        if (!std::isfinite(min_body_depth_) || min_body_depth_ < 0.004 ||
+            min_body_depth_ > 0.020 || !std::isfinite(approach_error_margin_) ||
+            approach_error_margin_ < 0.0 || approach_error_margin_ > 0.05 ||
+            !std::isfinite(approach_goal_tolerance_) || approach_goal_tolerance_ < 0.0 ||
+            approach_goal_tolerance_ > 0.05) {
+            throw std::invalid_argument("Invalid grasp depth or approach error margin");
+        }
         if (!std::isfinite(forward_offset_) || std::abs(forward_offset_) > 0.030) {
             throw std::invalid_argument("Grasp forward offset must be within 30mm");
         }
-        RCLCPP_INFO(get_logger(), "GRASP_CONFIG strategy=%s forward_offset=%.3f",
-            use_candidate_grasp_ ? "candidate_body" : "legacy", forward_offset_);
+        RCLCPP_INFO(get_logger(),
+            "GRASP_CONFIG strategy=%s forward_offset=%.3f min_body_depth=%.3f approach_error_margin=%.3f",
+            use_candidate_grasp_ ? "candidate_body" : "legacy", forward_offset_,
+            min_body_depth_, approach_error_margin_);
         if (!std::isfinite(insertion_depth_) || insertion_depth_ < 0.0 ||
             insertion_depth_ > 0.025 || !std::isfinite(floor_height_)) {
             throw std::invalid_argument("Invalid floor or grasp insertion depth");
         }
         target_max_age_ = this->get_parameter("target_max_age").as_double();
+        if (!std::isfinite(target_max_age_) || target_max_age_ <= 0.0 || target_max_age_ > 10.0) {
+            throw std::invalid_argument("target_max_age must be within 0..10 seconds");
+        }
         const std::string target_topic =
             this->get_parameter("target_topic").as_string();
+        carrying_pub_ = create_publisher<std_msgs::msg::Bool>(
+            "/cleanup/carrying", rclcpp::QoS(1).transient_local());
+        carrying_timer_ = create_wall_timer(200ms, [this]() {publishCarrying();});
         phase_pub_ = create_publisher<std_msgs::msg::String>("/pick/events", 20);
         joint_sub_ = create_subscription<sensor_msgs::msg::JointState>(
             "/joint_states", rclcpp::SensorDataQoS(),
@@ -70,6 +97,8 @@ public:
                             std::lock_guard<std::mutex> lock(joint_mutex_);
                             arm_positions_[j] = msg->position[i];
                             arm_stamps_[j] = rclcpp::Time(msg->header.stamp).seconds();
+                            arm_velocities_[j] = i < msg->velocity.size() ? msg->velocity[i] :
+                                std::numeric_limits<double>::infinity();
                         }
                     }
                     if (msg->name[i] != "gripper_left_joint" ||
@@ -78,6 +107,7 @@ public:
                     gripper_position_ = msg->position[i];
                     gripper_stamp_ = rclcpp::Time(msg->header.stamp).seconds();
                 }
+                joint_feedback_.notify_all();
             });
 
         action_callback_group_ = this->create_callback_group(
@@ -136,6 +166,11 @@ public:
         observe_service_ = this->create_service<Trigger>(
             "/observe_floor", [this](const std::shared_ptr<Trigger::Request>,
                 std::shared_ptr<Trigger::Response> response) {
+                std::unique_lock<std::mutex> operation_lock(operation_mutex_, std::try_to_lock);
+                if (!operation_lock.owns_lock() || release_requested_) {
+                    response->message = "Manipulation busy or finishing";
+                    return;
+                }
                 bool expected = false;
                 if (!sequence_in_progress_.compare_exchange_strong(expected, true)) {
                     response->message = "Pick sequence active";
@@ -153,7 +188,9 @@ public:
             }, rmw_qos_profile_services_default, action_callback_group_);
 
         // 5. 런처 실행 시 로봇팔 초기 자세 자동 이동 비동기 스레드 시작
-        init_thread_ = std::thread(&PickAndPlaceActionNode::initializePoseOnStartup, this);
+        if (declare_parameter<bool>("startup_park", true)) {
+            init_thread_ = std::thread(&PickAndPlaceActionNode::initializePoseOnStartup, this);
+        }
 
         RCLCPP_INFO(this->get_logger(), "Pick & Place Action Node Initialized.");
         RCLCPP_INFO(this->get_logger(), "Services ready: /execute_pick_and_place, /park_arm, /open_gripper, /close_gripper");
@@ -180,9 +217,11 @@ private:
     }
 
     bool planAutomaticGrasp(double x, double y, double z, double floor,
-                             pick_and_place::GraspPlan & plan) {
+                             pick_and_place::GraspPlan & plan,
+                             pick_and_place::CandidateDiagnostics * diagnostics = nullptr) {
         return use_candidate_grasp_ ? pick_and_place::planCandidateExecution(
-            x + forward_offset_, y, z, floor, freshArmPositions(), plan) :
+            x + forward_offset_, y, z, floor, freshArmPositions(), plan, diagnostics,
+            min_body_depth_) :
             pick_and_place::planGrasp(x + forward_offset_, y, z, floor, insertion_depth_, plan);
     }
 
@@ -210,17 +249,24 @@ private:
             const auto floor = (map_base * base_arm).inverse() *
                 tf2::Vector3(point.x(), point.y(), floor_height_);
             pick_and_place::GraspPlan plan;
+            pick_and_place::CandidateDiagnostics current_counts, approach_counts;
             response->reachable = planAutomaticGrasp(
-                local.x(), local.y(), local.z(), floor.z(), plan);
+                local.x(), local.y(), local.z(), floor.z(), plan, &current_counts);
             response->message = "link1 target x=" + std::to_string(local.x()) +
                 ", y=" + std::to_string(local.y()) + ", z=" + std::to_string(local.z());
-            response->message += "; strategy=" + std::string(
+            response->message += "; executor_strategy=" + std::string(
                 use_candidate_grasp_ ? "candidate_body" : "legacy") +
-                "; forward_offset=" + std::to_string(forward_offset_);
+                "; forward_offset=" + std::to_string(forward_offset_) +
+                "; surface_height=" + std::to_string(local.z() - floor.z()) +
+                "; min_body_depth=" + std::to_string(min_body_depth_);
             if (response->reachable) {
                 response->message += "; grasp pitch=" + std::to_string(plan.pitch_degrees) +
                     "; insertion=" + std::to_string(plan.insertion_depth);
                 return;
+            }
+            if (use_candidate_grasp_) {
+                response->message += "; current_rejections={" +
+                    pick_and_place::candidateRejectionSummary(current_counts) + "}";
             }
             const double yaw = std::atan2(point.y() - map_base.getOrigin().y(),
                                           point.x() - map_base.getOrigin().x());
@@ -232,24 +278,37 @@ private:
                 tf2::Transform proposed(orientation, tf2::Vector3(
                     point.x() - standoff * std::cos(yaw),
                     point.y() - standoff * std::sin(yaw), map_base.getOrigin().z()));
+                // When the actual grasp is unreachable, do not retry a goal Nav2
+                // would immediately call reached. Select the next closer pose.
+                if ((proposed.getOrigin() - map_base.getOrigin()).length() <=
+                        approach_goal_tolerance_ + 1e-6 &&
+                    map_base.getRotation().angleShortestPath(orientation) < 0.01) {continue;}
                 const auto relative = (proposed * base_arm).inverse() * point;
-                // A 2cm arrival error must still permit both grasp and lift.
+                // Optional conservative margin. Arrival is always reobserved and
+                // checked against actual geometry before any grasp is executed.
                 const auto proposed_floor = (proposed * base_arm).inverse() *
                     tf2::Vector3(point.x(), point.y(), floor_height_);
                 if (!planAutomaticGrasp(relative.x(), relative.y(), relative.z(),
-                        proposed_floor.z(), plan) ||
-                    !planAutomaticGrasp(relative.x() + 0.02, relative.y(), relative.z(),
-                        proposed_floor.z(), plan)) {continue;}
+                        proposed_floor.z(), plan, &approach_counts) ||
+                    (approach_error_margin_ > 0.0 &&
+                    !planAutomaticGrasp(relative.x() + approach_error_margin_,
+                        relative.y(), relative.z(), proposed_floor.z(), plan,
+                        &approach_counts))) {continue;}
                 response->approach_available = true;
                 response->approach_pose.header.frame_id = "map";
                 response->approach_pose.header.stamp = this->now();
                 response->approach_pose.pose.position.x = proposed.getOrigin().x();
                 response->approach_pose.pose.position.y = proposed.getOrigin().y();
                 response->approach_pose.pose.orientation = tf2::toMsg(orientation);
-                response->message += "; feasible base standoff=" + std::to_string(standoff);
+                response->message += "; feasible base standoff=" + std::to_string(standoff) +
+                    "; approach_error_margin=" + std::to_string(approach_error_margin_);
                 return;
             }
-            response->message += "; no IK-feasible pose within approach standoff limits";
+            response->message += "; no safe grasp within approach standoff limits";
+            if (use_candidate_grasp_) {
+                response->message += "; closest_approach_rejections={" +
+                    pick_and_place::candidateRejectionSummary(approach_counts) + "}";
+            }
         } catch (const std::exception& exception) {
             response->success = false;
             response->message = exception.what();
@@ -278,6 +337,11 @@ private:
     {
         (void)request;
 
+        std::unique_lock<std::mutex> operation_lock(operation_mutex_, std::try_to_lock);
+        if (!operation_lock.owns_lock() || release_requested_) {
+            response->message = "Manipulation busy or finishing";
+            return;
+        }
         bool expected = false;
         if (!sequence_in_progress_.compare_exchange_strong(expected, true)) {
             response->success = false;
@@ -310,15 +374,18 @@ private:
             const double target_age = (this->now() - target_received_time_).seconds();
             const double observation_age =
                 (this->now() - rclcpp::Time(latest_map_target_.header.stamp)).seconds();
-            if (target_age > target_max_age_ || observation_age < 0.0 ||
+            if (target_age < 0.0 || target_age > target_max_age_ || observation_age < 0.0 ||
                 observation_age > target_max_age_) {
                 has_target_ = false;
-                message = "The latest pick target is stale.";
-                RCLCPP_WARN(
-                    this->get_logger(), "%s Age: %.2fs", message.c_str(), target_age);
+                message = "TARGET_EXPIRED: observation_age=" + std::to_string(observation_age) +
+                    "s; receipt_age=" + std::to_string(target_age) +
+                    "s; limit=" + std::to_string(target_max_age_) + "s";
+                RCLCPP_WARN(this->get_logger(), "%s", message.c_str());
                 return false;
             }
             target_in_map = latest_map_target_;
+            phase("TARGET_ACCEPTED", "observation_age=" + std::to_string(observation_age) +
+                "s; limit=" + std::to_string(target_max_age_) + "s");
         }
 
         if (!arm_action_client_->wait_for_action_server(2s)) {
@@ -326,6 +393,7 @@ private:
             RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
             return false;
         }
+        if (release_requested_) {return false;}
         if (!gripper_action_client_->wait_for_action_server(2s)) {
             message = "Gripper action server is unavailable.";
             RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
@@ -460,6 +528,8 @@ private:
             phase("GRASP_UNVERIFIED", message);
             return false;
         }
+        carrying_ = true;
+        publishCarrying();
         phase("GRASP_HOLD_CONFIRMED", "Stable non-empty finger opening after lift and return");
 
         phase("SEQUENCE_COMPLETE", "Physical grasp still requires visual verification");
@@ -478,6 +548,11 @@ private:
 
     void handlePlaceRequest(const std::shared_ptr<PlaceObject::Request> request,
                             std::shared_ptr<PlaceObject::Response> response) {
+        std::unique_lock<std::mutex> operation_lock(operation_mutex_, std::try_to_lock);
+        if (!operation_lock.owns_lock() || release_requested_) {
+            response->message = "Manipulation busy or finishing";
+            return;
+        }
         bool expected = false;
         if (!sequence_in_progress_.compare_exchange_strong(expected, true)) {
             response->message = "Arm sequence already active";
@@ -540,6 +615,18 @@ private:
         sequence_in_progress_ = false;
     }
 
+    void publishCarrying() {
+        std_msgs::msg::Bool msg;
+        msg.data = carrying_.load();
+        if (msg.data) {
+            std::lock_guard<std::mutex> lock(joint_mutex_);
+            const double age = now().seconds() - gripper_stamp_;
+            msg.data = age >= 0.0 && age < 0.25 &&
+                gripper_position_ > -0.0085 && gripper_position_ < 0.0175;
+        }
+        carrying_pub_->publish(msg);
+    }
+
     void phase(const std::string & name, const std::string & detail = "") {
         std_msgs::msg::String event;
         event.data = name + "|" + detail;
@@ -548,13 +635,14 @@ private:
     }
 
     bool sendArmPath(const std::vector<std::vector<double>> & path, double duration_sec) {
-        if (path.empty()) {return false;}
+        if (release_requested_ || path.empty()) {return false;}
         if (!arm_action_client_->wait_for_action_server(2s)) {
             RCLCPP_ERROR(this->get_logger(), "Arm Action Server unavailable!");
             return false;
         }
 
         std::vector<double> current(4);
+        bool stationary = true;
         {
             std::lock_guard<std::mutex> lock(joint_mutex_);
             for (size_t j = 0; j < 4; ++j) {
@@ -564,6 +652,8 @@ private:
                     return false;
                 }
                 current[j] = arm_positions_[j];
+                stationary = stationary && std::isfinite(arm_velocities_[j]) &&
+                    std::abs(arm_velocities_[j]) < 0.02;
             }
         }
         try {
@@ -579,6 +669,16 @@ private:
             RCLCPP_ERROR(get_logger(), "Arm floor check TF unavailable: %s", error.what());
             return false;
         }
+        if (stationary && path.size() == 1 && reached_joint_tolerance_ > 0.0) {
+            double error = 0.0;
+            for (size_t j = 0; j < current.size(); ++j) {
+                error = std::max(error, std::abs(path.front()[j] - current[j]));
+            }
+            if (error <= reached_joint_tolerance_) {
+                phase("ARM_ALREADY_REACHED", "Fresh encoders and floor clearance verified");
+                return true;
+            }
+        }
         FollowJointTrajectory::Goal goal;
         goal.trajectory.joint_names = {"joint1", "joint2", "joint3", "joint4"};
 
@@ -590,6 +690,7 @@ private:
             goal.trajectory.points.push_back(point);
         }
 
+        if (release_requested_) {return false;}
         auto goal_handle_future = arm_action_client_->async_send_goal(goal);
         if (goal_handle_future.wait_for(3s) != std::future_status::ready) return false;
 
@@ -597,9 +698,11 @@ private:
         if (!goal_handle) return false;
 
         auto result_future = arm_action_client_->async_get_result(goal_handle);
-        if (result_future.wait_for(std::chrono::duration<double>(duration_sec + 3.0)) !=
-            std::future_status::ready)
-        {
+        const auto deadline = std::chrono::steady_clock::now() +
+            std::chrono::duration<double>(duration_sec + 3.0);
+        while (!release_requested_ && std::chrono::steady_clock::now() < deadline &&
+            result_future.wait_for(20ms) != std::future_status::ready) {}
+        if (release_requested_ || result_future.wait_for(0s) != std::future_status::ready) {
             arm_action_client_->async_cancel_goal(goal_handle);
             return false;
         }
@@ -613,7 +716,8 @@ private:
         const auto deadline = std::chrono::steady_clock::now() + 2s;
         double stable_since = -1.0, last_stamp = -1.0, last_position = 0.0;
         int samples = 0;
-        while (rclcpp::ok() && std::chrono::steady_clock::now() < deadline) {
+        while (rclcpp::ok() && !(holding && release_requested_) &&
+            std::chrono::steady_clock::now() < deadline) {
             double position, stamp;
             {
                 std::lock_guard<std::mutex> lock(joint_mutex_);
@@ -648,6 +752,7 @@ private:
 
     // GripperCommand 액션 전송 및 완료 대기
     bool sendGripperGoal(double position, double max_effort = 10.0) {
+        if (position < 0.0 && release_requested_) {return false;}
         if (!gripper_action_client_->wait_for_action_server(2s)) {
             RCLCPP_ERROR(this->get_logger(), "Gripper Action Server unavailable!");
             return false;
@@ -657,6 +762,7 @@ private:
         goal.command.position = position;
         goal.command.max_effort = max_effort;
 
+        if (position < 0.0 && release_requested_) {return false;}
         auto goal_handle_future = gripper_action_client_->async_send_goal(goal);
         if (goal_handle_future.wait_for(3s) != std::future_status::ready) return false;
 
@@ -664,7 +770,12 @@ private:
         if (!goal_handle) return false;
 
         auto result_future = gripper_action_client_->async_get_result(goal_handle);
-        if (result_future.wait_for(3s) != std::future_status::ready) {
+        const auto deadline = std::chrono::steady_clock::now() + 3s;
+        while (!(position < 0.0 && release_requested_) &&
+            std::chrono::steady_clock::now() < deadline &&
+            result_future.wait_for(20ms) != std::future_status::ready) {}
+        if ((position < 0.0 && release_requested_) ||
+            result_future.wait_for(0s) != std::future_status::ready) {
             gripper_action_client_->async_cancel_goal(goal_handle);
             return false;
         }
@@ -676,7 +787,12 @@ private:
                 "; reached_goal=" + std::to_string(result.result->reached_goal));
         }
         if (result.code != rclcpp_action::ResultCode::SUCCEEDED || !result.result) {return false;}
-        return position < 0.0 || waitForGripper(false, position);
+        const bool confirmed = position < 0.0 || waitForGripper(false, position);
+        if (confirmed && position > 0.0) {
+            carrying_ = false;
+            publishCarrying();
+        }
+        return confirmed;
     }
 
     void initializePoseOnStartup() {
@@ -686,9 +802,17 @@ private:
             return;
         }
 
-        // 안정적인 컨트롤러 구동을 위해 0.5초 대기
-        rclcpp::sleep_for(500ms);
+        // Wake on fresh feedback instead of assuming readiness after a fixed sleep.
+        {
+            std::unique_lock<std::mutex> lock(joint_mutex_);
+            if (!joint_feedback_.wait_for(lock, 2s, [this]() {
+                    const auto time = now().seconds();
+                    return std::all_of(arm_stamps_.begin(), arm_stamps_.end(),
+                        [time](double stamp) {return time >= stamp && time - stamp < 0.25;});
+                })) {return;}
+        }
 
+        std::unique_lock<std::mutex> operation_lock(operation_mutex_);
         const std::vector<double> init_joints = initialPoseJoints();
         RCLCPP_INFO(
             this->get_logger(),
@@ -705,6 +829,11 @@ private:
         std::shared_ptr<Trigger::Response> response)
     {
         (void)request;
+        std::unique_lock<std::mutex> operation_lock(operation_mutex_, std::try_to_lock);
+        if (!operation_lock.owns_lock() || release_requested_) {
+            response->message = "Manipulation busy or finishing";
+            return;
+        }
         RCLCPP_INFO(this->get_logger(), "Moving robot arm to the initial safe pose...");
         const std::vector<double> init_joints = initialPoseJoints();
         if (sendArmGoal(init_joints, 3.0)) {
@@ -722,12 +851,31 @@ private:
         std::shared_ptr<Trigger::Response> response)
     {
         (void)request;
-        if (sendGripperGoal(0.019)) {
+        std::lock_guard<std::mutex> release_lock(release_mutex_);
+        release_requested_ = true;
+        struct ResetRelease {
+            std::atomic_bool & value;
+            ~ResetRelease() {value = false;}
+        } reset_release{release_requested_};
+        std::unique_lock<std::mutex> operation_lock(operation_mutex_);
+        // An interrupted action must acknowledge cancellation before opening.
+        bool canceled = true;
+        if (arm_action_client_->action_server_is_ready()) {
+            auto future = arm_action_client_->async_cancel_all_goals();
+            canceled = future.wait_for(2s) == std::future_status::ready &&
+                future.get()->return_code == 0;
+        }
+        if (gripper_action_client_->action_server_is_ready()) {
+            auto future = gripper_action_client_->async_cancel_all_goals();
+            canceled = (future.wait_for(2s) == std::future_status::ready &&
+                future.get()->return_code == 0) && canceled;
+        }
+        if (canceled && sendGripperGoal(0.019)) {
             response->success = true;
             response->message = "Gripper opened.";
         } else {
             response->success = false;
-            response->message = "Failed to open gripper.";
+            response->message = "Failed to cancel manipulation or open gripper.";
         }
     }
 
@@ -736,6 +884,11 @@ private:
         std::shared_ptr<Trigger::Response> response)
     {
         (void)request;
+        std::unique_lock<std::mutex> operation_lock(operation_mutex_, std::try_to_lock);
+        if (!operation_lock.owns_lock() || release_requested_) {
+            response->message = "Manipulation busy or finishing";
+            return;
+        }
         if (sendGripperGoal(-0.010, 15.0)) {
             response->success = true;
             response->message = "Gripper closed.";
@@ -750,11 +903,17 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr target_sub_;
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_sub_;
     std::mutex joint_mutex_;
+    std::condition_variable joint_feedback_;
+    double reached_joint_tolerance_{0.0};
     std::array<double, 4> arm_positions_{};
+    std::array<double, 4> arm_velocities_{};
     std::array<double, 4> arm_stamps_{};
     double gripper_position_{0.0}, gripper_stamp_{0.0};
     bool use_candidate_grasp_{false};
     double forward_offset_{0.0};
+    double min_body_depth_{0.006};
+    double approach_error_margin_{0.02};
+    double approach_goal_tolerance_{0.02};
     rclcpp::Service<Trigger>::SharedPtr execute_service_;
     rclcpp::Service<Trigger>::SharedPtr park_service_;
     rclcpp::Service<Trigger>::SharedPtr open_gripper_service_;
@@ -770,11 +929,15 @@ private:
 
     geometry_msgs::msg::PointStamped latest_map_target_;
     bool has_target_;
-    double target_max_age_{2.0};
+    double target_max_age_{6.0};
     double insertion_depth_{0.012}, floor_height_{0.0};
     rclcpp::Time target_received_time_;
     std::mutex target_mutex_;
     std::atomic_bool sequence_in_progress_{false};
+    std::atomic_bool carrying_{false}, release_requested_{false};
+    std::mutex operation_mutex_, release_mutex_;
+    rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr carrying_pub_;
+    rclcpp::TimerBase::SharedPtr carrying_timer_;
     std::thread init_thread_;
 };
 

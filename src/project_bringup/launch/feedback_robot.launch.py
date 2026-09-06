@@ -29,6 +29,7 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from nav2_common.launch import RewrittenYaml
+from robot_motion.performance import PerformanceParameters
 
 
 class FeedbackParameters(RewrittenYaml):
@@ -83,9 +84,11 @@ def generate_launch_description():
         LaunchConfiguration('use_fake_hardware'),
     ]), value_type=str)
     controller = Node(
-        package='controller_manager', executable='ros2_control_node', output='screen',
-        parameters=[{'robot_description': robot}, controller_parameters(
-            os.path.join(bringup, 'config', 'hardware_controller_manager.yaml'))],
+        package='robot_motion', executable='controlled_hardware', output='screen',
+        sigterm_timeout='15', sigkill_timeout='8',
+        parameters=[{'robot_description': robot}, PerformanceParameters(controller_parameters(
+            os.path.join(bringup, 'config', 'hardware_controller_manager.yaml')),
+            LaunchConfiguration('performance_config_file'))],
         remappings=[('~/cmd_vel_unstamped', '/cmd_vel'), ('~/odom', '/odom')],
     )
     joints = Node(package='controller_manager', executable='spawner',
@@ -100,6 +103,8 @@ def generate_launch_description():
         get_package_share_directory(lidar_package), 'launch', lidar_file)),
         launch_arguments={'port': '/dev/ttyUSB0', 'frame_id': 'base_scan'}.items())
     return LaunchDescription([
+        DeclareLaunchArgument('performance_config_file', default_value=os.path.join(
+            get_package_share_directory('aruco_localizer'), 'config', 'performance.yaml')),
         DeclareLaunchArgument('use_sim', default_value='false'),
         DeclareLaunchArgument('use_fake_hardware', default_value='false'),
         OpaqueFunction(function=require_hardware_mode),

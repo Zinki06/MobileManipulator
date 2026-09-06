@@ -16,6 +16,8 @@ from sensor_msgs.msg import JointState, LaserScan, PointCloud2
 from std_msgs.msg import String
 from tf2_ros import Buffer, TransformListener
 
+from robot_motion.process_metrics import ProcessMetrics
+
 
 def transformed_points(points, transform):
     """Transform sensor points using a unit quaternion from TF."""
@@ -41,6 +43,9 @@ class MotionDiagnostics(Node):
         self._state = {}
         self._sensors = {}
         self._sensor_stamp = {}
+        self._arrivals = {}
+        self._metrics = ProcessMetrics()
+        self.create_timer(5.0, self._performance)
         for topic in ('/cmd_vel_nav', '/cmd_vel_smoothed',
                       '/cmd_vel_collision_checked', '/cmd_vel'):
             self.create_subscription(Twist, topic,
@@ -67,10 +72,27 @@ class MotionDiagnostics(Node):
         except (ValueError, OSError) as error:
             self.get_logger().error(f'Diagnostic write failed: {error}')
 
+    def _performance(self):
+        record = self._metrics.sample()
+        record['topics'] = {key: {'received_hz': item[0] / record['sample_seconds'],
+                                  'max_input_age_seconds': item[1]}
+                            for key, item in self._arrivals.items()}
+        self._arrivals.clear()
+        self._record('performance', record)
+
+    def _arrival(self, topic, header=None):
+        age = (self.get_clock().now().nanoseconds * 1e-9 -
+               (header.stamp.sec + header.stamp.nanosec * 1e-9)) if header else None
+        count, maximum = self._arrivals.get(topic, (0, None))
+        self._arrivals[topic] = (count + 1, age if maximum is None else
+                                 maximum if age is None else max(age, maximum))
+
     def _twist(self, topic, msg):
+        self._arrival(topic)
         self._state[topic] = [msg.linear.x, msg.angular.z]
 
     def _odom(self, msg):
+        self._arrival('/odom', msg.header)
         p, q = msg.pose.pose.position, msg.pose.pose.orientation
         self._state['odom'] = [p.x, p.y, math.atan2(
             2*(q.w*q.z+q.x*q.y), 1-2*(q.y*q.y+q.z*q.z)),
@@ -78,6 +100,7 @@ class MotionDiagnostics(Node):
         self._state['odom_stamp'] = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
 
     def _joints(self, msg):
+        self._arrival('/joint_states', msg.header)
         self._state['joint_positions'] = dict(zip(msg.name, msg.position))
 
     def _path(self, msg):
@@ -102,6 +125,7 @@ class MotionDiagnostics(Node):
             self._sensors[source] = {'error': str(error)}
 
     def _scan(self, msg):
+        self._arrival('/scan', msg.header)
         ranges = np.asarray(msg.ranges)
         angles = msg.angle_min + np.arange(len(ranges)) * msg.angle_increment
         good = np.isfinite(ranges) & (ranges >= msg.range_min) & (ranges <= msg.range_max)
@@ -110,6 +134,7 @@ class MotionDiagnostics(Node):
         self._near('laser', msg.header, points)
 
     def _depth(self, msg):
+        self._arrival('/cleanup/obstacle_points', msg.header)
         try:
             offsets = {f.name: f.offset for f in msg.fields}
             arrays = [np.ndarray((msg.height, msg.width),

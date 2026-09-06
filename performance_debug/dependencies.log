@@ -1,0 +1,22 @@
+/usr/bin/rosdep:6: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html
+  from pkg_resources import load_entry_point
+ERROR[aruco_localizer]: Cannot locate rosdep definition for [opencv]
+	rosdep key : opencv
+	OS name    : ubuntu
+	OS version : jammy
+	Data:
+<no data>
+ERROR[realsense_bringup]: Cannot locate rosdep definition for [opencv2]
+	rosdep key : opencv2
+	OS name    : ubuntu
+	OS version : jammy
+	Data:
+<no data>
+ERROR[segmentation]: Cannot locate rosdep definition for [pytest]
+	rosdep key : pytest
+	OS name    : ubuntu
+	OS version : jammy
+	Data:
+<no data>
+System dependencies have not been satisfied:
+apt	ros-humble-pcl-ros

@@ -1,0 +1,363 @@
+{
+  "selected": {
+    "pixel": [
+      714.0,
+      424.0
+    ],
+    "depth_m": 0.5125463917525773,
+    "observed_link1": [
+      0.506957950839799,
+      -0.011716168824913206,
+      -0.07964149519515629
+    ],
+    "target_link1": [
+      0.536957950839799,
+      -0.011716168824913206,
+      -0.07964149519515629
+    ],
+    "forward_offset_m": 0.03,
+    "body_percentile": 50,
+    "width_m": 0.0328627174534124,
+    "end_margin_m": 0.047021980660847625,
+    "local_axis_mismatch_degrees": 26.891452867946622,
+    "local_axis_confidence_ratio": 2.473843112298064,
+    "depth_uncertainty_m": 0.0005200010376052673,
+    "plan": {
+      "feasible": false,
+      "rejections": {
+        "insufficient_body_depth": 27,
+        "hover_unreachable": 0,
+        "approach_clearance": 0,
+        "descent_unreachable": 0
+      }
+    }
+  },
+  "evaluated": [
+    {
+      "pixel": [
+        711.0,
+        454.0
+      ],
+      "depth_m": 0.49572164948453634,
+      "observed_link1": [
+        0.48414143658857783,
+        -0.008350543721067416,
+        -0.08011841131799902
+      ],
+      "target_link1": [
+        0.5141414365885778,
+        -0.008350543721067416,
+        -0.08011841131799902
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 30,
+      "width_m": 0.02935234658182899,
+      "end_margin_m": 0.02561498023631926,
+      "local_axis_mismatch_degrees": 3.4229596769982527,
+      "local_axis_confidence_ratio": 2.7117962216574516,
+      "depth_uncertainty_m": 0.0005046214645074975,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 27,
+          "hover_unreachable": 0,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        711.0,
+        444.0
+      ],
+      "depth_m": 0.5024845360824742,
+      "observed_link1": [
+        0.4924857598231153,
+        -0.009002548322090943,
+        -0.08087569409575435
+      ],
+      "target_link1": [
+        0.5224857598231153,
+        -0.009002548322090943,
+        -0.08087569409575435
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 35,
+      "width_m": 0.03136278113424273,
+      "end_margin_m": 0.033152316689676345,
+      "local_axis_mismatch_degrees": 13.201653505517973,
+      "local_axis_confidence_ratio": 2.34751387412865,
+      "depth_uncertainty_m": 0.0005160720273553442,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 27,
+          "hover_unreachable": 0,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        711.0,
+        437.0
+      ],
+      "depth_m": 0.5058762886597938,
+      "observed_link1": [
+        0.49743809343102785,
+        -0.009349630411744116,
+        -0.08038616516948122
+      ],
+      "target_link1": [
+        0.5274380934310279,
+        -0.009349630411744116,
+        -0.08038616516948122
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 40,
+      "width_m": 0.03132205806919164,
+      "end_margin_m": 0.037605621938687064,
+      "local_axis_mismatch_degrees": 19.20982738266358,
+      "local_axis_confidence_ratio": 2.4615191713778266,
+      "depth_uncertainty_m": 0.0003789523408383716,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 27,
+          "hover_unreachable": 0,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        712.0,
+        431.0
+      ],
+      "depth_m": 0.5086804123711341,
+      "observed_link1": [
+        0.5016258624640227,
+        -0.010198015733599249,
+        -0.07986557925101417
+      ],
+      "target_link1": [
+        0.5316258624640228,
+        -0.010198015733599249,
+        -0.07986557925101417
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 45,
+      "width_m": 0.03139647800467921,
+      "end_margin_m": 0.04165084390428543,
+      "local_axis_mismatch_degrees": 22.606736193543124,
+      "local_axis_confidence_ratio": 2.4679979052075844,
+      "depth_uncertainty_m": 0.0003404502409016922,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 27,
+          "hover_unreachable": 0,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        714.0,
+        424.0
+      ],
+      "depth_m": 0.5125463917525773,
+      "observed_link1": [
+        0.506957950839799,
+        -0.011716168824913206,
+        -0.07964149519515629
+      ],
+      "target_link1": [
+        0.536957950839799,
+        -0.011716168824913206,
+        -0.07964149519515629
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 50,
+      "width_m": 0.0328627174534124,
+      "end_margin_m": 0.047021980660847625,
+      "local_axis_mismatch_degrees": 26.891452867946622,
+      "local_axis_confidence_ratio": 2.473843112298064,
+      "depth_uncertainty_m": 0.0005200010376052673,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 27,
+          "hover_unreachable": 0,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        723.0,
+        414.0
+      ],
+      "depth_m": 0.5208247422680412,
+      "observed_link1": [
+        0.5165616628647798,
+        -0.017676616130743984,
+        -0.08116706826183945
+      ],
+      "target_link1": [
+        0.5465616628647798,
+        -0.017676616130743984,
+        -0.08116706826183945
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 55,
+      "width_m": 0.03242719529140044,
+      "end_margin_m": 0.05832066198967723,
+      "local_axis_mismatch_degrees": 29.001495101813948,
+      "local_axis_confidence_ratio": 2.511288472125071,
+      "depth_uncertainty_m": 0.0005785304772481155,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 0,
+          "hover_unreachable": 0,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        727.0,
+        409.0
+      ],
+      "depth_m": 0.5243820224719105,
+      "observed_link1": [
+        0.5209910198970757,
+        -0.02037251341798265,
+        -0.08147762807713183
+      ],
+      "target_link1": [
+        0.5509910198970758,
+        -0.02037251341798265,
+        -0.08147762807713183
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 60,
+      "width_m": 0.03356042726633092,
+      "end_margin_m": 0.06350500055098406,
+      "local_axis_mismatch_degrees": 28.75389966706115,
+      "local_axis_confidence_ratio": 2.3165088440658765,
+      "depth_uncertainty_m": 0.00043340285592207274,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 0,
+          "hover_unreachable": 0,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        731.0,
+        403.0
+      ],
+      "depth_m": 0.5277422680412374,
+      "observed_link1": [
+        0.5256858425851236,
+        -0.023089667669804567,
+        -0.08118955742578238
+      ],
+      "target_link1": [
+        0.5556858425851237,
+        -0.023089667669804567,
+        -0.08118955742578238
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 65,
+      "width_m": 0.035041538644270925,
+      "end_margin_m": 0.06892939027181007,
+      "local_axis_mismatch_degrees": 31.382881306959174,
+      "local_axis_confidence_ratio": 2.1611342727767133,
+      "depth_uncertainty_m": 0.00024988040502146045,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 0,
+          "hover_unreachable": 0,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    },
+    {
+      "pixel": [
+        734.0,
+        397.0
+      ],
+      "depth_m": 0.5310927835051549,
+      "observed_link1": [
+        0.5304141338302351,
+        -0.02525273852592687,
+        -0.08085883080934309
+      ],
+      "target_link1": [
+        0.5604141338302351,
+        -0.02525273852592687,
+        -0.08085883080934309
+      ],
+      "forward_offset_m": 0.03,
+      "body_percentile": 70,
+      "width_m": 0.03724976802234038,
+      "end_margin_m": 0.06652973010885616,
+      "local_axis_mismatch_degrees": 34.70037394209459,
+      "local_axis_confidence_ratio": 2.0575141111583886,
+      "depth_uncertainty_m": 0.0004737819710625567,
+      "plan": {
+        "feasible": false,
+        "rejections": {
+          "insufficient_body_depth": 27,
+          "hover_unreachable": 0,
+          "approach_clearance": 0,
+          "descent_unreachable": 0
+        }
+      }
+    }
+  ],
+  "rotation": [
+    [
+      -0.02036357709828961,
+      -0.6617166773369598,
+      0.7494773936963646
+    ],
+    [
+      -0.999779516477514,
+      0.017318557794319143,
+      -0.011873752057104427
+    ],
+    [
+      -0.005122807799516406,
+      -0.7495539383460397,
+      -0.6619234474999289
+    ]
+  ],
+  "translation": [
+    0.14044149750688417,
+    0.03242898332815826,
+    0.27889910019692044
+  ],
+  "floor_link1": -0.10099999999999998,
+  "start_joints": [
+    0.0015339807878856412,
+    -0.5138835639416898,
+    -0.4970097752749477,
+    1.5753982691585535
+  ]
+}

@@ -17,6 +17,8 @@
   <test_depend>python3-yaml</test_depend>
 
   <exec_depend>aruco_localizer</exec_depend>
+  <exec_depend>robot_motion</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
   <exec_depend>cleanup_task_manager</exec_depend>
   <exec_depend>cleanup_interfaces</exec_depend>
   <exec_depend>cleanup_perception</exec_depend>

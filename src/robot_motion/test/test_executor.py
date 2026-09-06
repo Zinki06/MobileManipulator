@@ -1,6 +1,7 @@
 """Exercise the real executor with quantized encoder feedback, never robot hardware."""
 
 import math
+import gc
 import os
 import threading
 import time
@@ -9,6 +10,7 @@ from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import Twist
 from nav2_msgs.action import NavigateToPose, Spin
 from nav_msgs.msg import Odometry
+import pytest
 import rclpy
 from rclpy.action import ActionClient, ActionServer, CancelResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
@@ -29,12 +31,19 @@ def wait_for(predicate, seconds=5.0):
     assert predicate(), 'ROS test deadline exceeded'
 
 
-def test_measured_turns_safety_wait_cancel_and_exclusive_admission(tmp_path, monkeypatch):
+@pytest.mark.parametrize('balanced', [False, True])
+def test_measured_turns_safety_wait_cancel_and_exclusive_admission(
+        tmp_path, monkeypatch, balanced):
     """Four quarter turns close on encoders; stopping never triggers a recenter move."""
     monkeypatch.setenv('ROS_DOMAIN_ID', str(150 + os.getpid() % 10))
     monkeypatch.setenv('ROS_LOCALHOST_ONLY', '1')
     monkeypatch.setenv('ROS_LOG_DIR', str(tmp_path / 'ros_logs'))
-    rclpy.init()
+    args = []
+    if balanced:
+        args = ['--ros-args', '-p', 'spin_max_velocity:=0.55', '-p', 'spin_gain:=2.0',
+                '-p', 'spin_acceleration:=0.8', '-p', 'rotation_settle:=0.15',
+                '-p', 'reuse_stationary_readiness:=true']
+    rclpy.init(args=args)
     motion = MotionExecutor()
     motion.wait_limit = 1.0
     fake = rclpy.create_node('fake_encoders_and_nav2')
@@ -171,6 +180,9 @@ def test_measured_turns_safety_wait_cancel_and_exclusive_admission(tmp_path, mon
         executor.shutdown(timeout_sec=5)
         thread.join(timeout=5)
         server.destroy()
+        spin.destroy()
+        nav.destroy()
         fake.destroy_node()
         motion.destroy_node()
+        gc.collect()
         rclpy.shutdown()

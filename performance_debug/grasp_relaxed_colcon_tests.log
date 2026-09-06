@@ -1,0 +1,9 @@
+Starting >>> pick_and_place
+[Processing: pick_and_place]
+Finished <<< pick_and_place [30.0s]
+Starting >>> cleanup_perception
+Finished <<< cleanup_perception [4.59s]
+Starting >>> project_bringup
+Finished <<< project_bringup [3.81s]
+
+Summary: 3 packages finished [39.1s]

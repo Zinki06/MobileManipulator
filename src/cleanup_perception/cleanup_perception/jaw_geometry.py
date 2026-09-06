@@ -1,13 +1,30 @@
 """Experimental jaw-direction centering for stationary, open-gripper hover trials."""
 
+from dataclasses import replace
+
 import cv2
 import numpy as np
 
 from cleanup_perception.depth_geometry import central_grasp_sample
 
 
+def prepare_jaw_geometry(mask, depth, k, rotation, translation):
+    """Project one observed body once for all jaw-center candidates in a capture."""
+    inverse_k = np.linalg.inv(k)
+    metres = depth.astype(float)
+    if np.issubdtype(depth.dtype, np.integer):
+        metres /= 1000.0
+    interior = cv2.erode(
+        np.asarray(mask, dtype=np.uint8), np.ones((5, 5), dtype=np.uint8)) > 0
+    yy, xx = np.nonzero(interior & np.isfinite(metres) &
+                        (metres > 0.1) & (metres < 2.5))
+    camera = np.column_stack((xx, yy, np.ones(len(xx)))) @ inverse_k.T
+    points = (camera * metres[yy, xx, None]) @ rotation.T + translation
+    return inverse_k, interior, points
+
+
 def jaw_center_sample(mask, depth, k, rotation, translation, original,
-                      forward_offset=0.030):
+                      forward_offset=0.030, prepared=None):
     """
     Recenter a valid body sample between opposing transverse surface boundaries.
 
@@ -22,15 +39,8 @@ def jaw_center_sample(mask, depth, k, rotation, translation, original,
         raise ValueError('A valid original body sample and aligned mask are required')
     if not all(np.isfinite(a).all() for a in (k, rotation, translation)):
         raise ValueError('Non-finite geometry')
-    inverse_k = np.linalg.inv(k)
-    metres = depth.astype(float)
-    if np.issubdtype(depth.dtype, np.integer):
-        metres /= 1000.0
-    interior = cv2.erode(mask, np.ones((5, 5), dtype=np.uint8)) > 0
-    yy, xx = np.nonzero(interior & np.isfinite(metres) &
-                        (metres > 0.1) & (metres < 2.5))
-    camera = (np.column_stack((xx, yy, np.ones(len(xx)))) @ inverse_k.T)
-    points = (camera * metres[yy, xx, None]) @ rotation.T + translation
+    inverse_k, interior, points = (prepared if prepared is not None else
+                                   prepare_jaw_geometry(mask, depth, k, rotation, translation))
 
     def local(sample):
         ray = inverse_k @ np.array([sample.u, sample.v, 1.0])
@@ -60,9 +70,14 @@ def jaw_center_sample(mask, depth, k, rotation, translation, original,
     h, w = depth.shape
     if not 3 <= u < w - 3 or not 3 <= v < h - 3 or not interior[int(v), int(u)]:
         raise ValueError('Jaw center outside observed body')
-    yy, xx = np.indices(depth.shape)
-    region = (mask > 0) & ((xx - u) ** 2 + (yy - v) ** 2 <= 8 ** 2)
-    sample = central_grasp_sample(region, depth, 0.1, 2.5, 30)
+    # Include a four-pixel zero border for the unchanged clipped-mask checks.
+    x0, x1 = max(0, int(u) - 13), min(w, int(u) + 14)
+    y0, y1 = max(0, int(v) - 13), min(h, int(v) + 14)
+    yy, xx = np.mgrid[y0:y1, x0:x1]
+    region = (mask[y0:y1, x0:x1] > 0) & ((xx - u) ** 2 + (yy - v) ** 2 <= 8 ** 2)
+    sample = central_grasp_sample(region, depth[y0:y1, x0:x1], 0.1, 2.5, 30)
+    if sample is not None:
+        sample = replace(sample, u=sample.u + x0, v=sample.v + y0)
     if sample is None:
         raise ValueError('No reliable depth at jaw center')
     final = local(sample)

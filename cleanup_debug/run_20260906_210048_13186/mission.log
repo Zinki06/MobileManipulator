@@ -1,0 +1,15 @@
+1788696048.861486 [MISSION_START] Starting 0-to-5 station cleanup; drop zone=marker_3_outer_collection, planner=gemini.
+1788696048.862386 [ARM_PARK_START] Parking the arm before station scanning.
+1788696051.919452 [NAVIGATION_START] purpose=station, operation=2, goal=(1.000000,-0.500000), yaw=3.141593.
+1788696064.263336 [NAVIGATION_FAILURE_EVIDENCE] /home/user/turtlebot3_ws/cleanup_debug/run_20260906_210048_13186/navigation_failure_2
+1788696064.263597 [NAVIGATION_RETRY_WAIT] Nav2 cleanup goal ABORTED; purpose=station; retry=1/2
+1788696066.264773 [NAVIGATION_RETRY] Stationary and sensors/TF ready; replan same goal.
+1788696066.265098 [NAVIGATION_START] purpose=station, operation=4, goal=(1.000000,-0.500000), yaw=3.141593.
+1788696078.620308 [NAVIGATION_FAILURE_EVIDENCE] /home/user/turtlebot3_ws/cleanup_debug/run_20260906_210048_13186/navigation_failure_4
+1788696078.620546 [NAVIGATION_RETRY_WAIT] Nav2 cleanup goal ABORTED; purpose=station; retry=2/2
+1788696080.621931 [NAVIGATION_RETRY] Stationary and sensors/TF ready; replan same goal.
+1788696080.622462 [NAVIGATION_START] purpose=station, operation=6, goal=(1.000000,-0.500000), yaw=3.141593.
+1788696092.972108 [NAVIGATION_FAILURE_EVIDENCE] /home/user/turtlebot3_ws/cleanup_debug/run_20260906_210048_13186/navigation_failure_6
+1788696092.972642 [MISSION_RELEASE_START] Opening fingers before ending cleanup
+1788696095.747746 [MISSION_RELEASE_FAILED] Failed to cancel manipulation or open gripper.
+1788696095.748060 [MISSION_FAILED] Nav2 cleanup goal ABORTED for station; final release failed: Failed to cancel manipulation or open gripper.

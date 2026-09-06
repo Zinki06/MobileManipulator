@@ -68,6 +68,7 @@ class ScanPerceptionNode(Node):
         self.declare_parameter('min_confidence', 0.45)
         self.declare_parameter('association_gate', 0.25)
         self.declare_parameter('capture_timeout', 4.0)
+        self.declare_parameter('empty_scene_frames', 2)
         self.declare_parameter('sync_tolerance', 0.15)
         self.declare_parameter('min_depth', 0.10)
         self.declare_parameter('max_depth', 2.50)
@@ -91,6 +92,10 @@ class ScanPerceptionNode(Node):
         self._use_body_candidates = self.declare_parameter('use_body_candidates', False).value
         self._forward_offset = self.declare_parameter('grasp_forward_offset', 0.0).value
         self._floor_height = self.declare_parameter('floor_height', 0.0).value
+        self._align_grasp_floor = self.declare_parameter('align_grasp_floor', False).value
+        self._min_body_depth = self.declare_parameter('grasp_min_body_depth', 0.006).value
+        if not np.isfinite(self._min_body_depth) or not 0.004 <= self._min_body_depth <= 0.020:
+            raise ValueError('Minimum body depth must be within 4..20mm')
         if self._use_body_candidates and self._camera_calibration is None:
             raise ValueError('Body candidate cleanup requires calibrated camera extrinsics')
         if not np.isfinite(self._forward_offset) or abs(self._forward_offset) > 0.030:
@@ -100,7 +105,8 @@ class ScanPerceptionNode(Node):
         self.get_logger().info(
             f'GRASP_CONFIG body_candidates={self._use_body_candidates}; '
             f'camera_calibration={self._camera_calibration is not None}; '
-            f'forward_offset={self._forward_offset}')
+            f'forward_offset={self._forward_offset}; align_grasp_floor={self._align_grasp_floor}; '
+            f'min_body_depth={self._min_body_depth}')
 
         self._model_path = self.get_parameter('model_path').value
         self._sam_model_path = self.get_parameter('sam_model_path').value
@@ -124,6 +130,7 @@ class ScanPerceptionNode(Node):
         self._capture_timeout = float(
             self.get_parameter('capture_timeout').value
         )
+        self._empty_scene_frames = int(self.get_parameter('empty_scene_frames').value)
         self._sync_tolerance = float(
             self.get_parameter('sync_tolerance').value
         )
@@ -206,6 +213,8 @@ class ScanPerceptionNode(Node):
             raise ValueError('association_gate must be positive')
         if self._capture_timeout <= 0.0 or self._sync_tolerance <= 0.0:
             raise ValueError('capture and synchronization times must be positive')
+        if not 2 <= self._empty_scene_frames <= 100:
+            raise ValueError('empty_scene_frames must be between 2 and 100')
         if self._min_depth <= 0.0 or self._max_depth <= self._min_depth:
             raise ValueError('depth limits are invalid')
         if self._sam_min_mask_pixels < 1:
@@ -328,6 +337,7 @@ class ScanPerceptionNode(Node):
             response.success = False
             response.message = 'another capture request is already active'
             return response
+        started, cpu_started = time.perf_counter(), time.process_time()
         try:
             if not self._ensure_model():
                 self._capture_count += 1
@@ -348,6 +358,12 @@ class ScanPerceptionNode(Node):
             self.get_logger().error(response.message)
             return response
         finally:
+            elapsed = time.perf_counter() - started
+            cpu = time.process_time() - cpu_started
+            self.get_logger().info(
+                f'[CAPTURE_PERF] station={request.station_name} '
+                f'heading={request.heading_index} wall_ms={1000 * elapsed:.1f} '
+                f'process_cpu_ms={1000 * cpu:.1f}')
             self._capture_mutex.release()
 
     def _joint_callback(self, message):
@@ -378,12 +394,14 @@ class ScanPerceptionNode(Node):
                    'lib/pick_and_place/candidate_grasp_plan')
         selected, report = select_body_sample(
             mask, depth, k, wrist, self._camera_calibration,
-            self._forward_offset, floor.point.z, start, planner)
+            self._forward_offset, floor.point.z, start, planner,
+            align_floor=self._align_grasp_floor, min_body_depth=self._min_body_depth)
         self._candidate_reports[index] = report
         strategy = 'candidate_body' if selected['plan'].get('feasible') else 'candidate_approach'
         reason = (f"{strategy}; forward={self._forward_offset:.3f}; "
                   f"body={selected['body_percentile']}%; width={selected['width_m']:.3f}; "
-                  f"pitch={selected['plan'].get('pitch_degrees', 'unreachable')}")
+                  f"pitch={selected['plan'].get('pitch_degrees', 'unreachable')}; "
+                  f"floor_z_correction={selected.get('floor_correction_m', 0.):.4f}")
         return DepthSample(*selected['pixel'], selected['depth_m'],
                            selected['depth_uncertainty_m'], 30), strategy, reason
 
@@ -403,6 +421,7 @@ class ScanPerceptionNode(Node):
         captured_frames = []
         last_error = ''
         seen_yolo = False
+        empty_limit = min(self._empty_scene_frames, request.burst_frames)
 
         while collected_frames < request.burst_frames:
             frame = self._next_synchronized_frame(
@@ -445,18 +464,13 @@ class ScanPerceptionNode(Node):
                     best_annotated = annotated
                 last_stamp = depth_message.header.stamp
                 collected_frames += 1
-                # Preserve negative evidence and inspect the entire requested burst.
-                if not seen_yolo and collected_frames >= request.burst_frames:
+                # Empty headings need neither a positive confirmation burst nor photos.
+                # Any YOLO target, even without valid depth, keeps the full capture path.
+                if not seen_yolo and collected_frames >= empty_limit:
                     response.success = True
-                    response.image_reference = self._save_evidence(
-                        request.mission_id, request.station_name, int(request.heading_index),
-                        best_annotated, suffix='_empty')
+                    response.image_reference = ''
                     response.message = (f'YOLO: no target in {collected_frames} frames; '
-                                        'negative image saved')
-                    if response.image_reference:
-                        Path(response.image_reference).with_suffix('.json').write_text(
-                            json.dumps({'frames': collected_frames, 'confirmed_objects': 0,
-                                        'reason': response.message}), encoding='utf-8')
+                                        'empty heading skipped; no image saved')
                     return response
                 if confirm_burst(detections, self._association_gate,
                                  int(request.min_confirmations)):
@@ -794,8 +808,11 @@ class ScanPerceptionNode(Node):
                             continue
                     else:
                         strategy = 'candidate_approach'
-                point, uncertainty = self._sample_point_in_map(
-                    sample, image.shape, depth, info, header)
+                if result_index in self._candidate_reports:
+                    point, uncertainty = self._candidate_point_in_map(result_index, header)
+                else:
+                    point, uncertainty = self._sample_point_in_map(
+                        sample, image.shape, depth, info, header)
                 if sample is not None:
                     self._grasp_replay[result_index]['grasp_depth_m'] = np.asarray(sample.distance)
                 if point is None:
@@ -875,6 +892,22 @@ class ScanPerceptionNode(Node):
         )
         return self._sample_point_in_map(sample, rgb_shape, depth, info, header)
 
+    def _candidate_point_in_map(self, index, header):
+        """Publish the evaluated observed point, including its bounded height alignment."""
+        selected = self._candidate_reports[index]['selected']
+        point = PointStamped()
+        point.header.stamp = header.stamp
+        point.header.frame_id = 'link1'
+        # Forward +30mm belongs to the executor, not this observation boundary.
+        point.point.x, point.point.y, point.point.z = selected['observed_link1']
+        try:
+            transformed = self._tf_buffer.transform(
+                point, self._map_frame, timeout=Duration(seconds=0.2))
+            return transformed, selected['depth_uncertainty_m']
+        except Exception as exception:
+            self.get_logger().warning(f'No timestamped candidate-to-map transform: {exception}')
+            return None, 0.0
+
     def _sample_point_in_map(self, sample, rgb_shape, depth, info, header):
         if sample is None:
             return None, 0.0
@@ -914,6 +947,8 @@ class ScanPerceptionNode(Node):
 
     def _save_evidence(
             self, mission_id, station_name, heading_index, image, suffix=''):
+        if image is None:
+            return ''
         mission = ''.join(
             character if character.isalnum() or character in '-_'
             else '_'
@@ -929,12 +964,10 @@ class ScanPerceptionNode(Node):
         path = directory / (
             f'heading_{heading_index}_capture_{self._capture_count:03d}{suffix}.jpg'
         )
-        if image is not None:
-            if not cv2.imwrite(str(path), image):
-                raise OSError(f'Failed to save evidence image: {path}')
-            self.get_logger().info(f'[IMAGE_SAVED] {path}')
-            return str(path)
-        return ''
+        if not cv2.imwrite(str(path), image):
+            raise OSError(f'Failed to save evidence image: {path}')
+        self.get_logger().info(f'[IMAGE_SAVED] {path}')
+        return str(path)
 
 
 def main(args=None):

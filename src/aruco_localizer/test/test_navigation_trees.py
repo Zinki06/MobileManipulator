@@ -5,7 +5,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 from launch import LaunchContext
-from launch.actions import GroupAction, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 import yaml
 
 
@@ -22,10 +22,17 @@ def test_launch_selects_explicit_ordinary_checker(tmp_path, monkeypatch):
                         lambda name: str(package) if name == 'aruco_localizer'
                         else installed_lookup(name))
     description = module.generate_launch_description()
+    context = LaunchContext()
+    for action in description.entities:
+        if isinstance(action, DeclareLaunchArgument):
+            action.execute(context)
     group = next(action for action in description.entities if isinstance(action, GroupAction))
     include = next(action for action in group.get_sub_entities()
                    if isinstance(action, IncludeLaunchDescription))
-    params = dict(include.launch_arguments)['params_file'].perform(LaunchContext())
+    params = dict(include.launch_arguments)['params_file'].perform(context)
+    configured = yaml.safe_load(Path(params).read_text())
+    assert configured['controller_server']['ros__parameters'][
+        'StationPath']['desired_linear_vel'] == 0.16
     settings = yaml.safe_load(Path(params).read_text())['bt_navigator']['ros__parameters']
     for field in ('default_nav_to_pose_bt_xml', 'default_nav_through_poses_bt_xml'):
         root = ET.parse(settings[field]).getroot()

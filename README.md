@@ -8,6 +8,11 @@
 - ros2 pkg create --build-type ament_cmake <package_name> //cpp
 - ros2 pkg create --build-type ament_python <package_name> //python
 
+## 디버깅 문서
+
+- [현재 디버깅 로그 확인 방법](docs/DEBUG_LOG_GUIDE.md): 실행 폴더 선택, 실시간 확인,
+  검출·파지·운반·종료 문제별 검색 명령과 성능 지표 읽기.
+
 ## MEMO
 - grasping 개선 필요. 좀 더 들어가야하는데 안 들어가서 바로 앞에서 놓침
 - id=4에서 멈춰있는 경향이 있음 : TION_FAULT] Rejected map reset: translation=0.455m yaw=0.160rad. Motion inhibited; inspect localization before restarting.

@@ -1,0 +1,473 @@
+Starting >>> cleanup_task_manager
+UpdateCTestConfiguration  from :/home/user/turtlebot3_ws/build/cleanup_task_manager/CTestConfiguration.ini
+Parse Config file:/home/user/turtlebot3_ws/build/cleanup_task_manager/CTestConfiguration.ini
+   Site: ubuntu
+   Build name: (empty)
+ Add coverage exclude regular expressions.
+Create new tag: 20260906-1000 - Experimental
+UpdateCTestConfiguration  from :/home/user/turtlebot3_ws/build/cleanup_task_manager/CTestConfiguration.ini
+Parse Config file:/home/user/turtlebot3_ws/build/cleanup_task_manager/CTestConfiguration.ini
+Test project /home/user/turtlebot3_ws/build/cleanup_task_manager
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start 1: test_task_config
+
+1: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/cleanup_task_manager/test_results/cleanup_task_manager/test_task_config.gtest.xml" "--package-name" "cleanup_task_manager" "--output-file" "/home/user/turtlebot3_ws/build/cleanup_task_manager/ament_cmake_gtest/test_task_config.txt" "--command" "/home/user/turtlebot3_ws/build/cleanup_task_manager/test_task_config" "--gtest_output=xml:/home/user/turtlebot3_ws/build/cleanup_task_manager/test_results/cleanup_task_manager/test_task_config.gtest.xml"
+1: Test timeout computed to be: 60
+1: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/cleanup_task_manager':
+1:  - /home/user/turtlebot3_ws/build/cleanup_task_manager/test_task_config --gtest_output=xml:/home/user/turtlebot3_ws/build/cleanup_task_manager/test_results/cleanup_task_manager/test_task_config.gtest.xml
+1: Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+1: [==========] Running 5 tests from 1 test suite.
+1: [----------] Global test environment set-up.
+1: [----------] 5 tests from TaskConfig
+1: [ RUN      ] TaskConfig.LoadsSafeDefaultsAndDropPose
+1: [       OK ] TaskConfig.LoadsSafeDefaultsAndDropPose (1 ms)
+1: [ RUN      ] TaskConfig.ExclusionUsesObjectLocationRatherThanBaseStop
+1: [       OK ] TaskConfig.ExclusionUsesObjectLocationRatherThanBaseStop (0 ms)
+1: [ RUN      ] TaskConfig.RejectsInvalidDistanceRange
+1: [       OK ] TaskConfig.RejectsInvalidDistanceRange (0 ms)
+1: [ RUN      ] TaskConfig.RejectsDuplicateStationNames
+1: [       OK ] TaskConfig.RejectsDuplicateStationNames (1 ms)
+1: [ RUN      ] TaskConfig.RejectsImpossibleBurstConfirmation
+1: [       OK ] TaskConfig.RejectsImpossibleBurstConfirmation (0 ms)
+1: [----------] 5 tests from TaskConfig (2 ms total)
+1: 
+1: [----------] Global test environment tear-down
+1: [==========] 5 tests from 1 test suite ran. (2 ms total)
+1: [  PASSED  ] 5 tests.
+1: -- run_test.py: return code 0
+1: -- run_test.py: inject classname prefix into gtest result file '/home/user/turtlebot3_ws/build/cleanup_task_manager/test_results/cleanup_task_manager/test_task_config.gtest.xml'
+1: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/cleanup_task_manager/test_results/cleanup_task_manager/test_task_config.gtest.xml'
+1/2 Test #1: test_task_config .................   Passed    0.17 sec
+test 2
+    Start 2: test_mission_flow
+
+2: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/cleanup_task_manager/test_results/cleanup_task_manager/test_mission_flow.xunit.xml" "--package-name" "cleanup_task_manager" "--output-file" "/home/user/turtlebot3_ws/build/cleanup_task_manager/ament_cmake_pytest/test_mission_flow.txt" "--command" "/usr/bin/python3" "-u" "-m" "pytest" "/home/user/turtlebot3_ws/src/cleanup_task_manager/test/test_mission_flow.py" "-o" "cache_dir=/home/user/turtlebot3_ws/build/cleanup_task_manager/ament_cmake_pytest/test_mission_flow/.cache" "--junit-xml=/home/user/turtlebot3_ws/build/cleanup_task_manager/test_results/cleanup_task_manager/test_mission_flow.xunit.xml" "--junit-prefix=cleanup_task_manager"
+2: Test timeout computed to be: 180
+2: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/cleanup_task_manager':
+2:  - /usr/bin/python3 -u -m pytest /home/user/turtlebot3_ws/src/cleanup_task_manager/test/test_mission_flow.py -o cache_dir=/home/user/turtlebot3_ws/build/cleanup_task_manager/ament_cmake_pytest/test_mission_flow/.cache --junit-xml=/home/user/turtlebot3_ws/build/cleanup_task_manager/test_results/cleanup_task_manager/test_mission_flow.xunit.xml --junit-prefix=cleanup_task_manager
+2: ============================= test session starts ==============================
+2: platform linux -- Python 3.10.12, pytest-6.2.5, py-1.10.0, pluggy-0.13.0
+2: cachedir: build/cleanup_task_manager/ament_cmake_pytest/test_mission_flow/.cache
+2: rootdir: /home/user/turtlebot3_ws
+2: collected 21 items
+2: 
+2: ../../src/cleanup_task_manager/test/test_mission_flow.py ............... [ 71%]
+2: ......                                                                   [100%]
+2: 
+2: - generated xml file: /home/user/turtlebot3_ws/build/cleanup_task_manager/test_results/cleanup_task_manager/test_mission_flow.xunit.xml -
+2: ======================== 21 passed in 101.64s (0:01:41) ========================
+2: -- run_test.py: return code 0
+2: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/cleanup_task_manager/test_results/cleanup_task_manager/test_mission_flow.xunit.xml'
+2/2 Test #2: test_mission_flow ................   Passed  102.57 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+gtest     =   0.17 sec*proc (1 test)
+pytest    = 102.57 sec*proc (1 test)
+
+Total Test time (real) = 102.74 sec
+Finished <<< cleanup_task_manager [1min 43s]
+Starting >>> pick_and_place
+UpdateCTestConfiguration  from :/home/user/turtlebot3_ws/build/pick_and_place/CTestConfiguration.ini
+Parse Config file:/home/user/turtlebot3_ws/build/pick_and_place/CTestConfiguration.ini
+   Site: ubuntu
+   Build name: (empty)
+ Add coverage exclude regular expressions.
+Create new tag: 20260906-1002 - Experimental
+UpdateCTestConfiguration  from :/home/user/turtlebot3_ws/build/pick_and_place/CTestConfiguration.ini
+Parse Config file:/home/user/turtlebot3_ws/build/pick_and_place/CTestConfiguration.ini
+Test project /home/user/turtlebot3_ws/build/pick_and_place
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start 1: test_pick_execution
+
+1: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/pick_and_place/test_results/pick_and_place/test_pick_execution.xunit.xml" "--package-name" "pick_and_place" "--output-file" "/home/user/turtlebot3_ws/build/pick_and_place/ament_cmake_pytest/test_pick_execution.txt" "--command" "/usr/bin/python3" "-u" "-m" "pytest" "/home/user/turtlebot3_ws/src/pick_and_place/test/test_pick_execution.py" "-o" "cache_dir=/home/user/turtlebot3_ws/build/pick_and_place/ament_cmake_pytest/test_pick_execution/.cache" "--junit-xml=/home/user/turtlebot3_ws/build/pick_and_place/test_results/pick_and_place/test_pick_execution.xunit.xml" "--junit-prefix=pick_and_place"
+1: Test timeout computed to be: 90
+1: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/pick_and_place':
+1:  - /usr/bin/python3 -u -m pytest /home/user/turtlebot3_ws/src/pick_and_place/test/test_pick_execution.py -o cache_dir=/home/user/turtlebot3_ws/build/pick_and_place/ament_cmake_pytest/test_pick_execution/.cache --junit-xml=/home/user/turtlebot3_ws/build/pick_and_place/test_results/pick_and_place/test_pick_execution.xunit.xml --junit-prefix=pick_and_place
+1: ============================= test session starts ==============================
+1: platform linux -- Python 3.10.12, pytest-6.2.5, py-1.10.0, pluggy-0.13.0
+1: cachedir: build/pick_and_place/ament_cmake_pytest/test_pick_execution/.cache
+1: rootdir: /home/user/turtlebot3_ws
+1: collected 8 items
+1: 
+1: ../../src/pick_and_place/test/test_pick_execution.py ........            [100%]
+1: 
+1: - generated xml file: /home/user/turtlebot3_ws/build/pick_and_place/test_results/pick_and_place/test_pick_execution.xunit.xml -
+1: ============================== 8 passed in 26.41s ==============================
+1: -- run_test.py: return code 0
+1: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/pick_and_place/test_results/pick_and_place/test_pick_execution.xunit.xml'
+1/2 Test #1: test_pick_execution ..............   Passed   27.23 sec
+test 2
+    Start 2: test_grasp_kinematics
+
+2: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/pick_and_place/test_results/pick_and_place/test_grasp_kinematics.gtest.xml" "--package-name" "pick_and_place" "--output-file" "/home/user/turtlebot3_ws/build/pick_and_place/ament_cmake_gtest/test_grasp_kinematics.txt" "--command" "/home/user/turtlebot3_ws/build/pick_and_place/test_grasp_kinematics" "--gtest_output=xml:/home/user/turtlebot3_ws/build/pick_and_place/test_results/pick_and_place/test_grasp_kinematics.gtest.xml"
+2: Test timeout computed to be: 60
+2: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/pick_and_place':
+2:  - /home/user/turtlebot3_ws/build/pick_and_place/test_grasp_kinematics --gtest_output=xml:/home/user/turtlebot3_ws/build/pick_and_place/test_results/pick_and_place/test_grasp_kinematics.gtest.xml
+2: Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+2: [==========] Running 9 tests from 3 test suites.
+2: [----------] Global test environment set-up.
+2: [----------] 1 test from PlaceKinematics
+2: [ RUN      ] PlaceKinematics.LowReleaseAndRetreatAtCollectionStandoff
+2: [       OK ] PlaceKinematics.LowReleaseAndRetreatAtCollectionStandoff (1 ms)
+2: [----------] 1 test from PlaceKinematics (1 ms total)
+2: 
+2: [----------] 3 tests from CandidateGrasp
+2: [ RUN      ] CandidateGrasp.DiagonalBodyHasCompleteFloorClearDescent
+2: [       OK ] CandidateGrasp.DiagonalBodyHasCompleteFloorClearDescent (1 ms)
+2: [ RUN      ] CandidateGrasp.RejectsUnreachableTargetAndInvalidStart
+2: [       OK ] CandidateGrasp.RejectsUnreachableTargetAndInvalidStart (0 ms)
+2: [ RUN      ] CandidateGrasp.RejectedLiveCaptureRetainsDiagnosticReasons
+2: [       OK ] CandidateGrasp.RejectedLiveCaptureRetainsDiagnosticReasons (0 ms)
+2: [----------] 3 tests from CandidateGrasp (1 ms total)
+2: 
+2: [----------] 5 tests from GraspKinematics
+2: [ RUN      ] GraspKinematics.LoggedTargetRequiresBaseApproach
+2: [       OK ] GraspKinematics.LoggedTargetRequiresBaseApproach (2 ms)
+2: [ RUN      ] GraspKinematics.RejectsNonFiniteAndImpossibleHeights
+2: [       OK ] GraspKinematics.RejectsNonFiniteAndImpossibleHeights (0 ms)
+2: [ RUN      ] GraspKinematics.RejectsLoggedShallowGraspsAndAcceptsCloserCompletePlan
+2: [       OK ] GraspKinematics.RejectsLoggedShallowGraspsAndAcceptsCloserCompletePlan (0 ms)
+2: [ RUN      ] GraspKinematics.InsertionNeverCrossesFloorOrExceedsBound
+2: [       OK ] GraspKinematics.InsertionNeverCrossesFloorOrExceedsBound (0 ms)
+2: [ RUN      ] GraspKinematics.ActualFingerMeshStaysAboveFloorAtLowSurface
+2: [       OK ] GraspKinematics.ActualFingerMeshStaysAboveFloorAtLowSurface (0 ms)
+2: [----------] 5 tests from GraspKinematics (2 ms total)
+2: 
+2: [----------] Global test environment tear-down
+2: [==========] 9 tests from 3 test suites ran. (4 ms total)
+2: [  PASSED  ] 9 tests.
+2: -- run_test.py: return code 0
+2: -- run_test.py: inject classname prefix into gtest result file '/home/user/turtlebot3_ws/build/pick_and_place/test_results/pick_and_place/test_grasp_kinematics.gtest.xml'
+2: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/pick_and_place/test_results/pick_and_place/test_grasp_kinematics.gtest.xml'
+2/2 Test #2: test_grasp_kinematics ............   Passed    0.17 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+gtest     =   0.17 sec*proc (1 test)
+pytest    =  27.23 sec*proc (1 test)
+
+Total Test time (real) =  27.40 sec
+Finished <<< pick_and_place [27.5s]
+Starting >>> aruco_localizer
+UpdateCTestConfiguration  from :/home/user/turtlebot3_ws/build/aruco_localizer/CTestConfiguration.ini
+Parse Config file:/home/user/turtlebot3_ws/build/aruco_localizer/CTestConfiguration.ini
+   Site: ubuntu
+   Build name: (empty)
+ Add coverage exclude regular expressions.
+Create new tag: 20260906-1002 - Experimental
+UpdateCTestConfiguration  from :/home/user/turtlebot3_ws/build/aruco_localizer/CTestConfiguration.ini
+Parse Config file:/home/user/turtlebot3_ws/build/aruco_localizer/CTestConfiguration.ini
+Test project /home/user/turtlebot3_ws/build/aruco_localizer
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start 1: test_obstacle_depth_node
+
+1: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_obstacle_depth_node.xunit.xml" "--package-name" "aruco_localizer" "--output-file" "/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_pytest/test_obstacle_depth_node.txt" "--command" "/usr/bin/python3" "-u" "-m" "pytest" "/home/user/turtlebot3_ws/src/aruco_localizer/test/test_obstacle_depth_node.py" "-o" "cache_dir=/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_pytest/test_obstacle_depth_node/.cache" "--junit-xml=/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_obstacle_depth_node.xunit.xml" "--junit-prefix=aruco_localizer"
+1: Test timeout computed to be: 30
+1: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/aruco_localizer':
+1:  - /usr/bin/python3 -u -m pytest /home/user/turtlebot3_ws/src/aruco_localizer/test/test_obstacle_depth_node.py -o cache_dir=/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_pytest/test_obstacle_depth_node/.cache --junit-xml=/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_obstacle_depth_node.xunit.xml --junit-prefix=aruco_localizer
+1: ============================= test session starts ==============================
+1: platform linux -- Python 3.10.12, pytest-6.2.5, py-1.10.0, pluggy-0.13.0
+1: cachedir: build/aruco_localizer/ament_cmake_pytest/test_obstacle_depth_node/.cache
+1: rootdir: /home/user/turtlebot3_ws
+1: collected 1 item
+1: 
+1: ../../src/aruco_localizer/test/test_obstacle_depth_node.py .             [100%]
+1: 
+1: - generated xml file: /home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_obstacle_depth_node.xunit.xml -
+1: ============================== 1 passed in 5.40s ===============================
+1: -- run_test.py: return code 0
+1: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_obstacle_depth_node.xunit.xml'
+1/8 Test #1: test_obstacle_depth_node .........   Passed    6.17 sec
+test 2
+    Start 2: test_navigation_trees
+
+2: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_navigation_trees.xunit.xml" "--package-name" "aruco_localizer" "--output-file" "/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_pytest/test_navigation_trees.txt" "--command" "/usr/bin/python3" "-u" "-m" "pytest" "/home/user/turtlebot3_ws/src/aruco_localizer/test/test_navigation_trees.py" "-o" "cache_dir=/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_pytest/test_navigation_trees/.cache" "--junit-xml=/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_navigation_trees.xunit.xml" "--junit-prefix=aruco_localizer"
+2: Test timeout computed to be: 60
+2: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/aruco_localizer':
+2:  - /usr/bin/python3 -u -m pytest /home/user/turtlebot3_ws/src/aruco_localizer/test/test_navigation_trees.py -o cache_dir=/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_pytest/test_navigation_trees/.cache --junit-xml=/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_navigation_trees.xunit.xml --junit-prefix=aruco_localizer
+2: ============================= test session starts ==============================
+2: platform linux -- Python 3.10.12, pytest-6.2.5, py-1.10.0, pluggy-0.13.0
+2: cachedir: build/aruco_localizer/ament_cmake_pytest/test_navigation_trees/.cache
+2: rootdir: /home/user/turtlebot3_ws
+2: collected 2 items
+2: 
+2: ../../src/aruco_localizer/test/test_navigation_trees.py F.               [100%]
+2: 
+2: =================================== FAILURES ===================================
+2: ________________ test_launch_selects_explicit_ordinary_checker _________________
+2: 
+2: tmp_path = PosixPath('/tmp/pytest-of-user/pytest-17/test_launch_selects_explicit_o0')
+2: monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff7f508cd0>
+2: 
+2:     def test_launch_selects_explicit_ordinary_checker(tmp_path, monkeypatch):
+2:         """Resolve launch substitutions without starting any robot nodes."""
+2:         monkeypatch.setenv('ROS_LOG_DIR', str(tmp_path / 'launch_logs'))
+2:         package = Path(__file__).parents[1]
+2:         spec = importlib.util.spec_from_file_location(
+2:             'aruco_launch_test', package / 'launch' / 'aruco_launcher.launch.py')
+2:         module = importlib.util.module_from_spec(spec)
+2:         spec.loader.exec_module(module)
+2:         installed_lookup = module.get_package_share_directory
+2:         monkeypatch.setattr(module, 'get_package_share_directory',
+2:                             lambda name: str(package) if name == 'aruco_localizer'
+2:                             else installed_lookup(name))
+2:         description = module.generate_launch_description()
+2:         group = next(action for action in description.entities if isinstance(action, GroupAction))
+2:         include = next(action for action in group.get_sub_entities()
+2:                        if isinstance(action, IncludeLaunchDescription))
+2: >       params = dict(include.launch_arguments)['params_file'].perform(LaunchContext())
+2: 
+2: ../../src/aruco_localizer/test/test_navigation_trees.py:28: 
+2: _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+2: ../robot_motion/robot_motion/performance.py:83: in perform
+2:     profile = yaml.safe_load(Path(perform_substitutions(context, self.profile)).read_text())
+2: /opt/ros/humble/lib/python3.10/site-packages/launch/utilities/perform_substitutions_impl.py:26: in perform_substitutions
+2:     return ''.join([context.perform_substitution(sub) for sub in subs])
+2: /opt/ros/humble/lib/python3.10/site-packages/launch/utilities/perform_substitutions_impl.py:26: in <listcomp>
+2:     return ''.join([context.perform_substitution(sub) for sub in subs])
+2: /opt/ros/humble/lib/python3.10/site-packages/launch/launch_context.py:240: in perform_substitution
+2:     return substitution.perform(self)
+2: _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+2: 
+2: self = <launch.substitutions.launch_configuration.LaunchConfiguration object at 0xffff7f3149d0>
+2: context = <launch.launch_context.LaunchContext object at 0xffff7f370910>
+2: 
+2:     def perform(self, context: LaunchContext) -> Text:
+2:         """
+2:         Perform the substitution by retrieving the launch configuration, as a string.
+2:     
+2:         If the launch configuration is not found and a default has been set,
+2:         the default will be returned, as a string.
+2:         """
+2:         from ..utilities import perform_substitutions
+2:         expanded_variable_name = perform_substitutions(context, self.__variable_name)
+2:         if expanded_variable_name not in context.launch_configurations:
+2:             if self.__default is None:
+2: >               raise SubstitutionFailure(
+2:                     "launch configuration '{}' does not exist".format(expanded_variable_name))
+2: E               launch.substitutions.substitution_failure.SubstitutionFailure: launch configuration 'performance_config_file' does not exist
+2: 
+2: /opt/ros/humble/lib/python3.10/site-packages/launch/substitutions/launch_configuration.py:98: SubstitutionFailure
+2: - generated xml file: /home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_navigation_trees.xunit.xml -
+2: =========================== short test summary info ============================
+2: FAILED ../../src/aruco_localizer/test/test_navigation_trees.py::test_launch_selects_explicit_ordinary_checker
+2: ========================= 1 failed, 1 passed in 0.63s ==========================
+2: -- run_test.py: return code 1
+2: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_navigation_trees.xunit.xml'
+2/8 Test #2: test_navigation_trees ............***Failed    1.26 sec
+test 3
+    Start 3: test_motion_safety
+
+3: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_motion_safety.xunit.xml" "--package-name" "aruco_localizer" "--output-file" "/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_pytest/test_motion_safety.txt" "--command" "/usr/bin/python3" "-u" "-m" "pytest" "/home/user/turtlebot3_ws/src/aruco_localizer/test/test_motion_safety.py" "-o" "cache_dir=/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_pytest/test_motion_safety/.cache" "--junit-xml=/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_motion_safety.xunit.xml" "--junit-prefix=aruco_localizer"
+3: Test timeout computed to be: 60
+3: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/aruco_localizer':
+3:  - /usr/bin/python3 -u -m pytest /home/user/turtlebot3_ws/src/aruco_localizer/test/test_motion_safety.py -o cache_dir=/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_pytest/test_motion_safety/.cache --junit-xml=/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_motion_safety.xunit.xml --junit-prefix=aruco_localizer
+3: ============================= test session starts ==============================
+3: platform linux -- Python 3.10.12, pytest-6.2.5, py-1.10.0, pluggy-0.13.0
+3: cachedir: build/aruco_localizer/ament_cmake_pytest/test_motion_safety/.cache
+3: rootdir: /home/user/turtlebot3_ws
+3: collected 2 items
+3: 
+3: ../../src/aruco_localizer/test/test_motion_safety.py ..                  [100%]
+3: 
+3: - generated xml file: /home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_motion_safety.xunit.xml -
+3: ============================== 2 passed in 21.02s ==============================
+3: -- run_test.py: return code 0
+3: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_motion_safety.xunit.xml'
+3/8 Test #3: test_motion_safety ...............   Passed   21.78 sec
+test 4
+    Start 4: test_depth_projection
+
+4: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_depth_projection.gtest.xml" "--package-name" "aruco_localizer" "--output-file" "/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_gtest/test_depth_projection.txt" "--command" "/home/user/turtlebot3_ws/build/aruco_localizer/test_depth_projection" "--gtest_output=xml:/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_depth_projection.gtest.xml"
+4: Test timeout computed to be: 60
+4: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/aruco_localizer':
+4:  - /home/user/turtlebot3_ws/build/aruco_localizer/test_depth_projection --gtest_output=xml:/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_depth_projection.gtest.xml
+4: Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+4: [==========] Running 2 tests from 1 test suite.
+4: [----------] Global test environment set-up.
+4: [----------] 2 tests from DepthProjection
+4: [ RUN      ] DepthProjection.StridePaddingAndEndianness
+4: [       OK ] DepthProjection.StridePaddingAndEndianness (0 ms)
+4: [ RUN      ] DepthProjection.InvalidValuesAndBufferFailClosed
+4: [       OK ] DepthProjection.InvalidValuesAndBufferFailClosed (0 ms)
+4: [----------] 2 tests from DepthProjection (0 ms total)
+4: 
+4: [----------] Global test environment tear-down
+4: [==========] 2 tests from 1 test suite ran. (0 ms total)
+4: [  PASSED  ] 2 tests.
+4: -- run_test.py: return code 0
+4: -- run_test.py: inject classname prefix into gtest result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_depth_projection.gtest.xml'
+4: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_depth_projection.gtest.xml'
+4/8 Test #4: test_depth_projection ............   Passed    0.17 sec
+test 5
+    Start 5: test_route_config
+
+5: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_route_config.gtest.xml" "--package-name" "aruco_localizer" "--output-file" "/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_gtest/test_route_config.txt" "--command" "/home/user/turtlebot3_ws/build/aruco_localizer/test_route_config" "--gtest_output=xml:/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_route_config.gtest.xml"
+5: Test timeout computed to be: 60
+5: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/aruco_localizer':
+5:  - /home/user/turtlebot3_ws/build/aruco_localizer/test_route_config --gtest_output=xml:/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_route_config.gtest.xml
+5: Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+5: [==========] Running 6 tests from 1 test suite.
+5: [----------] Global test environment set-up.
+5: [----------] 6 tests from RouteConfig
+5: [ RUN      ] RouteConfig.LoadsIndependentVirtualWaypoints
+5: [       OK ] RouteConfig.LoadsIndependentVirtualWaypoints (1 ms)
+5: [ RUN      ] RouteConfig.RejectsUnknownWaypointReference
+5: [       OK ] RouteConfig.RejectsUnknownWaypointReference (0 ms)
+5: [ RUN      ] RouteConfig.RejectsMissingPoseField
+5: [       OK ] RouteConfig.RejectsMissingPoseField (0 ms)
+5: [ RUN      ] RouteConfig.RejectsNonFinitePose
+5: [       OK ] RouteConfig.RejectsNonFinitePose (0 ms)
+5: [ RUN      ] RouteConfig.StationScanRouteVisitsSixOrderedScanPoses
+5: [       OK ] RouteConfig.StationScanRouteVisitsSixOrderedScanPoses (1 ms)
+5: [ RUN      ] RouteConfig.RejectsDuplicateMarkerAssociations
+5: [       OK ] RouteConfig.RejectsDuplicateMarkerAssociations (0 ms)
+5: [----------] 6 tests from RouteConfig (2 ms total)
+5: 
+5: [----------] Global test environment tear-down
+5: [==========] 6 tests from 1 test suite ran. (3 ms total)
+5: [  PASSED  ] 6 tests.
+5: -- run_test.py: return code 0
+5: -- run_test.py: inject classname prefix into gtest result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_route_config.gtest.xml'
+5: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_route_config.gtest.xml'
+5/8 Test #5: test_route_config ................   Passed    0.18 sec
+test 6
+    Start 6: test_localization_policy
+
+6: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_localization_policy.gtest.xml" "--package-name" "aruco_localizer" "--output-file" "/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_gtest/test_localization_policy.txt" "--command" "/home/user/turtlebot3_ws/build/aruco_localizer/test_localization_policy" "--gtest_output=xml:/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_localization_policy.gtest.xml"
+6: Test timeout computed to be: 60
+6: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/aruco_localizer':
+6:  - /home/user/turtlebot3_ws/build/aruco_localizer/test_localization_policy --gtest_output=xml:/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_localization_policy.gtest.xml
+6: Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+6: [==========] Running 7 tests from 2 test suites.
+6: [----------] Global test environment set-up.
+6: [----------] 5 tests from LocalizationPolicy
+6: [ RUN      ] LocalizationPolicy.AcceptsStableObservationInRange
+6: [       OK ] LocalizationPolicy.AcceptsStableObservationInRange (0 ms)
+6: [ RUN      ] LocalizationPolicy.UsesPlanarDistanceForNearFieldRejection
+6: [       OK ] LocalizationPolicy.UsesPlanarDistanceForNearFieldRejection (0 ms)
+6: [ RUN      ] LocalizationPolicy.RejectsCorrectionDuringRotation
+6: [       OK ] LocalizationPolicy.RejectsCorrectionDuringRotation (0 ms)
+6: [ RUN      ] LocalizationPolicy.RejectsFarAndInvalidObservations
+6: [       OK ] LocalizationPolicy.RejectsFarAndInvalidObservations (0 ms)
+6: [ RUN      ] LocalizationPolicy.AuthorizesOnlyExpectedMarkerWhenRouteProvidesOne
+6: [       OK ] LocalizationPolicy.AuthorizesOnlyExpectedMarkerWhenRouteProvidesOne (0 ms)
+6: [----------] 5 tests from LocalizationPolicy (0 ms total)
+6: 
+6: [----------] 2 tests from CorrectionGeometry
+6: [ RUN      ] CorrectionGeometry.LoggedStationFourIsSixCmNotFortyFiveCm
+6: [       OK ] CorrectionGeometry.LoggedStationFourIsSixCmNotFortyFiveCm (0 ms)
+6: [ RUN      ] CorrectionGeometry.OriginIndependentAndRealJumpsRemainVisible
+6: [       OK ] CorrectionGeometry.OriginIndependentAndRealJumpsRemainVisible (0 ms)
+6: [----------] 2 tests from CorrectionGeometry (0 ms total)
+6: 
+6: [----------] Global test environment tear-down
+6: [==========] 7 tests from 2 test suites ran. (0 ms total)
+6: [  PASSED  ] 7 tests.
+6: -- run_test.py: return code 0
+6: -- run_test.py: inject classname prefix into gtest result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_localization_policy.gtest.xml'
+6: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_localization_policy.gtest.xml'
+6/8 Test #6: test_localization_policy .........   Passed    0.16 sec
+test 7
+    Start 7: test_marker_guidance
+
+7: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_marker_guidance.gtest.xml" "--package-name" "aruco_localizer" "--output-file" "/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_gtest/test_marker_guidance.txt" "--command" "/home/user/turtlebot3_ws/build/aruco_localizer/test_marker_guidance" "--gtest_output=xml:/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_marker_guidance.gtest.xml"
+7: Test timeout computed to be: 60
+7: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/aruco_localizer':
+7:  - /home/user/turtlebot3_ws/build/aruco_localizer/test_marker_guidance --gtest_output=xml:/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_marker_guidance.gtest.xml
+7: Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+7: [==========] Running 5 tests from 1 test suite.
+7: [----------] Global test environment set-up.
+7: [----------] 5 tests from MarkerGuidance
+7: [ RUN      ] MarkerGuidance.PreviousMarkerPredictsOppositeDirectionOnStraightRoute
+7: [       OK ] MarkerGuidance.PreviousMarkerPredictsOppositeDirectionOnStraightRoute (0 ms)
+7: [ RUN      ] MarkerGuidance.RouteGeometryHandlesCornerInsteadOfBlindHalfTurn
+7: [       OK ] MarkerGuidance.RouteGeometryHandlesCornerInsteadOfBlindHalfTurn (0 ms)
+7: [ RUN      ] MarkerGuidance.PredictionWrapsAcrossPiBoundary
+7: [       OK ] MarkerGuidance.PredictionWrapsAcrossPiBoundary (0 ms)
+7: [ RUN      ] MarkerGuidance.SymmetricSearchReturnsToOriginalHeading
+7: [       OK ] MarkerGuidance.SymmetricSearchReturnsToOriginalHeading (0 ms)
+7: [ RUN      ] MarkerGuidance.SymmetricSearchRepeatsItsThreeTurnCycle
+7: [       OK ] MarkerGuidance.SymmetricSearchRepeatsItsThreeTurnCycle (0 ms)
+7: [----------] 5 tests from MarkerGuidance (0 ms total)
+7: 
+7: [----------] Global test environment tear-down
+7: [==========] 5 tests from 1 test suite ran. (0 ms total)
+7: [  PASSED  ] 5 tests.
+7: -- run_test.py: return code 0
+7: -- run_test.py: inject classname prefix into gtest result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_marker_guidance.gtest.xml'
+7: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_marker_guidance.gtest.xml'
+7/8 Test #7: test_marker_guidance .............   Passed    0.17 sec
+test 8
+    Start 8: test_nav2_config
+
+8: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_nav2_config.gtest.xml" "--package-name" "aruco_localizer" "--output-file" "/home/user/turtlebot3_ws/build/aruco_localizer/ament_cmake_gtest/test_nav2_config.txt" "--command" "/home/user/turtlebot3_ws/build/aruco_localizer/test_nav2_config" "--gtest_output=xml:/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_nav2_config.gtest.xml"
+8: Test timeout computed to be: 60
+8: -- run_test.py: invoking following command in '/home/user/turtlebot3_ws/build/aruco_localizer':
+8:  - /home/user/turtlebot3_ws/build/aruco_localizer/test_nav2_config --gtest_output=xml:/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_nav2_config.gtest.xml
+8: Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+8: [==========] Running 4 tests from 1 test suite.
+8: [----------] Global test environment set-up.
+8: [----------] 4 tests from Nav2Config
+8: [ RUN      ] Nav2Config.StationControllerUsesHardwareExecutableSpeeds
+8: [       OK ] Nav2Config.StationControllerUsesHardwareExecutableSpeeds (2 ms)
+8: [ RUN      ] Nav2Config.ProgressCheckerCountsAngularMotion
+8: [       OK ] Nav2Config.ProgressCheckerCountsAngularMotion (2 ms)
+8: [ RUN      ] Nav2Config.ManipulationHasIndependentPreciseController
+8: [       OK ] Nav2Config.ManipulationHasIndependentPreciseController (2 ms)
+8: [ RUN      ] Nav2Config.ClearedAreaUsesStaticMapWithoutLiveObstacleDetours
+8: [       OK ] Nav2Config.ClearedAreaUsesStaticMapWithoutLiveObstacleDetours (2 ms)
+8: [----------] 4 tests from Nav2Config (8 ms total)
+8: 
+8: [----------] Global test environment tear-down
+8: [==========] 4 tests from 1 test suite ran. (8 ms total)
+8: [  PASSED  ] 4 tests.
+8: -- run_test.py: return code 0
+8: -- run_test.py: inject classname prefix into gtest result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_nav2_config.gtest.xml'
+8: -- run_test.py: verify result file '/home/user/turtlebot3_ws/build/aruco_localizer/test_results/aruco_localizer/test_nav2_config.gtest.xml'
+8/8 Test #8: test_nav2_config .................   Passed    0.17 sec
+
+88% tests passed, 1 tests failed out of 8
+
+Label Time Summary:
+gtest     =   0.84 sec*proc (5 tests)
+pytest    =  29.21 sec*proc (3 tests)
+
+Total Test time (real) =  30.06 sec
+
+The following tests FAILED:
+	  2 - test_navigation_trees (Failed)
+Errors while running CTest
+Output from these tests are in: /home/user/turtlebot3_ws/build/aruco_localizer/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.
+--- stderr: aruco_localizer
+Errors while running CTest
+Output from these tests are in: /home/user/turtlebot3_ws/build/aruco_localizer/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.
+---
+Finished <<< aruco_localizer [30.1s]	[ with test failures ]
+
+Summary: 3 packages finished [2min 41s]
+  1 package had stderr output: aruco_localizer
+  1 package had test failures: aruco_localizer

@@ -1,0 +1,53 @@
+Starting >>> cleanup_interfaces
+Starting >>> turtlebot3_manipulation_description
+Finished <<< turtlebot3_manipulation_description [0.84s]
+Starting >>> turtlebot3_manipulation_bringup
+Finished <<< turtlebot3_manipulation_bringup [0.79s]
+Starting >>> robot_motion
+Finished <<< cleanup_interfaces [5.17s]
+Starting >>> pick_and_place
+Finished <<< robot_motion [4.18s]
+Starting >>> turtlebot3_manipulation_moveit_config
+Finished <<< turtlebot3_manipulation_moveit_config [0.80s]
+Starting >>> ld08_driver
+Finished <<< pick_and_place [2.27s]
+Starting >>> cleanup_perception
+Finished <<< ld08_driver [1.63s]
+Starting >>> realsense_bringup
+--- stderr: realsense_bringup
+** WARNING ** io features related to pcap will be disabled
+** WARNING ** io features related to png will be disabled
+---
+Finished <<< realsense_bringup [3.16s]
+Starting >>> segmentation
+/home/user/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+  warnings.warn(msg)
+Finished <<< cleanup_perception [4.56s]
+Starting >>> turtlebot3_manipulation_cartographer
+Finished <<< turtlebot3_manipulation_cartographer [0.77s]
+Starting >>> turtlebot3_manipulation_hardware
+Finished <<< turtlebot3_manipulation_hardware [1.59s]
+Starting >>> turtlebot3_manipulation_navigation2
+Finished <<< turtlebot3_manipulation_navigation2 [0.78s]
+Starting >>> cleanup_planner
+--- stderr: segmentation
+/home/user/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+  warnings.warn(msg)
+---
+Finished <<< segmentation [4.31s]
+Starting >>> cleanup_task_manager
+Finished <<< cleanup_task_manager [2.19s]
+Starting >>> turtlebot3_manipulation_teleop
+Finished <<< cleanup_planner [4.24s]
+Starting >>> aruco_localizer
+Finished <<< turtlebot3_manipulation_teleop [1.64s]
+Starting >>> coin_d4_driver
+Finished <<< aruco_localizer [1.53s]
+Starting >>> turtlebot3_manipulation
+Finished <<< coin_d4_driver [1.60s]
+Starting >>> project_bringup
+Finished <<< project_bringup [0.19s]
+Finished <<< turtlebot3_manipulation [0.80s]
+
+Summary: 20 packages finished [22.5s]
+  2 packages had stderr output: realsense_bringup segmentation

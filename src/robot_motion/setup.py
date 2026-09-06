@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'controlled_hardware = robot_motion.controlled_hardware:main',
             'motion_executor = robot_motion.executor_node:main',
             'motion_diagnostics = robot_motion.diagnostics_node:main',
             'grasp_video_recorder = robot_motion.video_recorder:main',

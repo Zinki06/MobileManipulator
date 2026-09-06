@@ -1,0 +1,126 @@
+Starting >>> cleanup_interfaces
+Starting >>> turtlebot3_manipulation_description
+Finished <<< turtlebot3_manipulation_description [0.86s]
+Starting >>> turtlebot3_manipulation_bringup
+Finished <<< turtlebot3_manipulation_bringup [0.82s]
+Starting >>> robot_motion
+Finished <<< robot_motion [4.28s]
+Starting >>> turtlebot3_manipulation_moveit_config
+Finished <<< turtlebot3_manipulation_moveit_config [0.85s]
+Starting >>> ld08_driver
+Finished <<< cleanup_interfaces [20.7s]
+Starting >>> pick_and_place
+Finished <<< ld08_driver [29.8s]
+Starting >>> realsense_bringup
+--- stderr: pick_and_place
+CMake Warning at /opt/ros/humble/share/ament_cmake_pytest/cmake/ament_add_pytest_test.cmake:79 (message):
+  The Python module 'pytest' was not found, pytests cannot be run.  On Linux,
+  install the 'python3-pytest' package.  On other platforms, install 'pytest'
+  using pip.
+Call Stack (most recent call first):
+  CMakeLists.txt:50 (ament_add_pytest_test)
+
+
+---
+[Processing: pick_and_place, realsense_bringup]
+[Processing: pick_and_place, realsense_bringup]
+Finished <<< pick_and_place [1min 21s]
+Starting >>> cleanup_perception
+Finished <<< cleanup_perception [4.27s]
+Starting >>> segmentation
+/home/user/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+  warnings.warn(msg)
+--- stderr: segmentation
+/home/user/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+  warnings.warn(msg)
+---
+Finished <<< segmentation [4.21s]
+Starting >>> turtlebot3_manipulation_cartographer
+Finished <<< turtlebot3_manipulation_cartographer [0.79s]
+Starting >>> turtlebot3_manipulation_hardware
+Finished <<< turtlebot3_manipulation_hardware [16.9s]
+Starting >>> turtlebot3_manipulation_navigation2
+Finished <<< turtlebot3_manipulation_navigation2 [0.77s]
+Starting >>> cleanup_planner
+Finished <<< cleanup_planner [4.30s]
+Starting >>> cleanup_task_manager
+--- stderr: realsense_bringup
+** WARNING ** io features related to pcap will be disabled
+** WARNING ** io features related to png will be disabled
+---
+Finished <<< realsense_bringup [1min 38s]
+Starting >>> turtlebot3_manipulation_teleop
+[Processing: cleanup_task_manager, turtlebot3_manipulation_teleop]
+Finished <<< turtlebot3_manipulation_teleop [31.8s]
+Starting >>> aruco_localizer
+--- stderr: cleanup_task_manager
+CMake Warning at /opt/ros/humble/share/ament_cmake_pytest/cmake/ament_add_pytest_test.cmake:79 (message):
+  The Python module 'pytest' was not found, pytests cannot be run.  On Linux,
+  install the 'python3-pytest' package.  On other platforms, install 'pytest'
+  using pip.
+Call Stack (most recent call first):
+  CMakeLists.txt:70 (ament_add_pytest_test)
+
+
+---
+[Processing: aruco_localizer, cleanup_task_manager]
+[Processing: aruco_localizer, cleanup_task_manager]
+Finished <<< cleanup_task_manager [1min 34s]
+Starting >>> coin_d4_driver
+--- stderr: coin_d4_driver
+/home/user/turtlebot3_ws/src/coin_d4_driver/src/lidar_sdk/lidar_data_processor.cpp: In member function ‘result_t LidarDataProcessor::wait_package(node_info*, uint32_t)’:
+/home/user/turtlebot3_ws/src/coin_d4_driver/src/lidar_sdk/lidar_data_processor.cpp:371:36: warning: writing 1 byte into a region of size 0 [-Wstringop-overflow=]
+  371 |         package_buffer[recv_pos++] = current_byte;
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~
+In file included from /home/user/turtlebot3_ws/src/coin_d4_driver/include/coin_d4_driver/lidar_sdk/lidar_data_processor.hpp:22,
+                 from /home/user/turtlebot3_ws/src/coin_d4_driver/src/lidar_sdk/lidar_data_processor.cpp:23:
+/home/user/turtlebot3_ws/src/coin_d4_driver/include/coin_d4_driver/lidar_sdk/lidar_information.hpp:154:12: note: at offset 9 into destination object ‘node_packages::package_Head’ of size 2
+  154 |   uint16_t package_Head;
+      |            ^~~~~~~~~~~~
+/home/user/turtlebot3_ws/src/coin_d4_driver/include/coin_d4_driver/lidar_sdk/lidar_information.hpp:142:12: note: at offset 9 into destination object ‘node_package::package_Head’ of size 2
+  142 |   uint16_t package_Head;
+      |            ^~~~~~~~~~~~
+---
+[Processing: aruco_localizer, coin_d4_driver]
+Finished <<< coin_d4_driver [44.1s]
+Starting >>> turtlebot3_manipulation
+Finished <<< turtlebot3_manipulation [0.83s]
+--- stderr: aruco_localizer
+CMake Warning at /opt/ros/humble/share/ament_cmake_pytest/cmake/ament_add_pytest_test.cmake:79 (message):
+  The Python module 'pytest' was not found, pytests cannot be run.  On Linux,
+  install the 'python3-pytest' package.  On other platforms, install 'pytest'
+  using pip.
+Call Stack (most recent call first):
+  CMakeLists.txt:194 (ament_add_pytest_test)
+
+
+CMake Warning at /opt/ros/humble/share/ament_cmake_pytest/cmake/ament_add_pytest_test.cmake:79 (message):
+  The Python module 'pytest' was not found, pytests cannot be run.  On Linux,
+  install the 'python3-pytest' package.  On other platforms, install 'pytest'
+  using pip.
+Call Stack (most recent call first):
+  CMakeLists.txt:195 (ament_add_pytest_test)
+
+
+---
+[Processing: aruco_localizer]
+[Processing: aruco_localizer]
+[Processing: aruco_localizer]
+[Processing: aruco_localizer]
+[Processing: aruco_localizer]
+Finished <<< aruco_localizer [4min 44s]
+Starting >>> project_bringup
+--- stderr: project_bringup
+CMake Warning at /opt/ros/humble/share/ament_cmake_pytest/cmake/ament_add_pytest_test.cmake:79 (message):
+  The Python module 'pytest' was not found, pytests cannot be run.  On Linux,
+  install the 'python3-pytest' package.  On other platforms, install 'pytest'
+  using pip.
+Call Stack (most recent call first):
+  CMakeLists.txt:18 (ament_add_pytest_test)
+
+
+---
+Finished <<< project_bringup [1.78s]
+
+Summary: 20 packages finished [7min 33s]
+  7 packages had stderr output: aruco_localizer cleanup_task_manager coin_d4_driver pick_and_place project_bringup realsense_bringup segmentation

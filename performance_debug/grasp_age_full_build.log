@@ -1,0 +1,51 @@
+Starting >>> cleanup_interfaces
+Starting >>> turtlebot3_manipulation_description
+Starting >>> robot_motion
+Starting >>> ld08_driver
+Starting >>> realsense_bringup
+Starting >>> segmentation
+Starting >>> turtlebot3_manipulation_cartographer
+Starting >>> turtlebot3_manipulation_hardware
+/home/user/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+  warnings.warn(msg)
+Finished <<< ld08_driver [1.33s]
+Finished <<< turtlebot3_manipulation_description [1.38s]
+Finished <<< realsense_bringup [1.38s]
+Starting >>> turtlebot3_manipulation_bringup
+Starting >>> turtlebot3_manipulation_moveit_config
+Starting >>> turtlebot3_manipulation_navigation2
+Finished <<< cleanup_interfaces [1.52s]
+Finished <<< turtlebot3_manipulation_cartographer [1.47s]
+Starting >>> pick_and_place
+Starting >>> cleanup_planner
+Finished <<< turtlebot3_manipulation_hardware [1.57s]
+Starting >>> cleanup_task_manager
+Finished <<< turtlebot3_manipulation_bringup [0.87s]
+Starting >>> coin_d4_driver
+Finished <<< turtlebot3_manipulation_moveit_config [0.93s]
+Finished <<< turtlebot3_manipulation_navigation2 [0.97s]
+Starting >>> turtlebot3_manipulation_teleop
+Finished <<< turtlebot3_manipulation_teleop [0.28s]
+Starting >>> turtlebot3_manipulation
+Finished <<< coin_d4_driver [0.52s]
+Finished <<< turtlebot3_manipulation [0.27s]
+--- stderr: segmentation
+/home/user/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+  warnings.warn(msg)
+---
+Finished <<< segmentation [5.15s]
+Finished <<< robot_motion [5.26s]
+Finished <<< cleanup_planner [4.62s]
+[Processing: cleanup_task_manager, pick_and_place]
+[Processing: cleanup_task_manager, pick_and_place]
+Finished <<< pick_and_place [1min 17s]
+Starting >>> cleanup_perception
+Finished <<< cleanup_task_manager [1min 21s]
+Finished <<< cleanup_perception [4.22s]
+Starting >>> aruco_localizer
+Finished <<< aruco_localizer [1.26s]
+Starting >>> project_bringup
+Finished <<< project_bringup [0.23s]
+
+Summary: 20 packages finished [1min 25s]
+  1 package had stderr output: segmentation

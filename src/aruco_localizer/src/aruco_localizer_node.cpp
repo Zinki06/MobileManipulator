@@ -1,4 +1,5 @@
 #include "aruco_localizer/localization_policy.hpp"
+#include "aruco_localizer/carry_state.hpp"
 #include "aruco_localizer/msg/marker_observation.hpp"
 
 #include <rclcpp/rclcpp.hpp>
@@ -46,6 +47,7 @@ class ArucoLocalizer : public rclcpp::Node
 public:
   ArucoLocalizer()
   : Node("aruco_localizer_node"),
+    carry_(*this),
     has_cam_info_(false),
     has_valid_map_odom_(false),
     relocalization_candidate_count_(0),
@@ -125,8 +127,12 @@ public:
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
+    image_rate_ = declare_parameter<double>("image_processing_rate", 30.0);
+    if (!std::isfinite(image_rate_) || image_rate_ < 5.0 || image_rate_ > 60.0) {
+      throw std::invalid_argument("Invalid marker image processing rate");
+    }
     // 4. ROS 구독자 생성
-    auto qos = rclcpp::SensorDataQoS();
+    auto qos = rclcpp::SensorDataQoS().keep_last(1);
     cam_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
       "/camera/camera/color/camera_info", qos,
       std::bind(&ArucoLocalizer::cameraInfoCallback, this, std::placeholders::_1));
@@ -180,6 +186,8 @@ public:
   }
 
 private:
+  double image_rate_{30.0};
+  std::chrono::steady_clock::time_point last_image_{};
   void loadMarkerYaml(const std::string & path)
   {
     try {
@@ -234,11 +242,18 @@ private:
 
   void imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
   {
+    // Keep map->odom fixed while carrying; wheel odometry supplies every base update.
+    if (carry_.active()) {return;}
     if (!has_cam_info_) {return;}
+    const auto now = std::chrono::steady_clock::now();
+    if (std::chrono::duration<double>(now - last_image_).count() < 1.0 / image_rate_) {return;}
+    last_image_ = now;
+    const double age = (get_clock()->now() - rclcpp::Time(msg->header.stamp)).seconds();
+    if (age < -0.1 || age > 0.25) {return;}
 
-    cv_bridge::CvImagePtr cv_ptr;
+    cv_bridge::CvImageConstPtr cv_ptr;
     try {
-      cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+      cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::BGR8);
     } catch (const cv_bridge::Exception & e) {
       RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
       return;
@@ -551,6 +566,7 @@ private:
 
   void publishLocalizationStatus(bool fresh)
   {
+    fresh = fresh && !carry_.active();
     std_msgs::msg::Bool fresh_msg;
     fresh_msg.data = fresh && !localization_fault_;
     localization_fresh_pub_->publish(fresh_msg);
@@ -596,6 +612,7 @@ private:
 
   // 멤버 변수
   std::string base_frame_;
+  aruco_localizer::CarryState carry_;
   std::string map_frame_;
   std::string odom_frame_;
   double filter_alpha_;

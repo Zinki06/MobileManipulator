@@ -1,0 +1,8 @@
+Starting >>> cleanup_perception
+Finished <<< cleanup_perception [4.22s]
+Starting >>> aruco_localizer
+Finished <<< aruco_localizer [6.99s]
+Starting >>> project_bringup
+Finished <<< project_bringup [1.24s]
+
+Summary: 3 packages finished [13.2s]

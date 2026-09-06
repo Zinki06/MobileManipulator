@@ -1,0 +1,89 @@
+...........FF..s..............................                           [100%]
+=================================== FAILURES ===================================
+_________ test_incomplete_or_failed_frames_do_not_report_empty[False] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff82058bb0>
+failed_inference = False
+
+    @pytest.mark.parametrize('failed_inference', [False, True])
+    def test_incomplete_or_failed_frames_do_not_report_empty(tmp_path, monkeypatch, failed_inference):
+        """Missing images and YOLO errors are failures, not evidence of an empty view."""
+        node = perception(tmp_path)
+        model = Mock()
+        model.predict.return_value = []
+        monkeypatch.setitem(sys.modules, 'ultralytics', SimpleNamespace(YOLO=Mock(return_value=model)))
+        capture_frames(node, 1)
+        if failed_inference:
+            node._detect_frame = Mock(side_effect=RuntimeError('inference failed'))
+        response = node._capture_callback(request(), CaptureObjects.Response())
+        assert not response.success
+        assert not response.image_reference
+>       assert not list(tmp_path.rglob('*'))
+E       AssertionError: assert not [PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram0/test_run'), PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram0/test_run/station_0')]
+E        +  where [PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram0/test_run'), PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram0/test_run/station_0')] = list(<generator object Path.rglob at 0xffff81ffa650>)
+E        +    where <generator object Path.rglob at 0xffff81ffa650> = <bound method Path.rglob of PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram0')>('*')
+E        +      where <bound method Path.rglob of PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram0')> = PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram0').rglob
+
+test/test_capture_pipeline.py:234: AssertionError
+__________ test_incomplete_or_failed_frames_do_not_report_empty[True] __________
+
+tmp_path = PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff81ff7c70>
+failed_inference = True
+
+    @pytest.mark.parametrize('failed_inference', [False, True])
+    def test_incomplete_or_failed_frames_do_not_report_empty(tmp_path, monkeypatch, failed_inference):
+        """Missing images and YOLO errors are failures, not evidence of an empty view."""
+        node = perception(tmp_path)
+        model = Mock()
+        model.predict.return_value = []
+        monkeypatch.setitem(sys.modules, 'ultralytics', SimpleNamespace(YOLO=Mock(return_value=model)))
+        capture_frames(node, 1)
+        if failed_inference:
+            node._detect_frame = Mock(side_effect=RuntimeError('inference failed'))
+        response = node._capture_callback(request(), CaptureObjects.Response())
+        assert not response.success
+        assert not response.image_reference
+>       assert not list(tmp_path.rglob('*'))
+E       AssertionError: assert not [PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram1/test_run'), PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram1/test_run/station_0')]
+E        +  where [PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram1/test_run'), PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram1/test_run/station_0')] = list(<generator object Path.rglob at 0xffff7fcbf370>)
+E        +    where <generator object Path.rglob at 0xffff7fcbf370> = <bound method Path.rglob of PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram1')>('*')
+E        +      where <bound method Path.rglob of PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram1')> = PosixPath('/tmp/pytest-of-user/pytest-24/test_incomplete_or_failed_fram1').rglob
+
+test/test_capture_pipeline.py:234: AssertionError
+=============================== warnings summary ===============================
+test/test_copyright.py:21
+  /home/user/turtlebot3_ws/src/cleanup_perception/test/test_copyright.py:21: PytestUnknownMarkWarning: Unknown pytest.mark.copyright - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/mark.html
+    @pytest.mark.copyright
+
+test/test_copyright.py:22
+  /home/user/turtlebot3_ws/src/cleanup_perception/test/test_copyright.py:22: PytestUnknownMarkWarning: Unknown pytest.mark.linter - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/mark.html
+    @pytest.mark.linter
+
+test/test_flake8.py:19
+  /home/user/turtlebot3_ws/src/cleanup_perception/test/test_flake8.py:19: PytestUnknownMarkWarning: Unknown pytest.mark.flake8 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/mark.html
+    @pytest.mark.flake8
+
+test/test_flake8.py:20
+  /home/user/turtlebot3_ws/src/cleanup_perception/test/test_flake8.py:20: PytestUnknownMarkWarning: Unknown pytest.mark.linter - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/mark.html
+    @pytest.mark.linter
+
+test/test_pep257.py:19
+  /home/user/turtlebot3_ws/src/cleanup_perception/test/test_pep257.py:19: PytestUnknownMarkWarning: Unknown pytest.mark.linter - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/mark.html
+    @pytest.mark.linter
+
+test/test_pep257.py:20
+  /home/user/turtlebot3_ws/src/cleanup_perception/test/test_pep257.py:20: PytestUnknownMarkWarning: Unknown pytest.mark.pep257 - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/mark.html
+    @pytest.mark.pep257
+
+test/test_flake8.py::test_flake8
+test/test_flake8.py::test_flake8
+  /usr/lib/python3/dist-packages/flake8/plugins/manager.py:261: DeprecationWarning: SelectableGroups dict interface is deprecated. Use select.
+    eps = importlib_metadata.entry_points().get(self.namespace, ())
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+=========================== short test summary info ============================
+FAILED test/test_capture_pipeline.py::test_incomplete_or_failed_frames_do_not_report_empty[False]
+FAILED test/test_capture_pipeline.py::test_incomplete_or_failed_frames_do_not_report_empty[True]
+2 failed, 43 passed, 1 skipped, 8 warnings in 3.35s

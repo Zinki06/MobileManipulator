@@ -11,12 +11,13 @@ import xml.etree.ElementTree as ET
 from ament_index_python.packages import get_package_prefix
 from cleanup_interfaces.msg import ObjectObservation
 from cleanup_interfaces.srv import CaptureObjects, EvaluateGrasp, PlaceObject, PlanCleanup
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import PointStamped, TransformStamped
 from nav2_msgs.action import NavigateToPose, Spin
 from nav_msgs.msg import OccupancyGrid, Odometry
 import pytest
 import rclpy
 from rclpy.action import ActionServer
+from rclpy.duration import Duration
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
@@ -68,6 +69,8 @@ class FakeRobot(Node):
         self.captures = []
         self.capture_headings = []
         self.events = []
+        self.last_pick_target = None
+        self.last_capture_stamp = None
         self.tf = TransformBroadcaster(self)
         self.mode = self.create_publisher(String, '/aruco/localization_mode', 10)
         self.odom = self.create_publisher(Odometry, '/odom', 10)
@@ -78,6 +81,8 @@ class FakeRobot(Node):
             QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.create_subscription(String, '/cleanup/events',
                                  lambda msg: self.events.append(msg.data), 50)
+        self.create_subscription(PointStamped, '/cleanup/pick_target',
+                                 lambda msg: setattr(self, 'last_pick_target', msg), 10)
         self.timer = self.create_timer(0.02, self.publish_pose)
         self.nav = ActionServer(self, NavigateToPose, '/navigate_to_pose', self.navigate)
         self.spin = ActionServer(self, Spin, '/spin', self.rotate)
@@ -172,6 +177,9 @@ class FakeRobot(Node):
         """Return one persistent UUID until it is picked, or inject failure."""
         self.captures.append(request.station_name)
         self.capture_headings.append((request.station_name, request.heading_index))
+        if self.failure == 'carry_occluded' and request.heading_index == 251:
+            response.message = 'Camera occluded by carried banana'
+            return response
         if self.failure == 'model':
             response.message = 'YOLO unavailable: fixture error'
             return response
@@ -194,6 +202,12 @@ class FakeRobot(Node):
             )
             obj.header.frame_id = 'map'
             obj.header.stamp = self.get_clock().now().to_msg()
+            if request.station_name.endswith('_approach') and self.failure in {
+                    'processed_frame', 'expired_frame'}:
+                # Replay actual capture-to-pick latency without sleeping or forging a fresh stamp.
+                delay = 2.07 if self.failure == 'processed_frame' else 7.0
+                obj.header.stamp = (self.get_clock().now() - Duration(seconds=delay)).to_msg()
+                self.last_capture_stamp = obj.header.stamp
             obj.centroid.x, obj.centroid.y, obj.centroid.z = 1.0, 0.2, 0.03
             response.observations = [obj]
         return response
@@ -211,6 +225,9 @@ class FakeRobot(Node):
     def pick(self, request, response):
         """Record a simulated grasp."""
         assert self.plans == 1
+        if self.failure == 'processed_frame':
+            assert self.last_pick_target is not None
+            assert self.last_pick_target.header.stamp == self.last_capture_stamp
         assert math.hypot(self.x - 1.0, self.y - 0.2) < 0.26
         self.picks += 1
         if self.failure == 'empty_grasp' and self.picks == 1:
@@ -228,6 +245,11 @@ class FakeRobot(Node):
         point = request.target.point
         dx, dy = point.x - self.x, point.y - self.y
         response.success = True
+        if self.failure in {'geometry_refresh', 'geometry_rejected'} and (
+                self.failure == 'geometry_rejected' or
+                ('scan_station_0_approach', 249) not in self.capture_headings):
+            response.message = 'surface_height=0.021; insufficient_body_depth=27'
+            return response
         response.reachable = math.hypot(dx, dy) < 0.26
         response.approach_available = True
         yaw = math.atan2(dy, dx)
@@ -268,8 +290,9 @@ class FakeRobot(Node):
 @pytest.mark.parametrize('failure', [
     '', 'model', 'review', 'pick', 'pick_remains', 'empty_grasp', 'early_arrival', 'never_reach',
     'spin', 'spin_once',
-    'invalid_centroid', 'legacy_candidate', 'place',
-    'nav_once', 'nav_always', 'nav_blocked', 'nav_moving', 'nav_fault', 'nav_stop',
+    'invalid_centroid', 'legacy_candidate', 'place', 'geometry_refresh', 'geometry_rejected',
+    'processed_frame', 'expired_frame',
+    'carry_occluded', 'nav_once', 'nav_always', 'nav_blocked', 'nav_moving', 'nav_fault', 'nav_stop',
 ])
 def test_mission_flow(tmp_path, monkeypatch, failure):
     """Test scan/review/plan/pick/drop order and bounded perception failure paths."""
@@ -296,6 +319,7 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
         '-p', f'debug_output_root:={tmp_path / "evidence"}',
         '-p', f'approach_behavior_tree:={approach_bt}',
         '-p', 'require_candidate_grasp:=true',
+        '-p', f'verify_pick_with_camera:={str(failure != "carry_occluded").lower()}',
         '-p', 'navigation_retry_delay:=0.5', '-p', 'navigation_retry_timeout:=1.5',
     ], stdout=output, stderr=subprocess.STDOUT)
     try:
@@ -329,6 +353,8 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
             assert stopped.done() and stopped.result().success
             time.sleep(1.7)
             assert robot.nav_attempts == 1
+            assert robot.releases == 1
+            assert any(e.startswith("MISSION_RELEASE_COMPLETE|") for e in robot.events)
             assert not any(e.startswith('NAVIGATION_RETRY|') for e in robot.events)
             return
         while time.monotonic() < deadline:
@@ -337,6 +363,7 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
             assert process.poll() is None
             time.sleep(0.05)
         assert any(event.startswith(terminal) for event in robot.events), robot.events
+        assert any(e.startswith("MISSION_RELEASE_COMPLETE|") for e in robot.events)
         if failure.startswith('nav_'):
             files = list((tmp_path / 'evidence').glob('*/navigation_failure_*/context.yaml'))
             assert files
@@ -359,13 +386,14 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
             assert not any(event.startswith('MISSION_COMPLETE|') for event in robot.events)
         elif failure == 'place':
             assert robot.placements == [(-0.4, 1.5)]
-            assert robot.releases == 0
+            assert robot.releases == 1
             assert not any(event.startswith('OBJECT_COLLECTED|') for event in robot.events)
         else:
             assert sum(event.startswith('SCAN_CAPTURE_START|')
                        for event in robot.events) == 6 * config['cleanup']['scan']['turns']
             assert any(event.startswith('OBSERVATION_ALIGN_START|') for event in robot.events)
-            no_pick = failure in {'review', 'never_reach', 'invalid_centroid', 'legacy_candidate'}
+            no_pick = failure in {'review', 'never_reach', 'invalid_centroid', 'legacy_candidate',
+                                 'geometry_rejected', 'expired_frame'}
             assert robot.picks == (0 if no_pick else
                                    2 if failure in {'pick_remains', 'empty_grasp'} else 1)
             if failure in {'pick_remains', 'empty_grasp'}:
@@ -375,16 +403,39 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
                 assert robot.approaches == 2
             if failure == 'never_reach':
                 assert robot.approaches == 3
+            if failure in {'processed_frame', 'expired_frame'}:
+                assert any(e.startswith('PICK_OBSERVATION_AGE|') and 'limit=6.000000s' in e
+                           for e in robot.events)
+                if failure == 'processed_frame':
+                    assert any(e.startswith('OBJECT_COLLECTED|') for e in robot.events)
+                    assert not any(e.startswith('OBJECT_FAILED|') for e in robot.events)
+                else:
+                    assert any('outside processing budget' in e for e in robot.events)
+                    assert robot.last_pick_target is None
+            if failure in {'geometry_refresh', 'geometry_rejected'}:
+                assert robot.capture_headings.count(('scan_station_0_approach', 249)) == 1
+                assert sum(e.startswith('GRASP_REOBSERVE_REQUIRED|') for e in robot.events) == 1
+                if failure == 'geometry_rejected':
+                    assert robot.approaches == 0
+                    assert any('approaches_executed=0' in e and 'fresh_reobservation=true' in e
+                               for e in robot.events if e.startswith('OBJECT_FAILED|'))
+                else:
+                    assert robot.approaches == 1
             if failure == 'pick':
-                assert robot.releases == 1
+                assert robot.releases == 2
                 assert any(event.startswith('RECOVERY_RELEASE_START|')
                            for event in robot.events)
                 assert not any(event.startswith('OBJECT_COLLECTED|')
                                for event in robot.events)
+            if failure == 'carry_occluded':
+                assert not any(heading == 251 for _, heading in robot.capture_headings)
+                assert any('carrying on odometry' in e for e in robot.events)
+                assert robot.placements == [(-0.4, 1.5)]
+                assert any(e.startswith('OBJECT_COLLECTED|') for e in robot.events)
             if not failure:
                 assert any(event.startswith('OBJECT_COLLECTED|') for event in robot.events)
                 assert robot.placements == [(-0.4, 1.5)]
-                assert robot.releases == 0
+                assert robot.releases == 1
     finally:
         process.terminate()
         process.wait(timeout=10)

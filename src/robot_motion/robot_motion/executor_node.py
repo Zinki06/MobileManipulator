@@ -29,6 +29,18 @@ class MotionExecutor(Node):
         self.nav_limit = float(self.declare_parameter('navigation_timeout', 120.0).value)
         if not 1.0 <= self.wait_limit <= 30.0 or not 5.0 <= self.nav_limit <= 300.0:
             raise ValueError('Invalid motion time limits')
+        self.spin_max = float(self.declare_parameter('spin_max_velocity', 0.30).value)
+        self.spin_gain = float(self.declare_parameter('spin_gain', 1.0).value)
+        self.spin_acceleration = float(self.declare_parameter('spin_acceleration', 0.4).value)
+        self.readiness_hold = float(self.declare_parameter('readiness_hold', 0.30).value)
+        self.rotation_settle = float(self.declare_parameter('rotation_settle', 0.25).value)
+        self.reuse_readiness = self.declare_parameter('reuse_stationary_readiness', False).value
+        spin_velocity(1., maximum=self.spin_max, gain=self.spin_gain,
+                      acceleration=self.spin_acceleration)
+        if not 0.15 <= self.readiness_hold <= 1.0 or not 0.10 <= self.rotation_settle <= 1.0:
+            raise ValueError('Invalid encoder stabilization duration')
+        self._stationary_since = None
+        self._odom_received = 0.0
         self._lock = threading.Lock()
         self._reserved = False
         self._fault = ''
@@ -38,7 +50,7 @@ class MotionExecutor(Node):
         self._motion_id = ''
         self._motion_kind = ''
         self._group = ReentrantCallbackGroup()
-        self._commands = self.create_publisher(Twist, '/cmd_vel_nav', 10)
+        self._commands = self.create_publisher(Twist, '/cmd_vel_nav', 1)
         self._events = self.create_publisher(String, '/motion/events', 30)
         self._inhibit = self.create_publisher(
             String, '/motion/inhibit', QoSProfile(
@@ -60,7 +72,22 @@ class MotionExecutor(Node):
     def _on_guard(self, msg):
         self._guard = (msg.data, time.monotonic())
 
+    def destroy_node(self):
+        """Release native action handles before their ROS context is shut down."""
+        self._navigation.destroy()
+        self._rotation.destroy()
+        self._nav.destroy()
+        return super().destroy_node()
+
     def _on_odom(self, msg):
+        now = time.monotonic()
+        stopped = (abs(msg.twist.twist.linear.x) < 0.015 and
+                   abs(msg.twist.twist.angular.z) < 0.03)
+        if not stopped or now - self._odom_received > 0.15:
+            self._stationary_since = None
+        if stopped and self._stationary_since is None:
+            self._stationary_since = now
+        self._odom_received = now
         self._odom = msg
 
     def _accept(self, request):
@@ -138,8 +165,12 @@ class MotionExecutor(Node):
             stopped = odom is not None and abs(odom.twist.twist.linear.x) < 0.015 and \
                 abs(odom.twist.twist.angular.z) < 0.03
             if guard_allows_motion(health) and stopped:
-                stable = stable or time.monotonic()
-                if time.monotonic() - stable >= 0.3:
+                if self.reuse_readiness:
+                    stable = self._stationary_since if \
+                        time.monotonic() - self._odom_received <= 0.15 else None
+                else:
+                    stable = stable or time.monotonic()
+                if stable is not None and time.monotonic() - stable >= self.readiness_hold:
                     return ''
             else:
                 stable = None
@@ -182,7 +213,9 @@ class MotionExecutor(Node):
                 last_yaw = yaw
                 error = goal.request.target_yaw - measured
                 command = Twist()
-                command.angular.z = spin_velocity(error)
+                command.angular.z = spin_velocity(
+                    error, maximum=self.spin_max, gain=self.spin_gain,
+                    acceleration=self.spin_acceleration)
                 # Continue intent through the safety chain so collision clearing can be
                 # observed. The final guard alone authorizes motor output.
                 self._commands.publish(command)
@@ -193,7 +226,7 @@ class MotionExecutor(Node):
                 goal.publish_feedback(feedback)
                 if abs(error) <= 0.025 and abs(self._odom.twist.twist.angular.z) < 0.03:
                     settled = settled or now
-                    if now - settled >= 0.25:
+                    if now - settled >= self.rotation_settle:
                         self._event('TURN_MEASURED', requested=goal.request.target_yaw,
                                     measured=measured, residual=error,
                                     active_seconds=budget.active)
@@ -211,9 +244,9 @@ class MotionExecutor(Node):
                 self._reserved = False
 
     def _wait_future(self, future, timeout):
-        end = time.monotonic() + timeout
-        while rclpy.ok() and not future.done() and time.monotonic() < end:
-            time.sleep(0.01)
+        completed = threading.Event()
+        future.add_done_callback(lambda _: completed.set())
+        completed.wait(timeout)
         return future.done()
 
     def _cancel_backend(self, handle, result_future):

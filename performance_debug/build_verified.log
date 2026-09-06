@@ -1,0 +1,49 @@
+Starting >>> cleanup_interfaces
+Starting >>> turtlebot3_manipulation_description
+Finished <<< turtlebot3_manipulation_description [0.21s]
+Starting >>> turtlebot3_manipulation_bringup
+Finished <<< turtlebot3_manipulation_bringup [0.17s]
+Starting >>> robot_motion
+Finished <<< cleanup_interfaces [1.35s]
+Starting >>> pick_and_place
+Finished <<< pick_and_place [0.33s]
+Starting >>> turtlebot3_manipulation_moveit_config
+Finished <<< turtlebot3_manipulation_moveit_config [0.19s]
+Starting >>> cleanup_perception
+Finished <<< robot_motion [4.41s]
+Starting >>> ld08_driver
+Finished <<< ld08_driver [0.26s]
+Starting >>> realsense_bringup
+Finished <<< realsense_bringup [0.29s]
+Starting >>> segmentation
+/home/user/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+  warnings.warn(msg)
+Finished <<< cleanup_perception [4.20s]
+Starting >>> turtlebot3_manipulation_cartographer
+Finished <<< turtlebot3_manipulation_cartographer [0.19s]
+Starting >>> turtlebot3_manipulation_hardware
+Finished <<< turtlebot3_manipulation_hardware [0.27s]
+Starting >>> turtlebot3_manipulation_navigation2
+Finished <<< turtlebot3_manipulation_navigation2 [0.19s]
+Starting >>> cleanup_planner
+--- stderr: segmentation
+/home/user/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:289: UserWarning: Unknown distribution option: 'tests_require'
+  warnings.warn(msg)
+---
+Finished <<< segmentation [4.31s]
+Starting >>> cleanup_task_manager
+Finished <<< cleanup_task_manager [0.34s]
+Starting >>> turtlebot3_manipulation_teleop
+Finished <<< turtlebot3_manipulation_teleop [0.26s]
+Starting >>> aruco_localizer
+Finished <<< cleanup_planner [4.25s]
+Starting >>> coin_d4_driver
+Finished <<< coin_d4_driver [0.30s]
+Starting >>> turtlebot3_manipulation
+Finished <<< turtlebot3_manipulation [0.18s]
+Finished <<< aruco_localizer [1.52s]
+Starting >>> project_bringup
+Finished <<< project_bringup [1.24s]
+
+Summary: 20 packages finished [13.8s]
+  1 package had stderr output: segmentation

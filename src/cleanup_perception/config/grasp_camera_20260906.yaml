@@ -2,6 +2,9 @@
 scan_perception_node:
   ros__parameters:
     use_grasp_camera_calibration: true
+    # Use surrounding depth floor for <=15mm upward height alignment only.
+    # Does not alter camera extrinsics, global TF, or physical floor clearance.
+    align_grasp_floor: true
     grasp_camera_frame: camera_color_optical_frame
     grasp_camera_translation:
     - 0.10229101273989573

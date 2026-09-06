@@ -18,7 +18,12 @@ import pytest
 
 @pytest.mark.flake8
 @pytest.mark.linter
-def test_flake8():
+def test_flake8(monkeypatch):
+    # rclpy has native worker state after executor tests; do not fork it for lint.
+    import ament_flake8.main as flake8_main
+    original = flake8_main.get_flake8_style_guide
+    monkeypatch.setattr(flake8_main, 'get_flake8_style_guide',
+                        lambda argv: original([*argv, '--jobs=1']))
     rc, errors = main_with_errors(argv=[])
     assert rc == 0, \
         'Found %d code style errors / warnings:\n' % len(errors) + \

@@ -1,0 +1,849 @@
+{
+  "source_run": "run_20260906_201332_82213",
+  "telemetry_samples": 138,
+  "samples_with_depth_stop_points": 136,
+  "samples_with_external_stop_points_after_mask": 0,
+  "samples_with_lidar_stop_points": 0,
+  "carry_mask_base_link": {
+    "min": [
+      0.06,
+      -0.09,
+      0.16
+    ],
+    "max": [
+      0.18,
+      0.09,
+      0.35
+    ]
+  },
+  "samples": [
+    {
+      "time": 1788693334.715775,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693334.9629207,
+      "depth_stop_points": 16,
+      "masked_stop_points": 16,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693335.21113,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693335.4614644,
+      "depth_stop_points": 5,
+      "masked_stop_points": 5,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693335.7135615,
+      "depth_stop_points": 14,
+      "masked_stop_points": 14,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693335.9614234,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693336.2133722,
+      "depth_stop_points": 5,
+      "masked_stop_points": 5,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693336.4609582,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693336.7146726,
+      "depth_stop_points": 14,
+      "masked_stop_points": 14,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693336.9613175,
+      "depth_stop_points": 5,
+      "masked_stop_points": 5,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693337.2117085,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693337.4610445,
+      "depth_stop_points": 2,
+      "masked_stop_points": 2,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693337.7123363,
+      "depth_stop_points": 4,
+      "masked_stop_points": 4,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693337.966604,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693338.2109249,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693338.4625301,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693338.7149603,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693338.9612494,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693339.211618,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693339.4613004,
+      "depth_stop_points": 4,
+      "masked_stop_points": 4,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693339.7145941,
+      "depth_stop_points": 3,
+      "masked_stop_points": 3,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693339.9609962,
+      "depth_stop_points": 18,
+      "masked_stop_points": 18,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693340.2111313,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693340.461252,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693340.7116761,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693340.961123,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693341.2121735,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693341.4629865,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693341.713308,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693341.9619372,
+      "depth_stop_points": 13,
+      "masked_stop_points": 13,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693342.212053,
+      "depth_stop_points": 4,
+      "masked_stop_points": 4,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693342.462388,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693342.711725,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693342.9637249,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693343.2113886,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693343.4613035,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693343.7184799,
+      "depth_stop_points": 13,
+      "masked_stop_points": 13,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693343.9615974,
+      "depth_stop_points": 0,
+      "masked_stop_points": 0,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693344.2117205,
+      "depth_stop_points": 4,
+      "masked_stop_points": 4,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693344.4611373,
+      "depth_stop_points": 5,
+      "masked_stop_points": 5,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693344.7114584,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693344.9633255,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693345.2117748,
+      "depth_stop_points": 11,
+      "masked_stop_points": 11,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693345.461271,
+      "depth_stop_points": 13,
+      "masked_stop_points": 13,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693345.711722,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693345.9613957,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693346.2112572,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693346.4609492,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693346.7113123,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693346.9645758,
+      "depth_stop_points": 11,
+      "masked_stop_points": 11,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693347.2112603,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693347.4638343,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693347.7134867,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693347.9612312,
+      "depth_stop_points": 11,
+      "masked_stop_points": 11,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693348.211172,
+      "depth_stop_points": 2,
+      "masked_stop_points": 2,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693348.470155,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693348.7135673,
+      "depth_stop_points": 14,
+      "masked_stop_points": 14,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693348.9645507,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693349.2114584,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693349.4634817,
+      "depth_stop_points": 4,
+      "masked_stop_points": 4,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693349.7118618,
+      "depth_stop_points": 11,
+      "masked_stop_points": 11,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693349.961099,
+      "depth_stop_points": 13,
+      "masked_stop_points": 13,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693350.2115457,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693350.46227,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693350.712107,
+      "depth_stop_points": 14,
+      "masked_stop_points": 14,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693350.9608638,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693351.2110496,
+      "depth_stop_points": 4,
+      "masked_stop_points": 4,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693351.4666634,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693351.711241,
+      "depth_stop_points": 13,
+      "masked_stop_points": 13,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693351.961016,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693352.2111793,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693352.4623048,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693352.7116027,
+      "depth_stop_points": 14,
+      "masked_stop_points": 14,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693352.970259,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693353.2113855,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693353.473317,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693353.7112215,
+      "depth_stop_points": 2,
+      "masked_stop_points": 2,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693353.9612641,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693354.2112114,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693354.4630613,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693354.7112672,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693354.9611251,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693355.2111547,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693355.4649262,
+      "depth_stop_points": 15,
+      "masked_stop_points": 15,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693355.7112756,
+      "depth_stop_points": 5,
+      "masked_stop_points": 5,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693355.9611492,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693356.2111187,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693356.4623942,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693356.7116466,
+      "depth_stop_points": 13,
+      "masked_stop_points": 13,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693356.9631505,
+      "depth_stop_points": 13,
+      "masked_stop_points": 13,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693357.2112143,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693357.461507,
+      "depth_stop_points": 13,
+      "masked_stop_points": 13,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693357.7110407,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693357.961227,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693358.2122135,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693358.4625154,
+      "depth_stop_points": 13,
+      "masked_stop_points": 13,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693358.7135732,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693358.9610622,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693359.2113762,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693359.4649057,
+      "depth_stop_points": 13,
+      "masked_stop_points": 13,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693359.7117631,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693359.960976,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693360.2119823,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693360.4678733,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693360.7127397,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693360.9618807,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693361.2112978,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693361.4615066,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693361.7113235,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693361.9614153,
+      "depth_stop_points": 7,
+      "masked_stop_points": 7,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693362.2112262,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693362.4616034,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693362.7122676,
+      "depth_stop_points": 11,
+      "masked_stop_points": 11,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693362.961212,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693363.210995,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693363.4615374,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693363.7120314,
+      "depth_stop_points": 11,
+      "masked_stop_points": 11,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693363.9612482,
+      "depth_stop_points": 14,
+      "masked_stop_points": 14,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693364.2195334,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693364.4641895,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693364.711413,
+      "depth_stop_points": 0,
+      "masked_stop_points": 0,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693364.9627342,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693365.2110946,
+      "depth_stop_points": 5,
+      "masked_stop_points": 5,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693365.461529,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693365.711063,
+      "depth_stop_points": 12,
+      "masked_stop_points": 12,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693365.9610572,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693366.212492,
+      "depth_stop_points": 14,
+      "masked_stop_points": 14,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693366.4611318,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693366.7135441,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693366.9617126,
+      "depth_stop_points": 11,
+      "masked_stop_points": 11,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693367.211159,
+      "depth_stop_points": 5,
+      "masked_stop_points": 5,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693367.4630954,
+      "depth_stop_points": 6,
+      "masked_stop_points": 6,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693367.711152,
+      "depth_stop_points": 9,
+      "masked_stop_points": 9,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693367.9610102,
+      "depth_stop_points": 8,
+      "masked_stop_points": 8,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693368.21101,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693368.4636438,
+      "depth_stop_points": 10,
+      "masked_stop_points": 10,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693368.7125647,
+      "depth_stop_points": 3,
+      "masked_stop_points": 3,
+      "lidar_stop_points": 0
+    },
+    {
+      "time": 1788693368.9614856,
+      "depth_stop_points": 4,
+      "masked_stop_points": 4,
+      "lidar_stop_points": 0
+    }
+  ]
+}

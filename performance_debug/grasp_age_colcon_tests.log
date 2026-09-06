@@ -1,0 +1,12 @@
+Starting >>> cleanup_task_manager
+Starting >>> pick_and_place
+[Processing: cleanup_task_manager, pick_and_place]
+Finished <<< pick_and_place [32.6s]
+[Processing: cleanup_task_manager]
+[Processing: cleanup_task_manager]
+[Processing: cleanup_task_manager]
+Finished <<< cleanup_task_manager [2min 15s]
+Starting >>> project_bringup
+Finished <<< project_bringup [3.83s]
+
+Summary: 3 packages finished [2min 19s]

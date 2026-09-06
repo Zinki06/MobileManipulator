@@ -19,10 +19,35 @@ from cleanup_perception.object_registry import ConfirmedDetection
 from cleanup_perception.grasp_anchor import GraspAnchors
 
 
+def test_candidate_publication_retains_floor_alignment_and_single_forward_offset():
+    """The evaluated height reaches the manager; executor alone adds forward correction."""
+    from builtin_interfaces.msg import Time
+
+    selected = {'observed_link1': [0.4, 0.01, -0.069],
+                'target_link1': [0.43, 0.01, -0.069], 'depth_uncertainty_m': 0.0015}
+
+    def transform(point, frame, **kwargs):
+        assert point.header.frame_id == 'link1'
+        assert point.header.stamp.sec == 42
+        assert frame == 'map'
+        assert point.point.x == 0.4  # Never publish the +30mm execution target.
+        assert point.point.z == -0.069
+        point.point.z += 0.101
+        return point
+
+    node = SimpleNamespace(_candidate_reports={0: {'selected': selected}}, _map_frame='map',
+                           _tf_buffer=SimpleNamespace(transform=transform))
+    point, uncertainty = ScanPerceptionNode._candidate_point_in_map(
+        node, 0, SimpleNamespace(stamp=Time(sec=42)))
+    assert abs(point.point.z - 0.032) < 1e-9
+    assert uncertainty == 0.0015
+
+
 def perception(tmp_path):
     """Bind production callbacks to local frames without opening DDS or hardware."""
     node = SimpleNamespace(
         _model=None, _model_error='', _model_path='fixture.pt',
+        _empty_scene_frames=2,
         _capture_count=0, _capture_timeout=4.0, _rgb_sequence=0,
         _depth_sequence=0, _association_gate=0.25, _map_frame='map',
         _active_mission_id='', _capture_mutex=threading.Lock(),
@@ -51,7 +76,7 @@ def request():
 
 
 def test_first_request_loads_yolo_and_skips_empty_scene(tmp_path, monkeypatch):
-    """A negative scan inspects the full burst and preserves RGB evidence."""
+    """Two negative frames exit early without image or metadata file writes."""
     node = perception(tmp_path)
     model = Mock()
     model.predict.return_value = []
@@ -66,10 +91,10 @@ def test_first_request_loads_yolo_and_skips_empty_scene(tmp_path, monkeypatch):
     assert response.success, response.message
     assert not response.observations
     loader.assert_called_once_with('fixture.pt')
-    assert model.predict.call_count == 4  # warmup plus the full three-frame burst
-    assert Path(response.image_reference).is_file()
-    assert list(tmp_path.rglob('*.json'))
-    assert node._next_synchronized_frame.call_count == 3
+    assert model.predict.call_count == 3  # warmup plus two negative frames
+    assert not response.image_reference
+    assert not list(tmp_path.rglob('*'))
+    assert node._next_synchronized_frame.call_count == 2
     assert node._ensure_model() is True
     loader.assert_called_once()
 
@@ -164,3 +189,88 @@ def test_calibrated_clipped_object_never_uses_nominal_anchor(tmp_path):
     assert not refined[0].representative.grasp_valid
     node._grasp_anchors.sample.assert_not_called()
     node._grasp_anchors.remember.assert_not_called()
+
+
+def capture_frames(node, count):
+    """Provide distinct frames and a bounded end without opening a camera."""
+    image = np.zeros((64, 96, 3), np.uint8)
+    rgb = node._bridge.cv2_to_imgmsg(image, 'bgr8')
+    depth = node._bridge.cv2_to_imgmsg(np.ones((64, 96), np.uint16), '16UC1')
+    node._next_synchronized_frame = Mock(
+        side_effect=[(i, i, rgb, depth, CameraInfo()) for i in range(1, count + 1)] + [None])
+    return image
+
+
+def test_target_on_second_frame_keeps_positive_confirmation(tmp_path, monkeypatch):
+    """One empty frame must not skip a target or weaken its three confirmations."""
+    node = perception(tmp_path)
+    monkeypatch.setitem(sys.modules, 'ultralytics', SimpleNamespace(YOLO=Mock()))
+    image = capture_frames(node, 5)
+    node._detect_frame = Mock(side_effect=[([], image)] + [
+        ([Detection('banana', .9, 1., .2, .03, .01,
+                    (10, 20, 30, 40), i, float(i))], image.copy())
+        for i in range(1, 5)])
+    capture = request()
+    capture.burst_frames = 5
+    response = node._capture_callback(capture, CaptureObjects.Response())
+    assert response.success, response.message
+    assert node._next_synchronized_frame.call_count == 4
+    assert len(response.observations) == 1
+    assert response.observations[0].confirmation_count == 3
+    assert Path(response.observations[0].image_reference).is_file()
+
+
+def test_yolo_without_depth_is_not_a_negative_heading(tmp_path, monkeypatch):
+    """A visible target retains the full burst even when its depth is rejected."""
+    node = perception(tmp_path)
+    monkeypatch.setitem(sys.modules, 'ultralytics', SimpleNamespace(YOLO=Mock()))
+    image = capture_frames(node, 5)
+    counts = iter([1, 0, 0, 0, 0])
+
+    def detect(*_):
+        node._frame_yolo_count = next(counts)
+        return [], image.copy()
+
+    node._detect_frame = detect
+    capture = request()
+    capture.burst_frames = 5
+    response = node._capture_callback(capture, CaptureObjects.Response())
+    assert response.success, response.message
+    assert not response.observations
+    assert node._next_synchronized_frame.call_count == 5
+    assert 'empty heading skipped' not in response.message
+    assert Path(response.image_reference).is_file()
+
+
+@pytest.mark.parametrize('failed_inference', [False, True])
+def test_incomplete_or_failed_frames_do_not_report_empty(tmp_path, monkeypatch, failed_inference):
+    """Missing images and YOLO errors are failures, not evidence of an empty view."""
+    node = perception(tmp_path)
+    model = Mock()
+    model.predict.return_value = []
+    monkeypatch.setitem(sys.modules, 'ultralytics', SimpleNamespace(YOLO=Mock(return_value=model)))
+    capture_frames(node, 1)
+    if failed_inference:
+        node._detect_frame = Mock(side_effect=RuntimeError('inference failed'))
+    response = node._capture_callback(request(), CaptureObjects.Response())
+    assert not response.success
+    assert not response.image_reference
+    assert not list(tmp_path.rglob('*'))
+
+
+@pytest.mark.parametrize('limit', [2, 5])
+def test_negative_frame_limit_is_configurable_without_saving(tmp_path, monkeypatch, limit):
+    """Extra negative confirmation can be restored independently of image saving."""
+    node = perception(tmp_path)
+    node._empty_scene_frames = limit
+    model = Mock()
+    model.predict.return_value = []
+    monkeypatch.setitem(sys.modules, 'ultralytics', SimpleNamespace(YOLO=Mock(return_value=model)))
+    capture_frames(node, 5)
+    capture = request()
+    capture.burst_frames = 5
+    response = node._capture_callback(capture, CaptureObjects.Response())
+    assert response.success, response.message
+    assert node._next_synchronized_frame.call_count == limit
+    assert not response.image_reference
+    assert not list(tmp_path.rglob('*'))

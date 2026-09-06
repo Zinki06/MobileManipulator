@@ -1,0 +1,20 @@
+{
+  "package_test_results": {
+    "project_test_results.log": "Summary: 17 tests, 0 errors, 0 failures, 0 skipped",
+    "perception_test_results.log": "Summary: 40 tests, 0 errors, 0 failures, 1 skipped",
+    "aruco_test_results.log": "Summary: 30 tests, 0 errors, 0 failures, 0 skipped",
+    "robot_motion_test_results.log": "Summary: 15 tests, 0 errors, 0 failures, 1 skipped",
+    "manager_test_results.log": "Summary: 28 tests, 0 errors, 0 failures, 0 skipped",
+    "pick_test_results.log": "Summary: 19 tests, 0 errors, 0 failures, 0 skipped"
+  },
+  "python_imports": [
+    "robot_motion.executor_node",
+    "robot_motion.performance",
+    "robot_motion.process_metrics",
+    "robot_motion.diagnostics_node",
+    "cleanup_perception.grasp_candidates",
+    "cleanup_perception.jaw_geometry",
+    "cleanup_perception.perception_node"
+  ],
+  "hardware_started": false
+}

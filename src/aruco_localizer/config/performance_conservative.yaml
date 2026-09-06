@@ -1,0 +1,112 @@
+# Previous travel speeds with CPU optimizations retained. Braking .20 m/s^2
+# satisfies the modeled stopping horizon; this is not a byte-for-byte old config.
+controller_server:
+  ros__parameters:
+    controller_frequency: 20.0
+    StationPath:
+      desired_linear_vel: 0.08
+      min_approach_linear_velocity: 0.025
+      approach_velocity_scaling_dist: 0.3
+      rotate_to_heading_angular_vel: 0.25
+      max_angular_accel: 0.4
+      use_velocity_scaled_lookahead_dist: false
+      lookahead_time: 1.5
+      min_lookahead_dist: 0.2
+      max_lookahead_dist: 0.4
+    ApproachPath:
+      desired_linear_vel: 0.06
+      approach_velocity_scaling_dist: 0.3
+      rotate_to_heading_angular_vel: 0.25
+      max_angular_accel: 0.4
+velocity_smoother:
+  ros__parameters:
+    smoothing_frequency: 50.0
+    feedback: OPEN_LOOP
+    scale_velocities: false
+    max_velocity:
+    - 0.1
+    - 0.0
+    - 0.35
+    min_velocity:
+    - -0.05
+    - 0.0
+    - -0.35
+    max_accel:
+    - 0.15
+    - 0.0
+    - 0.4
+    max_decel:
+    - -0.2
+    - 0.0
+    - -0.4
+    velocity_timeout: 0.25
+behavior_server:
+  ros__parameters:
+    cycle_frequency: 20.0
+    max_rotational_vel: 0.3
+    rotational_acc_lim: 0.4
+motion_guard:
+  ros__parameters:
+    max_linear_velocity: 0.1
+    max_reverse_velocity: 0.05
+    max_angular_velocity: 0.35
+    linear_acceleration: 0.15
+    angular_acceleration: 0.4
+motion_executor:
+  ros__parameters:
+    spin_max_velocity: 0.3
+    spin_gain: 1.0
+    spin_acceleration: 0.4
+    readiness_hold: 0.3
+    rotation_settle: 0.25
+    reuse_stationary_readiness: false
+diff_drive_controller:
+  ros__parameters:
+    linear.x.max_velocity: 0.1
+    linear.x.min_velocity: -0.05
+    linear.x.max_acceleration: 0.15
+    linear.x.min_acceleration: -0.2
+    angular.z.max_velocity: 0.35
+    angular.z.min_velocity: -0.35
+    angular.z.max_acceleration: 0.4
+    angular.z.min_acceleration: -0.4
+aruco_localizer:
+  ros__parameters:
+    image_processing_rate: 10.0
+obstacle_depth:
+  ros__parameters:
+    carry_clear_all_obstacles: true
+    # Parked, encoder-verified carried object only; base_link metres.
+    carry_mask_min: [0.06, -0.09, 0.16]
+    carry_mask_max: [0.18, 0.09, 0.35]
+    publish_rate: 10.0
+    stride: 8
+cleanup_task_manager:
+  ros__parameters:
+    # The executor confirms nonempty fingers after lift and park. Camera can be occluded.
+    verify_pick_with_camera: false
+    scan_settle_seconds: 0.35
+    target_max_age: 6.0
+scan_perception_node:
+  ros__parameters:
+    empty_scene_frames: 2
+    grasp_min_body_depth: 0.006
+pick_and_place_action_node:
+  ros__parameters:
+    target_max_age: 6.0
+    startup_park: false
+    reached_joint_tolerance: 0.015
+    grasp_min_body_depth: 0.006
+    approach_error_margin: 0.02
+    approach_goal_tolerance: 0.02
+performance_safety:
+  ros__parameters:
+    reaction_seconds: 0.7
+    braking_deceleration: 0.2
+    margin_metres: 0.05
+    collision_horizon_seconds: 1.5
+collision_monitor:
+  ros__parameters:
+    source_timeout: 0.6
+    ApproachFootprint:
+      time_before_collision: 1.5

@@ -8,6 +8,7 @@ from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node, SetRemap
 from ament_index_python.packages import get_package_share_directory
 from nav2_common.launch import RewrittenYaml
+from robot_motion.performance import PerformanceParameters
 
 
 def generate_launch_description():
@@ -34,6 +35,8 @@ def generate_launch_description():
         },
         convert_types=True,
     )
+    profile = LaunchConfiguration('performance_config_file')
+    nav2_params_file = PerformanceParameters(nav2_params_file, profile)
     marker_yaml_file = os.path.join(pkg_dir, 'map', 'new_map_markers.yaml')
     map_yaml_file = os.path.join(pkg_dir, 'map', 'new_map.yaml')
     route_yaml_file = os.path.join(pkg_dir, 'config', 'routes.yaml')
@@ -41,6 +44,8 @@ def generate_launch_description():
     debug_output_dir = LaunchConfiguration('debug_output_dir')
     spin_command_scale = LaunchConfiguration('spin_command_scale')
     declared_arguments = [
+        DeclareLaunchArgument('performance_config_file',
+                              default_value=os.path.join(pkg_dir, 'config', 'performance.yaml')),
         DeclareLaunchArgument('record_grasp_video', default_value='true',
                               description='Save event-triggered approach and grasp clips.'),
         DeclareLaunchArgument(
@@ -65,7 +70,7 @@ def generate_launch_description():
         executable='aruco_localizer_node',
         name='aruco_localizer',
         output='screen',
-        parameters=[{'marker_yaml_path': marker_yaml_file}],
+        parameters=[profile, {'marker_yaml_path': marker_yaml_file}],
     )
 
     # 2. Map Marker Publisher 노드
@@ -101,7 +106,8 @@ def generate_launch_description():
     collision_monitor = Node(
         package='nav2_collision_monitor', executable='collision_monitor',
         name='collision_monitor', output='screen',
-        parameters=[os.path.join(pkg_dir, 'config', 'motion_safety.yaml')],
+        parameters=[PerformanceParameters(
+            os.path.join(pkg_dir, 'config', 'motion_safety.yaml'), profile)],
     )
     safety_lifecycle = Node(
         package='nav2_lifecycle_manager', executable='lifecycle_manager',
@@ -137,12 +143,12 @@ def generate_launch_description():
         map_marker_publisher_node,
         aruco_waypoint_navigator_node,
         navigation_debug_recorder_node,
-        Node(package='cleanup_perception', executable='obstacle_depth_node',
-             name='obstacle_depth', output='screen'),
+        Node(package=pkg_name, executable='obstacle_depth_node',
+             name='obstacle_depth', output='screen', parameters=[profile]),
         Node(package=pkg_name, executable='motion_guard_node',
-             name='motion_guard', output='screen'),
+             name='motion_guard', output='screen', parameters=[profile]),
         Node(package='robot_motion', executable='motion_executor',
-             name='motion_executor', output='screen'),
+             name='motion_executor', output='screen', parameters=[profile]),
         Node(package='robot_motion', executable='motion_diagnostics',
              name='motion_diagnostics', output='screen'),
         Node(package='robot_motion', executable='grasp_video_recorder',

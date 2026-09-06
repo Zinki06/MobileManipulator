@@ -18,8 +18,20 @@ void jointsJson(const std::vector<double> & joints)
 }
 
 // Read-only JSON-lines adapter; no ROS clients, publishers or hardware access.
-int main()
+int main(int argc, char ** argv)
 {
+  double min_body_depth = 0.006;
+  if (argc != 1) {
+    std::istringstream value(argc == 3 ? argv[2] : "");
+    std::string extra;
+    if (argc != 3 || std::string(argv[1]) != "--min-body-depth" ||
+      !(value >> min_body_depth) || (value >> extra) || !std::isfinite(min_body_depth) ||
+      min_body_depth < 0.004 || min_body_depth > 0.020)
+    {
+      std::cerr << "Usage: candidate_grasp_plan [--min-body-depth 0.004..0.020]\n";
+      return 2;
+    }
+  }
   std::cout << std::setprecision(12);
   std::string line;
   while (std::getline(std::cin, line)) {
@@ -33,7 +45,7 @@ int main()
     pick_and_place::CandidateGrasp plan;
     pick_and_place::CandidateDiagnostics counts;
     if (!valid || !pick_and_place::planCandidateGrasp(
-        x, y, surface, floor, start, plan, &counts)) {
+        x, y, surface, floor, start, plan, &counts, min_body_depth)) {
       std::cout << "{\"feasible\":false,\"rejections\":{\"insufficient_body_depth\":"
         << counts.insufficient_body_depth << ",\"hover_unreachable\":"
         << counts.hover_unreachable << ",\"approach_clearance\":"

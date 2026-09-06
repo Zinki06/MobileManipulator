@@ -13,10 +13,11 @@ from cleanup_interfaces.srv import EvaluateGrasp, PlaceObject
 from control_msgs.action import FollowJointTrajectory, GripperCommand
 from geometry_msgs.msg import PointStamped, TransformStamped
 import rclpy
-from rclpy.action import ActionServer
+from rclpy.action import ActionServer, CancelResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
-from std_msgs.msg import String
+from std_msgs.msg import Bool, String
+from rclpy.qos import DurabilityPolicy, QoSProfile
 from std_srvs.srv import Trigger
 from sensor_msgs.msg import JointState
 from tf2_ros import StaticTransformBroadcaster
@@ -32,7 +33,9 @@ def wait_for(predicate, seconds=5):
 
 @pytest.mark.parametrize('outcome', [
     'holding', 'empty', 'drop', 'false_open',
-    'candidate_holding', 'candidate_empty', 'candidate_false_open',
+    'candidate_holding', 'candidate_empty', 'candidate_false_open', 'candidate_relaxed',
+    'candidate_processed',
+    'optimized_park', 'interrupt',
 ])
 def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatch, outcome):
     """Reject shallow targets and execute insertion before closing at a closer target."""
@@ -42,12 +45,15 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
     rclpy.init()
     node = rclpy.create_node('fake_arm_controllers')
     group = ReentrantCallbackGroup()
-    paths, grippers, phases = [], [], []
+    paths, grippers, phases, carrying = [], [], [], []
     candidate_mode = outcome.startswith('candidate_')
-    behavior = outcome.removeprefix('candidate_')
+    behavior = ('holding' if outcome in {'candidate_relaxed', 'candidate_processed', 'interrupt'}
+                else outcome.removeprefix('candidate_'))
     finger = [0.019]
     arm_position = [0.0, -0.523, -0.523, 1.5707]
     reject_lowering = [False]
+    block_arm = [False]
+    arm_waiting = threading.Event()
     joint_pub = node.create_publisher(JointState, '/joint_states', 10)
 
     def feedback():
@@ -55,12 +61,23 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
         msg.header.stamp = node.get_clock().now().to_msg()
         msg.name = ['gripper_left_joint', 'joint1', 'joint2', 'joint3', 'joint4']
         msg.position = [finger[0]] + arm_position
+        msg.velocity = [0.] * 5
         joint_pub.publish(msg)
 
     node.create_timer(0.02, feedback, callback_group=group)
 
     def arm(goal):
         paths.append(goal.request.trajectory)
+        if block_arm[0]:
+            arm_waiting.set()
+            deadline = time.monotonic() + 5
+            while not goal.is_cancel_requested and time.monotonic() < deadline:
+                time.sleep(.02)
+            if goal.is_cancel_requested:
+                goal.canceled()
+                return FollowJointTrajectory.Result(error_code=-1)
+            goal.abort()
+            return FollowJointTrajectory.Result(error_code=-1)
         if reject_lowering[0] and len(goal.request.trajectory.points) == 10:
             goal.abort()
             return FollowJointTrajectory.Result(error_code=-1)
@@ -80,6 +97,7 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
 
     arm_server = ActionServer(node, FollowJointTrajectory,
                               '/arm_controller/follow_joint_trajectory', arm,
+                              cancel_callback=lambda _: CancelResponse.ACCEPT,
                               callback_group=group)
     grip_server = ActionServer(node, GripperCommand, '/gripper_controller/gripper_cmd',
                                gripper, callback_group=group)
@@ -96,6 +114,8 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
     broadcaster.sendTransform(transforms)
     target_pub = node.create_publisher(PointStamped, '/object_centroid', 10)
     node.create_subscription(String, '/pick/events', lambda msg: phases.append(msg.data), 20)
+    node.create_subscription(Bool, '/cleanup/carrying', lambda msg: carrying.append(msg.data),
+                             QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL))
     executor = MultiThreadedExecutor(num_threads=4)
     executor.add_node(node)
     thread = threading.Thread(target=executor.spin, daemon=True)
@@ -106,6 +126,11 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
     if candidate_mode:
         args += ['--ros-args', '-p', 'use_candidate_grasp:=true',
                  '-p', 'grasp_forward_offset:=0.03']
+    if outcome in {'candidate_relaxed', 'candidate_processed'}:
+        args += ['-p', 'grasp_min_body_depth:=0.004', '-p', 'approach_error_margin:=0.0']
+    if outcome == 'optimized_park':
+        args += ['--ros-args', '-p', 'startup_park:=false',
+                 '-p', 'reached_joint_tolerance:=0.015']
     process = subprocess.Popen(args, stdout=output, stderr=subprocess.STDOUT)
 
     def trigger(name):
@@ -116,6 +141,19 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
         return future.result()
 
     try:
+        if outcome == 'optimized_park':
+            client = node.create_client(Trigger, '/park_arm')
+            assert client.wait_for_service(timeout_sec=5)
+            time.sleep(.3)
+            assert not paths
+            assert trigger('/park_arm').success
+            assert not paths  # Fresh stationary feedback avoids a redundant 3 s action.
+            assert trigger('/observe_floor').success
+            assert len(paths) == 1
+            time.sleep(.1)
+            assert trigger('/park_arm').success
+            assert len(paths) == 2  # A different pose must still execute.
+            return
         wait_for(lambda: bool(paths), 10)  # Startup pose, no physical actuators connected.
         time.sleep(0.3)
         assert trigger('/observe_floor').success
@@ -127,6 +165,45 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
         req = EvaluateGrasp.Request()
         req.target.header.frame_id = 'map'
         req.require_candidate = candidate_mode
+        if outcome == 'candidate_relaxed':
+            req.target.point.x, req.target.point.z = 0.5, 0.029
+            checked = evaluate.call_async(req)
+            wait_for(checked.done)
+            response = checked.result()
+            assert response.success and not response.reachable
+            assert response.approach_available
+            assert 'min_body_depth=0.004000' in response.message
+            assert 'approach_error_margin=0.000000' in response.message
+            assert not grippers  # A proposed approach never executes the grasp.
+            # Disabling the hypothetical error margin admits the nominal 22cm pose.
+            req.target.point.z = 0.0324
+            checked = evaluate.call_async(req)
+            wait_for(checked.done)
+            assert checked.result().approach_available
+            assert abs(checked.result().approach_pose.pose.position.x - 0.28) < 1e-6
+            # An arrival inside Nav2's 2cm tolerance can still be outside arm reach.
+            # Retry the next closer pose, not the same already-reached goal.
+            req.target.point.x, req.target.point.z = 0.22, 0.029
+            checked = evaluate.call_async(req)
+            wait_for(checked.done)
+            assert not checked.result().reachable and checked.result().approach_available
+            assert abs(checked.result().approach_pose.pose.position.x - 0.04) < 1e-6
+        if outcome == 'candidate_holding':
+            req.target.point.x = 0.5
+            for height in (0.0213585, 0.0231518):
+                req.target.point.z = height
+                rejected = evaluate.call_async(req)
+                wait_for(rejected.done)
+                response = rejected.result()
+                assert response.success and not response.reachable
+                assert not response.approach_available
+                assert 'insufficient_body_depth=27' in response.message
+                assert 'hover_unreachable=0' in response.message
+            req.target.point.z = 0.0324
+            corrected = evaluate.call_async(req)
+            wait_for(corrected.done)
+            assert corrected.result().approach_available
+            assert abs(corrected.result().approach_pose.pose.position.x - 0.30) < 1e-6
         req.target.point.x, req.target.point.z = (0.5, 0.034) if candidate_mode else (0.255, 0.051)
         future = evaluate.call_async(req)
         wait_for(future.done)
@@ -142,9 +219,38 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
             assert trigger('/observe_floor').success
         req.target.point.x = 0.21 if candidate_mode else 0.20
         req.target.header.stamp = node.get_clock().now().to_msg()
+        if outcome == 'candidate_processed':
+            from rclpy.duration import Duration
+
+            # Recorded successful reachability target from run 200254, in the fake base frame.
+            req.target.point.x = 0.215559
+            req.target.point.y = 0.031291
+            req.target.point.z = 0.032088
+            for delay in (7.0, -2.0):
+                stamp = node.get_clock().now() - Duration(seconds=delay)
+                req.target.header.stamp = stamp.to_msg()
+                target_pub.publish(req.target)
+                time.sleep(0.1)
+                rejected = trigger('/execute_pick_and_place')
+                assert not rejected.success and rejected.message.startswith('TARGET_EXPIRED:')
+                assert not grippers
+            req.target.header.stamp = (node.get_clock().now() - Duration(seconds=2.07)).to_msg()
         target_pub.publish(req.target)
         time.sleep(0.1)
         paths.clear()
+        if outcome == 'interrupt':
+            block_arm[0] = True
+            client = node.create_client(Trigger, '/execute_pick_and_place')
+            assert client.wait_for_service(timeout_sec=3)
+            future = client.call_async(Trigger.Request())
+            wait_for(arm_waiting.is_set)
+            assert trigger('/open_gripper').success
+            wait_for(future.done)
+            assert not future.result().success
+            time.sleep(.3)
+            assert grippers == [.019, .019]  # No late CLOSE after the terminal opening.
+            assert not any(carrying)
+            return
         result = trigger('/execute_pick_and_place')
         if behavior != 'holding':
             assert not result.success
@@ -152,9 +258,11 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
                 assert not paths  # Never descend with an incompletely opened hand.
             else:
                 assert result.message.startswith('EMPTY_GRASP:')
+            assert not any(carrying)
             assert not any(p.startswith('SEQUENCE_COMPLETE|') for p in phases)
             return
         assert result.success
+        wait_for(lambda: carrying and carrying[-1])
         wait_for(lambda: any(p.startswith('SEQUENCE_COMPLETE|') for p in phases))
         tags = [p.split('|')[0] for p in phases]
         if candidate_mode:
@@ -165,9 +273,15 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
             assert 'strategy=candidate_body' in plan_phase
             assert 'forward_offset=0.030000' in plan_phase
             # Observed map x=.21 plus arm offset .092 plus correction .03 exactly once.
-            assert 'target_link1=0.332000' in plan_phase
+            assert f'target_link1={req.target.point.x + 0.122:.6f}' in plan_phase
+            if outcome == 'candidate_processed':
+                assert any(p.startswith('TARGET_ACCEPTED|') and 'limit=6.000000s' in p
+                           for p in phases)
             assert paths[2].points[-1].positions == paths[0].points[-1].positions
             assert -30 < -sum(paths[1].points[-1].positions[1:]) * 180 / math.pi < -15
+            assert trigger('/open_gripper').success
+            wait_for(lambda: carrying and not carrying[-1])
+            assert grippers[-1] == 0.019
             return
         assert tags.index('DESCEND') < tags.index('INSERT') < tags.index('CLOSE')
         assert [len(p.points) for p in paths] == [1, 10, 4, 10, 1]
@@ -206,6 +320,7 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
         tags = [p.split('|')[0] for p in phases]
         assert tags.index('PLACE_LOWER') < tags.index('PLACE_OPEN') < tags.index('PLACE_RETREAT')
         assert grippers[-1] == 0.019
+        wait_for(lambda: carrying and not carrying[-1])
     finally:
         process.terminate()
         process.wait(timeout=10)
