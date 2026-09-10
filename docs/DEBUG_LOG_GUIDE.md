@@ -1,6 +1,6 @@
 # 디버깅 로그 확인 방법
 
-2026-09-06 현재 프로젝트 코드 기준. 아래 명령은 저장 파일을 읽거나 ROS 토픽을
+2026-09-10 현재 프로젝트 코드 기준. 아래 명령은 저장 파일을 읽거나 ROS 토픽을
 구독한다. 브링업·정리 임무·팔 동작을 시작하는 명령은 포함하지 않는다.
 
 ## 1. 어느 로그부터 볼까
@@ -19,7 +19,7 @@
 | 영상과 같은 이름의 `.frames.jsonl` | 프레임 시각, 이벤트, UUID 대응 |
 | `nav_debug/run_*/navigation.log` | 별도 마커 경로 주행(`/route_navigation/*`)의 이벤트·상태 |
 | `~/.ros/log/`의 노드별 `.log` | 팔 실행 단계, 충돌 감시, Nav2 내부 오류, 센서 처리, 종료 처리 |
-| `performance_debug/` | 개발자가 저장한 빌드·시험·오프라인 분석 결과. 실기 실행 로그와 구분 |
+| `performance_debug/` (있을 때) | 개발자가 별도로 저장한 빌드·시험·오프라인 분석 결과 |
 
 `nav_debug/navigation.log`는 최신 recorder 실행 때 초기화되는 편의 파일이다.
 이전 실행을 보려면 `nav_debug/run_*/navigation.log`를 선택한다. 마커 경로 주행과
@@ -48,12 +48,13 @@ PY
 `cleanup_debug`는 정리 시작, `motion_debug`는 브링업 시작 시각이므로 이름이 다르다.
 각 폴더의 가장 최신 파일을 무조건 짝짓지 말고 **문제가 발생한 시각과 UUID**로 연결한다.
 
-아래는 실제 남아 있는 20:13 실험을 선택한 예다. 새 실행을 분석할 때는 위 목록에서
-해당 폴더로 바꾼다. 이후 명령은 같은 터미널에서 사용한다.
+과거 날짜별 문서가 가리키던 디버그 자료는 현재 작업 트리에 없다.
+목록이 비어 있으면 분석할 실행 로그가 없는 상태다. 새 실행 후 위 목록에서
+문제가 발생한 시각의 폴더를 골라 절대경로를 입력한다. 이후 명령은 같은 터미널에서 사용한다.
 
 ```bash
-CLEANUP_RUN="$PWD/cleanup_debug/run_20260906_201332_82213"
-MOTION_RUN="$PWD/motion_debug/run_20260906_201259_82112"
+read -r -p '분석할 cleanup run 절대경로: ' CLEANUP_RUN
+read -r -p '같은 시각 motion run 절대경로: ' MOTION_RUN
 ROS_LOG_ROOT="${ROS_LOG_DIR:-${ROS_HOME:-$HOME/.ros}/log}"
 
 tail -n 80 "$CLEANUP_RUN/mission.log"
@@ -120,8 +121,8 @@ rg -n 'GEMINI_|PLANNER_RESULT|fallback|collect_to_drop_zone|skip' \
    `target_max_age`는 6초지만, 해당 실행에 찍힌 값이 기준이다.
 
 `PLAN_ACCEPTED` 후 `PICK_START`가 없다면 planner API만 반복해서 볼 것이 아니라
-그 사이의 접근/기하 검사 이유를 확인한다. 관련 실제 사례는
-[GRASP_STATION_SKIP_20260906.md](GRASP_STATION_SKIP_20260906.md)에 있다.
+그 사이의 접근/기하 검사 이유를 확인한다. 기존 높이 오차와 관측 유효시간 사례는
+[과거 변경 근거](MAINTENANCE.md#과거-변경에서-남긴-판단-근거)에 요약되어 있다.
 
 ### 중심점을 어디로 잡았는지 / 끝부분을 잡으려 하는지 확인한다
 
@@ -158,7 +159,7 @@ rg --files "$CLEANUP_RUN" -g '*.jpg' -g '*.json' -g '*.npz'
 팔의 더 자세한 단계는 `/pick/events` 또는 노드별 ROS 로그에 있다.
 
 ```bash
-rg -n 'PICK_PHASE|GRIPPER_RESULT|GRIPPER_FEEDBACK|EMPTY_GRASP|GRASP_HOLD_CONFIRMED|CARRY_SELF_FILTER|StopFootprint|Failed to make progress|MOTION_GUARD|MOTION_SENSOR' \
+rg -n 'PICK_PHASE|GRIPPER_RESULT|GRIPPER_FEEDBACK|EMPTY_GRASP|GRASP_HOLD_CONFIRMED|CARRY_MUTED|CARRY_SELF_FILTER|StopFootprint|Failed to make progress|MOTION_GUARD|MOTION_SENSOR' \
   "$ROS_LOG_ROOT" -g '*.log'
 ```
 
@@ -174,9 +175,12 @@ PLACE_RETREAT → PLACE_COMPLETE`를 확인한다.
 - `StopFootprint`로 멈췄다면 `sensors.depth`와 `sensors.laser`의
   `count_inside_22cm`, `points_inside_22cm`를 비교한다. 점 좌표는 base_link 기준이다.
   좌표 목록은 최대 32개이므로 전체 개수보다 적을 수 있다.
-- 현재 운반 필터는 파지·운반 자세·관절 피드백이 확인될 때만 동작한다.
-  `[CARRY_SELF_FILTER] removed=... retained=...`와 운반 상태를 함께 본다.
-  점이 가깝다는 이유만으로 실제 장애물을 전부 자기 물체로 간주하지 않는다.
+- 현재 두 프로파일은 `carry_clear_all_obstacles=true`다. 운반·파킹·신선한 관절
+  피드백 조건을 통과하면 **외부 물체를 포함한 모든 depth 점을 비우고** `[CARRY_MUTED]`를 기록한다.
+  빈 cloud만 보고 주변이 비었다고 판단하지 않는다. 이때 LiDAR와 센서/TF 감시는 유지된다.
+- `carry_clear_all_obstacles=false`인 설정에서만 `[CARRY_SELF_FILTER] removed=... retained=...`가
+  나오며 지정한 자기 물체 영역 밖의 depth 점을 보존한다.
+  실행에 적용된 파라미터와 [운반 제한](CONFIGURATION.md#운반-중-깊이-장애물-처리)을 함께 확인한다.
 
 속도 경로는 다음과 같다. 선속도 단위는 m/s, 각속도는 rad/s다.
 
@@ -231,8 +235,21 @@ PY
 실제 새 센서 데이터라는 뜻은 아니다. 종료된 파일에서 JSON 파싱 실패가 반복되면
 파일 손상 여부를 별도로 확인한다.
 
-실제 20:13 사례의 깊이 자기 물체 오인 및 수정 내용은
-[CARRY_RELEASE_20260906.md](CARRY_RELEASE_20260906.md)에 있다.
+과거 운반 정지 사례와 종료 변경 이유는
+[유지보수 기록](MAINTENANCE.md#과거-변경에서-남긴-판단-근거)에 있다.
+
+### ID 4 부근 등에서 localization fault가 난다
+
+```bash
+rg -n 'LOCALIZATION_FAULT|robot_position_error|offset_translation_error|DEGRADED|MOTION_GUARD' \
+  "$ROS_LOG_ROOT" -g '*.log'
+```
+
+같은 시각의 odom, 마커 ID와 원시/필터 보정, TF 시각을 맞춰 본다.
+`map → odom` translation 성분끼리 뺀 값은 실제 로봇 위치 점프와 다르다.
+현재 코드는 같은 odom 로봇 점에 두 변환을 적용해 비교한다.
+운반 중 `DEAD_RECKONING`은 정상일 수 있지만 `DEGRADED`/FAULT는 별개다.
+원인을 확인하지 않고 보정 한도를 늘리거나 반복 재시작으로 진행하지 않는다.
 
 ### 주행 실패·재시도 또는 회전 후 오래 정지한다
 
@@ -251,6 +268,9 @@ rg --files "$CLEANUP_RUN" -g 'context.yaml' -g '*costmap.yaml'
 기본 스캔은 8방향, 약 45도 간격이다. 회전 종료부터 다음 이벤트까지의 시각 차이를
 계산해 정지 확인, 인식, planner 응답, 주행 재시도 중 어디서 대기했는지 구분한다.
 노드 로그의 `[CAPTURE_PERF]`, `[DEPTH_PERF]`와 아래 성능 기록도 확인한다.
+스테이션/복귀/배출 이동의 `ABORTED`에는 기본 2초 대기 후 최대 2회 재시도가 있다.
+센서·TF·odom 정지 조건을 확인하며 각 대기의 준비 제한은 10초다.
+거절/취소, 물체 접근 실패, 회전 액션 실패는 같은 재시도 정책이 아니다.
 
 ### 종료했는데 그리퍼가 열리지 않는다
 
@@ -316,7 +336,6 @@ PY
 함께 보관한다. `PICK_START`만 잘라내기보다 그 전의 재관찰·파지 검사와 이후 실패
 구간까지 남기면 같은 UUID와 시각으로 원인을 추적할 수 있다.
 
-현재 동작과 설정 설명은 [CARRY_RELEASE_20260906.md](CARRY_RELEASE_20260906.md),
-[PERFORMANCE_OPTIMIZATION_20260906.md](PERFORMANCE_OPTIMIZATION_20260906.md),
-[GRASP_SESSION_20260906.md](GRASP_SESSION_20260906.md)를 참고한다.
-[CLEANUP_DEBUGGING.md](CLEANUP_DEBUGGING.md)는 9월 5일 당시의 장애·검증 기록이다.
+현재 동작은 [구조](ARCHITECTURE.md), 실제 적용값은 [설정](CONFIGURATION.md),
+파지 기하는 [몸통 후보](GRASP_CANDIDATES.md), 과거 원인과 남은 검증은
+[유지보수 기록](MAINTENANCE.md)에 정리되어 있다.

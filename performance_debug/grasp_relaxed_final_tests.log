@@ -1,6 +1,0 @@
-Starting >>> pick_and_place
-Finished <<< pick_and_place [30.0s]
-Starting >>> project_bringup
-Finished <<< project_bringup [3.83s]
-
-Summary: 2 packages finished [34.5s]

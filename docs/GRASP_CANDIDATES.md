@@ -1,91 +1,94 @@
-# 몸통 후보·pitch 선택과 자동 정리 통합
+# 몸통 후보 파지와 진단 도구
 
-검출 중심 하나에 고정 pitch로 접근하던 방식 대신, 바나나 몸통 여러 구간을
-비교하여 현재 4축 팔이 접근하고 내려갈 수 있는 위치와 pitch를 고른다.
-독립적인 손목 yaw를 추가하는 기능은 아니다. 같은 위치에서 yaw를 강제하지 않고,
-각 후보의 XY로 결정되는 yaw와 몸통 국소 방향의 차이를 평가한다.
+## 자동 정리에서 쓰는 파지
 
-2026-09-06 후속 수정으로 `project_bringup/project.launch.py`의 자동 정리에도
-동일한 후보 생성·점수화·IK를 연결했다. 카메라 보정 `grasp_camera_20260906.yaml`,
-link1 +X 30mm 보정이 기본 적용된다. perception은 보정 전 관측 몸통점을 전달하며,
-30mm는 pick 노드가 도달성 검사와 실행에서 각각 한 번 적용한다.
+통합 launch는 `grasp_camera_20260906.yaml`, 몸통 후보/pitch 선택,
+link1 +X 30mm 보정을 사용한다. 카메라 보정은 파지 perception에만 적용하며
+전역 TF/URDF를 변경하지 않는다. perception이 전달하는 map 표적은 전방 보정 전
+관측점이고, pick의 도달성 검사와 실행이 각자 같은 +30mm 보정을 한 번 적용한다.
 
-`candidate_body` 관측만 자동 집기를 허용한다. 후보의 경로가 모두 불가능하면
-`candidate_approach`로 표시해 베이스 접근에만 사용하며, 재촬영에서 실행 가능한
-몸통 후보가 나오지 않으면 집지 않는다. 기존 얕은 `planGrasp`로 자동 대체하지 않는다.
-자동 실행은 열기→상공→10점 몸통 하강→닫기·hold 확인→하강 경로 전체 역순 인양→파킹이다.
+`candidate_body` 관측만 자동 집기를 허용한다. 실행 계획이 없는
+`candidate_approach`는 베이스 접근에만 쓰며, 재촬영에서 실행 가능한 몸통 후보가
+나오지 않으면 집지 않는다. SAM 실패 시 bbox depth는 탐색/identity에 사용할 수 있지만
+통합 자동 파지의 몸통 검증을 대신하지 못한다.
 
-`candidate_hover_trial`은 계속 촬영/계획 또는 열린 그리퍼 상공 시험만 수행한다.
-독립 실행한 pick 노드는 호환성을 위해 기본 legacy 모드를 유지하므로, 자동 정리에는
-위 통합 launch를 사용한다. 새 통합은 저장된 성공 실험 데이터와 모의 컨트롤러로 검증했으며,
-수정 후 전체 임무의 실물 성공은 아직 검증하지 않았다.
+실행 순서는 개방 → 상공 → 10점 몸통 하강 → 닫기/유지 확인 →
+하강 경로 역순 인양 → 파킹/유지 확인이다. 독립 실행 pick의 legacy 모드는
+통합 기본 동작과 다르므로 정리 운용은 [통합 실행](HANDOVER.md)을 사용한다.
 
-## 선택과 거절 조건
+## 기하와 확인 조건
 
-- 마스크 내부의 유효 깊이를 link1 좌표로 변환한다. 실험 camera extrinsic과
-  촬영 timestamp의 wrist TF를 사용하고 기존 perception target과 일치하는지 검사한다.
-- 몸통 PCA 투영의 30~70 percentile 구간에서 여러 지점을 만들고, 각 지점의
-  닫힘 축 양쪽 경계 가운데를 다시 찾는다. 새로운 픽셀의 깊이를 재측정한다.
-- 관측 표면 폭 25~65mm, 양 끝까지 투영 거리 최소20mm 조건을 적용한다.
-  폭은 표면 관측값이며 실제 손가락 접촉면/충돌/파지 안정성을 증명하지 않는다.
-- pitch -80~-15도를 2.5도 간격으로 탐색한다. 손가락 최저점이 표면 위50mm인
-  상공 목표, 현재 관절→상공 경로, 상공→몸통 하강 10개 waypoint를 검사한다.
-- 상공 이동은 모델상 손가락이 표면보다 최소45mm 위에 있도록 검사한다.
-  하강은 바닥 여유8mm, 관절 한계 여유0.025rad, TCP 표면 아래 최소6mm 조건이다.
-  경로 보간에도 바닥 여유를 확인한다. 물체/팔 전체 충돌과 force closure는 미검증이다.
-- 몸통 중앙, 적당한 폭, 국소 방향, 깊이 지지, 몸통 진입 깊이와 기존 -45도에서의
-  pitch 변화량을 함께 점수화한다. 완전한 접근/하강 계획이 없는 후보는 선택하지 않는다.
-- 해가 없으면 실패 이유와 후보들을 저장하고 정지한다. 옛 중심으로 대체하거나
-  그리퍼를 닫거나 바퀴를 움직이는 fallback은 없다.
+- 마스크 내부 깊이를 촬영 시각 wrist TF와 보정 카메라 기하로 link1에 변환한다.
+- 몸통 PCA 길이의 30~70 percentile에서 후보를 만들고 닫힘 축 양쪽 경계 중앙의
+  깊이를 다시 측정한다. 관측 폭 25~65mm, 양 끝 여유 최소 20mm를 요구한다.
+- pitch -80~-15°를 2.5° 간격으로 비교하고 상공·하강 전체 경로를 검사한다.
+  4축 팔의 후보 XY에 따라 yaw가 정해지며 독립 손목 yaw를 추가하는 기능은 아니다.
+- 모델상 손가락 바닥 여유는 목표 8mm, 경로 6mm다.
+  최소 몸통 진입 깊이는 기본 프로파일 4mm, conservative/계산 도구 기본값 6mm다.
+- `align_grasp_floor=true`는 주변 바닥 평면이 충분히 지지될 때 후보 높이를
+  최대 15mm 위쪽으로만 정렬한다. 원시 좌표·보정량·평면 품질은 증거에 남는다.
+- 기본 `approach_error_margin=0`은 가상 도착 오차의 추가 검사만 없앤다.
+  실제 접근 후 새 표적/IK 검사, 관절/바닥 조건과 접근 횟수 제한은 유지한다.
+- 관측의 `target_max_age=6s`는 인식·기하 처리 시간을 포함한다.
+  timestamp를 새로 찍어 오래된 관측을 통과시키지 않는다.
 
-## 실행
+깊은 몸통, 폭, 중심부, 국소 방향, 깊이 지지, pitch 등을 함께 평가한다.
+모델상 경로가 가능하다는 사실만으로 전체 손가락/물체 충돌이나 안정적인 실제 파지가
+증명되지는 않는다. 카메라 y 이동은 바닥 평면 실험으로 보정되지 않았고
++30mm는 특정 배치에서 관찰한 경험적 보정이다.
 
-워크스페이스에서 ROS 환경과 `install/setup.bash`를 source한다.
-기존 bringup, 실험 camera calibration을 적용한 perception, pick 노드가 필요하다.
-두 시험 명령을 동시에 실행하지 않는다.
+기존 nominal 모드에는 접근 후 잘린 물체의 중심을 짧게 재검증하는 odom 앵커가 있다.
+**현재 보정 모드에서는 nominal 앵커 fallback을 사용하지 않는다.**
+중심이 가려졌다고 끝점으로 바꿔 집는 방식으로 해석하지 않는다.
+
+## 진단 도구
+
+ROS 환경을 source하고 필요한 노드가 실행 중인 상태에서 사용하는 개발 도구다.
+자동 정리 임무와 동시에 실행하지 않는다. 아래 첫 명령은 촬영/계획만 요청하고,
+두 번째는 실제 팔·그리퍼를 움직인다. 도구는 베이스 자동 접근을 수행하지 않는다.
 
 ```bash
-colcon build --packages-select pick_and_place cleanup_perception --symlink-install
-source install/setup.bash
-
-# 현재 카메라 자세에서 새 촬영과 후보 계산만 수행한다. 팔 명령 없음.
+# 현재 카메라 자세에서 새 촬영과 후보 계산만 수행
 OPENBLAS_NUM_THREADS=1 ros2 run cleanup_perception candidate_hover_trial \
   --camera-calibration src/cleanup_perception/config/grasp_camera_20260906.yaml \
   --forward-offset 0.03
+```
 
-# 그리퍼 개방 → 관측 자세 → 새 촬영/선택 → 선택 후보의 상공에서 개방 정지.
+```bash
+# 그리퍼 개방 → 관측 자세 → 촬영/선택 → 상공에서 개방 정지
 OPENBLAS_NUM_THREADS=1 ros2 run cleanup_perception candidate_hover_trial \
   --execute-hover \
   --camera-calibration src/cleanup_perception/config/grasp_camera_20260906.yaml \
   --forward-offset 0.03
 ```
 
-`--forward-offset` 기본값은0이며, +30mm는 이 세션에서 사용자 관찰로 정한
-link1 수평 +X 경험적 보정이다. 새로운 pitch에서 정확성을 재확인해야 한다.
-기본 출력은 현재 디렉터리의 `cleanup_debug/candidate_hover_<시간>/`이다.
+`--forward-offset` 기본값은 0이다. 도구 옵션은 통합 launch의 설정을 자동으로
+복제하지 않으므로 같은 조건을 비교하는지 확인한다. 상공 시험은 하강/닫기/수거 완료가 아니다.
 
-`result.json`에는 후보별 계획/탈락 이유, 선택 점수, 좌표 변환, 실제 관절값을 저장한다.
-`capture.npz`와 `geometry`의 rotation/translation으로 원래 후보 계산을 재생할 수 있다.
-`candidate_preview.jpg`의 청록색 원은 전방 보정 전 선택한 몸통 픽셀이다.
-완료 시 `hover_rgb.jpg`, `hover_depth.npz`, depth timestamp의 wrist TF도 저장한다.
+| 도구 | 범위 |
+| --- | --- |
+| `candidate_hover_trial` | 촬영·후보 계산; `--execute-hover`일 때 개방과 팔 상공 이동 |
+| `candidate_grasp_plan` (pick_and_place) | ROS 초기화 없는 C++ 계산 전용 CLI |
+| `grasp_trial` | 촬영/평가; `--execute`를 주면 실제 단일 파지, 자동 배출 없음 |
+| `src/pick_and_place/scripts/check_camera_geometry.py` | 손목 자세를 바꿔 보정 후보를 계산하는 실험 스크립트. 현재 CMake 설치 대상이 아님 |
 
-`candidate_grasp_plan`은 ROS를 시작하지 않는 계산 전용 C++ 실행 파일이다.
-표준 입력 한 줄에 `x y surface_z floor_z joint1 joint2 joint3 joint4`를 받아
-JSON 한 줄로 상공/하강 계획 또는 탈락 집계를 출력한다. 하드웨어 명령은 없다.
+계산 CLI는 표준 입력 한 줄에
+`x y surface_z floor_z joint1 joint2 joint3 joint4`를 받고 JSON 계획/거절 사유를 출력한다.
+`--min-body-depth 0.004` 옵션으로 통합 기본 진입 깊이를 지정할 수 있다.
 
-## 검증과 현재 한계
+## 결과와 검증 범위
 
-```bash
-PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 colcon test \
-  --packages-select pick_and_place cleanup_perception
-colcon test-result --test-result-base build/pick_and_place --verbose
-colcon test-result --test-result-base build/cleanup_perception --verbose
-```
+`candidate_hover_trial` 기본 출력은 현재 작업 폴더의
+`cleanup_debug/candidate_hover_<시각>/`이다.
 
-테스트에는 몸통 내부 후보, 폭/깊이 거절, 보정 범위, 도달 불가능 후보 제외,
-실제 로그 좌표의 상공/하강 바닥 여유 및 거절 사유 회귀가 포함된다.
+| 파일 | 용도 |
+| --- | --- |
+| `result.json` | 후보 선택/탈락, 변환, 관절과 시험 단계 결과 |
+| `capture.npz` | RGB/depth/기하 입력의 재생 자료 |
+| `candidate_preview.jpg` | 전방 보정 전 선택 몸통 픽셀 |
+| `hover_rgb.jpg`, `hover_depth.npz` | 상공 단계 이후 관측 |
 
-2026-09-06 실험에서는 촬영 간 표면 높이 추정 약2mm 차이로 후보 통과 여부가
-바뀌었다. 따라서 이 조건에서의 해는 검증된 파지 성공이나 오차에 강한 파지를
-의미하지 않는다. 실제 파지를 연결하기 전에 여러 프레임/팔 자세에서의 보정 일관성,
-전체 손가락·물체 충돌, 접촉 깊이와 유지 여부를 확인해야 한다.
+자동 임무의 UUID별 사진·후보 JSON은 [로그 안내](DEBUG_LOG_GUIDE.md)를 따른다.
+2026-09-06 세션 문서에는 한 후보의 실제 파지와 추가 인양을 사용자가 확인한 기록이 있다.
+현재 통합 프로파일로 여러 물체를 집고 운반·배치하는 전체 실물 성공의 증거는 아니다.
+개발 시험 범위와 이번 검사 결과는 [개발 안내](DEVELOPMENT.md)에 있다.
