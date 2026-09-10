@@ -19,14 +19,17 @@ from pathlib import Path
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
+from launch.actions import ExecuteProcess
 from launch.actions import IncludeLaunchDescription
 from launch.actions import OpaqueFunction
 from launch.conditions import IfCondition
+from launch.logging import launch_config
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from ament_index_python.packages import get_package_prefix
 
 
 def include_launch(package_name, launch_file, condition, launch_arguments=None):
@@ -83,6 +86,19 @@ def launch_cleanup_planner(context, model, env_file):
     )]
 
 
+def launch_debug_recorder(context):
+    """Start passive recording before hardware and retain shutdown diagnostics."""
+    executable = (Path(get_package_prefix('project_bringup')) /
+                  'lib/project_bringup/record_debug.py')
+    return [ExecuteProcess(
+        cmd=['python3', str(executable),
+             '--root', LaunchConfiguration('debug_record_root').perform(context),
+             '--launch-logs', launch_config.log_dir,
+             '--profile', LaunchConfiguration('performance_config_file').perform(context)],
+        output='both', sigterm_timeout='45', sigkill_timeout='10',
+    )]
+
+
 def generate_launch_description():
     """Start the complete hardware, perception, navigation, and grasping stack."""
     start_robot = LaunchConfiguration('start_robot')
@@ -103,6 +119,11 @@ def generate_launch_description():
 
     profile = LaunchConfiguration('performance_config_file')
     declared_arguments = [
+        DeclareLaunchArgument('record_debug', default_value='true',
+                              description='Record all topics, images and action feedback.'),
+        DeclareLaunchArgument('debug_record_root',
+                              default_value='/home/user/turtlebot3_ws/cleanup_debug',
+                              description='Directory for full diagnostic bags and log links.'),
         DeclareLaunchArgument('performance_config_file', default_value=PathJoinSubstitution([
             FindPackageShare('aruco_localizer'), 'config', 'performance.yaml'])),
         DeclareLaunchArgument(
@@ -191,6 +212,8 @@ def generate_launch_description():
     ]
 
     actions = [
+        OpaqueFunction(function=launch_debug_recorder,
+                       condition=IfCondition(LaunchConfiguration('record_debug'))),
         include_launch(
             'project_bringup',
             'feedback_robot.launch.py',
@@ -250,6 +273,7 @@ def generate_launch_description():
             parameters=[profile, {
                 'target_topic': '/cleanup/pick_target',
                 'use_candidate_grasp': True, 'grasp_forward_offset': 0.030,
+                'require_gripper_hardware_state': False,
             }],
         ),
         Node(

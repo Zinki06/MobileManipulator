@@ -49,14 +49,16 @@ TEST(Nav2Config, ManipulationHasIndependentPreciseController)
   EXPECT_TRUE(config["ApproachPath"]["use_collision_detection"].as<bool>());
 }
 
-TEST(Nav2Config, ClearedAreaUsesStaticMapWithoutLiveObstacleDetours)
+TEST(Nav2Config, DepthOnlyDetoursPreserveStaticMap)
 {
   const auto config = YAML::LoadFile(NAV2_PARAMS_PATH);
   for (const std::string name : {"global_costmap", "local_costmap"}) {
     const auto costmap = config[name][name]["ros__parameters"];
     EXPECT_EQ(costmap["plugins"].as<std::vector<std::string>>(),
-      (std::vector<std::string>{"static_layer", "inflation_layer"}));
-    EXPECT_FALSE(costmap["obstacle_layer"]);
+      (std::vector<std::string>{"static_layer", "depth_layer", "inflation_layer"}));
+    EXPECT_EQ(costmap["depth_layer"]["depth"]["topic"].as<std::string>(), "/cleanup/obstacle_points");
+    EXPECT_TRUE(costmap["depth_layer"]["depth"]["marking"].as<bool>());
+    EXPECT_TRUE(costmap["depth_layer"]["depth"]["clearing"].as<bool>());
     EXPECT_EQ(costmap["static_layer"]["map_topic"].as<std::string>(), "/map");
     EXPECT_TRUE(costmap["static_layer"]["map_subscribe_transient_local"].as<bool>());
     EXPECT_TRUE(costmap["track_unknown_space"].as<bool>());

@@ -1,0 +1,19 @@
+# Execute the most recently published pick target. Legacy Trigger remains available.
+---
+uint8 OK=0
+uint8 PRECONDITION_FAILED=1
+uint8 GRIPPER_FAILED=2
+uint8 ARM_FAILED=3
+uint8 EMPTY_GRASP=4
+uint8 INTERRUPTED=5
+uint8 HOLD_UNKNOWN=0
+uint8 HOLD_EMPTY=1
+uint8 HOLD_CONFIRMED=2
+bool success
+uint8 result_code
+# UNKNOWN must never be treated as an empty gripper, including service timeouts.
+uint8 holding_state
+# True once this request may have dispatched a closing command.
+bool close_started
+string stage
+string message

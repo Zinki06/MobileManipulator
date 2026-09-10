@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Reuse the robot description/hardware with a project-owned feedback override."""
+"""Start the original TurtleBot3 hardware and standard controllers."""
 
 import os
 from pathlib import Path
@@ -21,10 +21,10 @@ import yaml
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, RegisterEventHandler, IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import ExecuteProcess, OpaqueFunction, TimerAction
 from launch.event_handlers import OnProcessExit
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
@@ -33,7 +33,7 @@ from robot_motion.performance import PerformanceParameters
 
 
 class FeedbackParameters(RewrittenYaml):
-    """Add gripper keys absent from the vendor YAML to the generated copy only."""
+    """Apply gripper completion settings to the generated configuration copy."""
 
     def perform(self, context):
         """Preserve drive rewrites and require millimetre-scale finger completion."""
@@ -49,7 +49,7 @@ class FeedbackParameters(RewrittenYaml):
 
 
 def controller_parameters(source):
-    """Override commands-as-odometry while leaving vendor configuration untouched."""
+    """Use measured feedback for the drive and arm controllers."""
     return FeedbackParameters(
         source_file=source, root_key='', convert_types=True,
         param_rewrites={
@@ -74,7 +74,7 @@ def require_hardware_mode(context):
 
 
 def generate_launch_description():
-    """Start the existing hardware and controllers with measured-state feedback."""
+    """Start the original OpenCR driver and standard ROS controllers."""
     description = get_package_share_directory('turtlebot3_manipulation_description')
     bringup = get_package_share_directory('turtlebot3_manipulation_bringup')
     robot = ParameterValue(Command([
@@ -85,7 +85,8 @@ def generate_launch_description():
     ]), value_type=str)
     controller = Node(
         package='robot_motion', executable='controlled_hardware', output='screen',
-        sigterm_timeout='15', sigkill_timeout='8',
+        # Allow release waits plus the child's 10s graceful / 5s forced cleanup.
+        sigterm_timeout='30', sigkill_timeout='10',
         parameters=[{'robot_description': robot}, PerformanceParameters(controller_parameters(
             os.path.join(bringup, 'config', 'hardware_controller_manager.yaml')),
             LaunchConfiguration('performance_config_file'))],
@@ -112,11 +113,13 @@ def generate_launch_description():
         RegisterEventHandler(OnProcessExit(target_action=others[2], on_exit=[TimerAction(
             period=1.0,
             actions=[ExecuteProcess(cmd=[
-                'ros2', 'topic', 'pub', '--once', '/arm_controller/joint_trajectory',
-                'trajectory_msgs/msg/JointTrajectory',
-                "{joint_names: [joint1, joint2, joint3, joint4], points: "
-                "[{positions: [0.0, -0.523, -0.523, 1.5707], time_from_start: {sec: 3}}]}",
-            ], output='screen')])])),
+                'ros2', 'action', 'send_goal',
+                '/arm_controller/follow_joint_trajectory',
+                'control_msgs/action/FollowJointTrajectory',
+                "{trajectory: {joint_names: [joint1, joint2, joint3, joint4], points: "
+                "[{positions: [0.0, -0.523, -0.523, 1.5707], time_from_start: {sec: 3}}]}}",
+                '--feedback',
+            ], output='both')])])),
         controller,
         Node(package='robot_state_publisher', executable='robot_state_publisher',
              parameters=[{'robot_description': robot}], output='screen'),

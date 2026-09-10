@@ -1,6 +1,7 @@
 """Exercise the installed C++ manager against isolated fake ROS action/services."""
 
 import math
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -10,12 +11,14 @@ import xml.etree.ElementTree as ET
 
 from ament_index_python.packages import get_package_prefix
 from cleanup_interfaces.msg import ObjectObservation
-from cleanup_interfaces.srv import CaptureObjects, EvaluateGrasp, PlaceObject, PlanCleanup
+from cleanup_interfaces.srv import (
+    CaptureObjects, EvaluateGrasp, ExecutePick, PlaceObject, PlanCleanup)
 from geometry_msgs.msg import PointStamped, TransformStamped
 from nav2_msgs.action import NavigateToPose, Spin
 from nav_msgs.msg import OccupancyGrid, Odometry
 import pytest
 import rclpy
+from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.action import ActionServer
 from rclpy.duration import Duration
 from rclpy.executors import MultiThreadedExecutor
@@ -62,6 +65,7 @@ class FakeRobot(Node):
         self.picks = 0
         self.plans = 0
         self.releases = 0
+        self.preparations = 0
         self.placements = []
         self.approaches = 0
         self.station2_spins = 0
@@ -71,6 +75,7 @@ class FakeRobot(Node):
         self.events = []
         self.last_pick_target = None
         self.last_capture_stamp = None
+        self.retired_requests = []
         self.tf = TransformBroadcaster(self)
         self.mode = self.create_publisher(String, '/aruco/localization_mode', 10)
         self.odom = self.create_publisher(Odometry, '/odom', 10)
@@ -86,14 +91,24 @@ class FakeRobot(Node):
         self.timer = self.create_timer(0.02, self.publish_pose)
         self.nav = ActionServer(self, NavigateToPose, '/navigate_to_pose', self.navigate)
         self.spin = ActionServer(self, Spin, '/spin', self.rotate)
-        self.create_service(CaptureObjects, '/cleanup/capture_objects', self.capture)
-        self.create_service(PlanCleanup, '/cleanup/plan_objects', self.plan)
-        self.create_service(EvaluateGrasp, '/cleanup/evaluate_grasp', self.evaluate)
-        self.create_service(Trigger, '/execute_pick_and_place', self.pick)
-        self.create_service(Trigger, '/open_gripper', self.release)
-        self.create_service(PlaceObject, '/cleanup/place_object', self.place)
-        self.create_service(Trigger, '/park_arm', self.ok)
-        self.create_service(Trigger, '/observe_floor', self.ok)
+        group = ReentrantCallbackGroup()
+        for service, name, callback, kind in [
+                (CaptureObjects, '/cleanup/capture_objects', self.capture, 'capture'),
+                (PlanCleanup, '/cleanup/plan_objects', self.plan, 'plan'),
+                (EvaluateGrasp, '/cleanup/evaluate_grasp', self.evaluate, 'eval'),
+                (ExecutePick, '/cleanup/execute_pick', self.pick, 'pick'),
+                (Trigger, '/cleanup/prepare_gripper', self.prepare, 'prepare'),
+                (Trigger, '/open_gripper', self.release, 'open'),
+                (Trigger, '/cleanup/stop_manipulation', self.ok, 'stop'),
+                (PlaceObject, '/cleanup/place_object', self.place, 'place'),
+                (Trigger, '/park_arm', self.ok, 'park'),
+                (Trigger, '/observe_floor', self.ok, 'observe')]:
+            def respond(request, response, callback=callback, kind=kind):
+                if self.failure == 'timeout_' + kind and not getattr(self, '_delayed', False):
+                    self._delayed = True
+                    time.sleep(1.2)
+                return callback(request, response)
+            self.create_service(service, name, respond, callback_group=group)
 
     def publish_pose(self):
         """Publish a connected, current map/base tree on the test domain only."""
@@ -139,6 +154,7 @@ class FakeRobot(Node):
     def navigate(self, handle):
         """Apply a navigation pose without moving any physical device."""
         pose = handle.request.pose.pose
+        assert self.preparations == 1
         self.nav_attempts += 1
         if self.failure.startswith('nav_') and (
                 self.failure != 'nav_once' or self.nav_attempts == 1):
@@ -175,6 +191,7 @@ class FakeRobot(Node):
 
     def capture(self, request, response):
         """Return one persistent UUID until it is picked, or inject failure."""
+        self.retired_requests.append(list(request.retired_object_uuids))
         self.captures.append(request.station_name)
         self.capture_headings.append((request.station_name, request.heading_index))
         if self.failure == 'carry_occluded' and request.heading_index == 251:
@@ -230,15 +247,38 @@ class FakeRobot(Node):
             assert self.last_pick_target.header.stamp == self.last_capture_stamp
         assert math.hypot(self.x - 1.0, self.y - 0.2) < 0.26
         self.picks += 1
+        response.stage = 'RETURN_HOME'
+        response.close_started = True
+        response.holding_state = ExecutePick.Response.HOLD_CONFIRMED
         if self.failure == 'empty_grasp' and self.picks == 1:
             response.success = False
+            response.result_code = ExecutePick.Response.EMPTY_GRASP
+            response.holding_state = ExecutePick.Response.HOLD_EMPTY
             response.message = 'EMPTY_GRASP: no stable finger obstruction after closing'
             return response
         if self.failure == 'pick':
             response.success = False
+            response.result_code = ExecutePick.Response.ARM_FAILED
             response.message = 'Object grasped, but arm failed to return home'
             return response
+        if self.failure in {'pick_open', 'pick_unknown'}:
+            response.stage = 'OPEN' if self.failure == 'pick_open' else 'CLOSE'
+            response.result_code = ExecutePick.Response.GRIPPER_FAILED
+            response.close_started = self.failure == 'pick_unknown'
+            response.holding_state = (
+                ExecutePick.Response.HOLD_EMPTY if self.failure == 'pick_open' else
+                ExecutePick.Response.HOLD_UNKNOWN)
+            response.message = 'fixture gripper stalled'
+            return response
         return self.ok(request, response)
+
+    def prepare(self, request, response):
+        """Verify the gripper before the first navigation request."""
+        self.preparations += 1
+        response.success = self.failure != 'prepare'
+        response.message = ('fixture opening verified' if response.success else
+                            'fixture gripper stalled')
+        return response
 
     def evaluate(self, request, response):
         """Return a feasible base pose; arrival alone cannot satisfy this check."""
@@ -279,6 +319,9 @@ class FakeRobot(Node):
             return response
         response.success = True
         response.released = True
+        if self.failure == 'place_retreat':
+            response.success = False
+            response.message = 'fixture retreat rejected after release'
         return response
 
     def ok(self, request, response):
@@ -288,15 +331,20 @@ class FakeRobot(Node):
 
 
 @pytest.mark.parametrize('failure', [
-    '', 'model', 'review', 'pick', 'pick_remains', 'empty_grasp', 'early_arrival', 'never_reach',
+    '', 'model', 'review', 'pick', 'pick_open', 'pick_unknown', 'prepare',
+    'pick_remains', 'empty_grasp', 'early_arrival', 'never_reach',
     'spin', 'spin_once',
-    'invalid_centroid', 'legacy_candidate', 'place', 'geometry_refresh', 'geometry_rejected',
+    'timeout_capture', 'timeout_plan', 'timeout_eval', 'timeout_pick',
+    'timeout_place', 'timeout_park', 'timeout_observe', 'timeout_stop',
+    'invalid_centroid', 'legacy_candidate', 'place', 'place_retreat',
+    'geometry_refresh', 'geometry_rejected',
     'processed_frame', 'expired_frame',
-    'carry_occluded', 'nav_once', 'nav_always', 'nav_blocked', 'nav_moving', 'nav_fault', 'nav_stop',
+    'carry_occluded', 'nav_once', 'nav_always', 'nav_blocked', 'nav_moving', 'nav_fault',
+    'nav_stop',
 ])
 def test_mission_flow(tmp_path, monkeypatch, failure):
     """Test scan/review/plan/pick/drop order and bounded perception failure paths."""
-    monkeypatch.setenv('ROS_DOMAIN_ID', str(160 + os.getpid() % 50))
+    monkeypatch.setenv('ROS_DOMAIN_ID', str(160 + os.getpid() % 10))
     monkeypatch.setenv('ROS_LOCALHOST_ONLY', '1')
     monkeypatch.setenv('ROS_LOG_DIR', str(tmp_path / 'ros_logs'))
     config_path = Path(__file__).parents[1] / 'config' / 'task_zones.yaml'
@@ -314,6 +362,12 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
         'cleanup_task_manager' / 'cleanup_task_manager_node'
     approach_bt = Path(__file__).parents[1] / 'behavior_trees' / 'precision_approach.xml'
     output = (tmp_path / 'manager_output.log').open('w')
+    timeout_names = {'capture': 'capture', 'plan': 'planner', 'eval': 'evaluation',
+                     'pick': 'pick', 'place': 'place', 'park': 'park',
+                     'observe': 'observe', 'stop': 'stop'}
+    timeout_args = []
+    if failure.startswith('timeout_'):
+        timeout_args = ['-p', f'{timeout_names[failure[8:]]}_service_timeout:=0.3']
     process = subprocess.Popen([
         str(executable), '--ros-args', '-p', f'task_config_path:={local_config}',
         '-p', f'debug_output_root:={tmp_path / "evidence"}',
@@ -321,7 +375,7 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
         '-p', 'require_candidate_grasp:=true',
         '-p', f'verify_pick_with_camera:={str(failure != "carry_occluded").lower()}',
         '-p', 'navigation_retry_delay:=0.5', '-p', 'navigation_retry_timeout:=1.5',
-    ], stdout=output, stderr=subprocess.STDOUT)
+    ] + timeout_args, stdout=output, stderr=subprocess.STDOUT)
     try:
         client = robot.create_client(Trigger, '/start_cleanup')
         assert client.wait_for_service(timeout_sec=10)
@@ -339,8 +393,13 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
         deadline = time.monotonic() + 30
         nav_failure = failure.startswith('nav_') and failure != 'nav_once'
         terminal = ('MISSION_FAILED|' if
-                    failure in {'model', 'spin', 'spin_once', 'place'} or nav_failure
+                    failure in {'model', 'spin', 'spin_once', 'place', 'place_retreat',
+                                'pick', 'pick_open', 'pick_unknown', 'prepare', 'pick_remains'}
+                    or nav_failure
                     else 'MISSION_COMPLETE|')
+        if failure in {'timeout_pick', 'timeout_place', 'timeout_park',
+                       'timeout_observe', 'timeout_stop'}:
+            terminal = 'MISSION_FAILED|'
         if failure == 'nav_stop':
             while time.monotonic() < deadline and not any(
                     e.startswith('NAVIGATION_RETRY_WAIT|') for e in robot.events):
@@ -353,8 +412,8 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
             assert stopped.done() and stopped.result().success
             time.sleep(1.7)
             assert robot.nav_attempts == 1
-            assert robot.releases == 1
-            assert any(e.startswith("MISSION_RELEASE_COMPLETE|") for e in robot.events)
+            assert robot.releases == 0
+            assert any(e.startswith("MISSION_STOP_COMPLETE|") for e in robot.events)
             assert not any(e.startswith('NAVIGATION_RETRY|') for e in robot.events)
             return
         while time.monotonic() < deadline:
@@ -363,7 +422,33 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
             assert process.poll() is None
             time.sleep(0.05)
         assert any(event.startswith(terminal) for event in robot.events), robot.events
-        assert any(e.startswith("MISSION_RELEASE_COMPLETE|") for e in robot.events)
+        if failure in {'prepare', 'pick_open', 'pick_unknown'}:
+            assert not robot.placements
+            assert not any('skipped without aborting' in e for e in robot.events)
+            if failure == 'prepare':
+                assert robot.nav_attempts == 0 and robot.picks == 0
+            else:
+                result = next(e for e in robot.events if e.startswith('PICK_RESULT|'))
+                assert ('stage=OPEN' if failure == 'pick_open' else 'stage=CLOSE') in result
+                assert 'possible held object' not in robot.events[-1]
+            return
+        if failure.startswith('timeout_'):
+            assert any(e.startswith('SERVICE_TIMEOUT|') for e in robot.events)
+            before = robot.nav_attempts
+            time.sleep(1.4)  # Late response must never resume an abandoned operation.
+            assert robot.nav_attempts == before
+            assert sum(e.startswith(terminal) for e in robot.events) == 1
+            assert robot.releases == 0
+            if terminal == 'MISSION_FAILED|':
+                restarted = client.call_async(Trigger.Request())
+                deadline = time.monotonic() + 3
+                while not restarted.done() and time.monotonic() < deadline:
+                    time.sleep(.02)
+                assert restarted.done() and not restarted.result().success
+            return
+        assert any(e.startswith("MISSION_STOP_FAILED|" if failure == 'nav_moving' else
+                                "MISSION_STOP_COMPLETE|") for e in robot.events)
+        assert robot.releases == 0
         if failure.startswith('nav_'):
             files = list((tmp_path / 'evidence').glob('*/navigation_failure_*/context.yaml'))
             assert files
@@ -384,16 +469,24 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
         elif failure in {'spin', 'spin_once'}:
             assert not any(event.startswith('SCAN_RECENTER_START|') for event in robot.events)
             assert not any(event.startswith('MISSION_COMPLETE|') for event in robot.events)
-        elif failure == 'place':
+        elif failure in {'pick', 'pick_remains'}:
+            assert robot.picks == 1
+            assert not robot.placements
+            assert not any(e.startswith('OBJECT_COLLECTED|') for e in robot.events)
+        elif failure in {'place', 'place_retreat'}:
             assert robot.placements == [(-0.4, 1.5)]
-            assert robot.releases == 1
+            assert robot.releases == 0
+            snapshot = next((tmp_path / 'evidence').glob('*/object_registry.json'))
+            assert json.loads(snapshot.read_text())['collected_count'] == (
+                1 if failure == 'place_retreat' else 0)
             assert not any(event.startswith('OBJECT_COLLECTED|') for event in robot.events)
         else:
             assert sum(event.startswith('SCAN_CAPTURE_START|')
                        for event in robot.events) == 6 * config['cleanup']['scan']['turns']
             assert any(event.startswith('OBSERVATION_ALIGN_START|') for event in robot.events)
-            no_pick = failure in {'review', 'never_reach', 'invalid_centroid', 'legacy_candidate',
-                                 'geometry_rejected', 'expired_frame'}
+            no_pick = failure in {
+                'review', 'never_reach', 'invalid_centroid', 'legacy_candidate',
+                'geometry_rejected', 'expired_frame'}
             assert robot.picks == (0 if no_pick else
                                    2 if failure in {'pick_remains', 'empty_grasp'} else 1)
             if failure in {'pick_remains', 'empty_grasp'}:
@@ -421,21 +514,16 @@ def test_mission_flow(tmp_path, monkeypatch, failure):
                                for e in robot.events if e.startswith('OBJECT_FAILED|'))
                 else:
                     assert robot.approaches == 1
-            if failure == 'pick':
-                assert robot.releases == 2
-                assert any(event.startswith('RECOVERY_RELEASE_START|')
-                           for event in robot.events)
-                assert not any(event.startswith('OBJECT_COLLECTED|')
-                               for event in robot.events)
             if failure == 'carry_occluded':
                 assert not any(heading == 251 for _, heading in robot.capture_headings)
                 assert any('carrying on odometry' in e for e in robot.events)
                 assert robot.placements == [(-0.4, 1.5)]
                 assert any(e.startswith('OBJECT_COLLECTED|') for e in robot.events)
             if not failure:
+                assert any('banana-fixture' in ids for ids in robot.retired_requests)
                 assert any(event.startswith('OBJECT_COLLECTED|') for event in robot.events)
                 assert robot.placements == [(-0.4, 1.5)]
-                assert robot.releases == 1
+                assert robot.releases == 0
     finally:
         process.terminate()
         process.wait(timeout=10)

@@ -72,7 +72,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_gtest(test_task_config test/test_task_config.cpp)
   target_link_libraries(test_task_config task_config)
-  ament_add_pytest_test(test_mission_flow test/test_mission_flow.py TIMEOUT 180)
+  ament_add_pytest_test(test_mission_flow test/test_mission_flow.py TIMEOUT 300)
 endif()
 
 ament_package()

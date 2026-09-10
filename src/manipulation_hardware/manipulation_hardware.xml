@@ -1,0 +1,7 @@
+<library path="manipulation_hardware">
+  <class name="manipulation_hardware/OpenCRSystem"
+         type="robotis::manipulation_hardware::OpenCRSystemHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>Independent OpenCR transport with checked commits and gripper telemetry.</description>
+  </class>
+</library>

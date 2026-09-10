@@ -12,7 +12,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
-from sensor_msgs.msg import JointState, LaserScan, PointCloud2
+from sensor_msgs.msg import JointState, PointCloud2
 from std_msgs.msg import String
 from tf2_ros import Buffer, TransformListener
 
@@ -53,7 +53,6 @@ class MotionDiagnostics(Node):
         self.create_subscription(Odometry, '/odom', self._odom, qos_profile_sensor_data)
         self.create_subscription(JointState, '/joint_states', self._joints,
                                  qos_profile_sensor_data)
-        self.create_subscription(LaserScan, '/scan', self._scan, qos_profile_sensor_data)
         self.create_subscription(PointCloud2, '/cleanup/obstacle_points',
                                  self._depth, qos_profile_sensor_data)
         for topic in ('/motion/events', '/aruco/correction_diagnostics', '/cleanup/events'):
@@ -123,15 +122,6 @@ class MotionDiagnostics(Node):
             self._sensor_stamp[source] = header.stamp.sec + header.stamp.nanosec * 1e-9
         except Exception as error:
             self._sensors[source] = {'error': str(error)}
-
-    def _scan(self, msg):
-        self._arrival('/scan', msg.header)
-        ranges = np.asarray(msg.ranges)
-        angles = msg.angle_min + np.arange(len(ranges)) * msg.angle_increment
-        good = np.isfinite(ranges) & (ranges >= msg.range_min) & (ranges <= msg.range_max)
-        points = np.column_stack([ranges[good]*np.cos(angles[good]),
-                                  ranges[good]*np.sin(angles[good]), np.zeros(good.sum())])
-        self._near('laser', msg.header, points)
 
     def _depth(self, msg):
         self._arrival('/cleanup/obstacle_points', msg.header)

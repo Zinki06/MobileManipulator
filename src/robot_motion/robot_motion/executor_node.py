@@ -17,6 +17,7 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
 from std_msgs.msg import String
 
+from robot_motion.depth_costmaps import DepthCostmaps
 from robot_motion.policy import ProgressBudget, guard_allows_motion, spin_velocity, wrap
 
 
@@ -50,6 +51,8 @@ class MotionExecutor(Node):
         self._motion_id = ''
         self._motion_kind = ''
         self._group = ReentrantCallbackGroup()
+        self._costmaps = DepthCostmaps(self, self._group) if self.declare_parameter(
+            'sync_depth_costmaps', True).value else None
         self._commands = self.create_publisher(Twist, '/cmd_vel_nav', 1)
         self._events = self.create_publisher(String, '/motion/events', 30)
         self._inhibit = self.create_publisher(
@@ -110,6 +113,8 @@ class MotionExecutor(Node):
     def _health(self):
         if self._fault:
             return 'FAULT: ' + self._fault
+        if self._costmaps and self._costmaps.issue():
+            return 'FAULT: ' + self._costmaps.issue()
         status, received = self._guard
         if time.monotonic() - received > 0.5:
             return 'BLOCKED: safety status stale'
@@ -156,6 +161,12 @@ class MotionExecutor(Node):
         return result
 
     def _ready(self, goal):
+        if self._costmaps:
+            reason = self._costmaps.prepare(lambda: goal.is_cancel_requested or not rclpy.ok())
+            if reason:
+                self._fault = reason
+                self._inhibit.publish(String(data=reason))
+                return reason
         started, stable = time.monotonic(), None
         while rclpy.ok() and not goal.is_cancel_requested:
             health = self._health()

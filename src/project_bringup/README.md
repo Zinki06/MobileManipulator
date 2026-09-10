@@ -1,13 +1,23 @@
 # project_bringup
 
+Current behavior: [depth-only navigation and bounded recovery](../../docs/CLEANUP_RECOVERY_AND_DEPTH_NAVIGATION.md).
+
 This package starts the TurtleBot3 hardware, RealSense perception pipeline,
 ArUco/Nav2 navigation, request-driven cleanup perception, the constrained
 Gemini planner, pick-and-place, and the cleanup task manager from one terminal.
-It reuses existing descriptions and hardware without modifying vendor packages.
-The project-owned `feedback_robot.launch.py` applies encoder-feedback odometry
-and arm feedback to a generated controller YAML. Turn scale defaults to 1.0.
-All Nav2 velocity producers go through collision monitoring and a final motion
-guard; large localization corrections latch a stop. See
+It starts the independent `manipulation_hardware/OpenCRSystem` through
+`manipulation_bringup/hardware.launch.py`, reusing reference URDF/meshes read-only.
+The three protected source trees are unchanged by this integration.
+`feedback_robot.launch.py` is a compatibility entry point for the new bringup.
+Its controller configuration enables encoder-feedback odometry and arm feedback.
+Turn scale defaults to 1.0.
+The default `performance.yaml` temporarily disables Nav2 collision prediction,
+depth obstacle layers, depth synchronization waits, and depth-based stops/slowdowns.
+The guard consumes smoothed commands directly in this test mode; camera obstacles
+will not stop the robot. Command timeouts, speed limits, and localization fault
+stops remain active. Restart the launch after rebuilding to apply this mode.
+Restore depth protection with `performance_config_file:=/home/user/turtlebot3_ws/src/aruco_localizer/config/performance_conservative.yaml`.
+See
 [collision and grasp fixes](../../docs/COLLISION_AND_GRASP_FIX.md).
 
 The default planner model is `gemini-3.5-flash-lite`; override it with
@@ -26,7 +36,16 @@ source install/setup.bash
 ros2 launch project_bringup project.launch.py
 ```
 
-Stop the complete stack with `Ctrl+C`. The legacy segmentation tracker is off
+Stop the complete stack with `Ctrl+C`. The wrapper verifies opening before allowing
+up to 10 seconds for controller cleanup. The new hardware driver uses explicit
+lifecycle shutdown to stop the wheels and request torque-off, with no hidden
+home/zero-gripper movement or destructor delay. The installed controller_manager
+2.54.0 invokes hardware shutdown in its
+[pre-shutdown callback](https://github.com/ros-controls/ros2_control/blob/2.54.0/controller_manager/src/controller_manager.cpp#L551).
+Release failure or forced/abnormal controller exit now returns a failure status;
+`CONTROLLER_SHUTDOWN_RESULT` records both outcomes. A normal process exit still
+does not constitute a readback of each motor's torque state.
+The legacy segmentation tracker is off
 by default because cleanup perception loads the existing YOLO and SAM2 weights
 on demand. YOLO confirms all banana candidates across a burst; SAM2 runs only
 on confirmed boxes to refine the final grasp depth without loading a duplicate
@@ -42,7 +61,7 @@ Available switches also include `start_cleanup_perception` and
 `start_cleanup_planner` in addition to `start_robot`, `start_realsense`,
 `start_segmentation`, `start_navigation`, `start_pick_and_place`, and
 `start_cleanup_manager`. Set `use_fake_hardware:=true` to use fake ros2_control
-hardware; the existing hardware launch still starts the configured lidar.
+hardware. LiDAR is not started or used by this project bringup.
 
 ## Virtual waypoint navigation
 
@@ -134,6 +153,20 @@ ros2 service call /execute_pick_and_place std_srvs/srv/Trigger "{}"
 Concurrent requests are rejected. A failed request returns the reason in the
 service response.
 
+The cleanup manager uses `/cleanup/execute_pick` (`cleanup_interfaces/srv/ExecutePick`)
+to distinguish opening/arm/closing failures and confirmed empty/held/unknown states.
+It parks and verifies opening through `/cleanup/prepare_gripper` before navigating.
+Real hardware requires fresh `/manipulation/gripper_hardware_state` as well as
+`/joint_states`; fake hardware disables the extra transport requirement.
+Inspect communication faults and raw gripper telemetry with:
+
+```bash
+ros2 topic echo /manipulation/gripper_hardware_state
+```
+
+Transport acknowledgements do not expose every servo protection state. See
+[`manipulation_hardware/README.md`](../manipulation_hardware/README.md) for limits.
+
 ## Cleanup mission
 
 The banana cleanup scans stations 0 through 5 at eight headings separated by
@@ -181,5 +214,25 @@ rviz2 -d "$(ros2 pkg prefix --share \
   turtlebot3_manipulation_navigation2)/rviz/navigation2.rviz"
 ```
 
-Set `LDS_MODEL` before launching if the robot uses a lidar other than the
-default selected by `turtlebot3_manipulation_bringup`.
+Depth-only obstacle detours and stop/recovery behavior are documented in
+[the current navigation and recovery guide](../../docs/CLEANUP_RECOVERY_AND_DEPTH_NAVIGATION.md).
+# Full diagnostic recording
+
+`project.launch.py` defaults to `record_debug:=true`. Each bringup creates
+`cleanup_debug/full_<date>_<time>_<pid>/` containing a rosbag, recorder output,
+the performance profile, a manifest, and a `launch_logs` link to ROS launch logs.
+All discovered topics, including hidden action feedback/status, camera images,
+depth, joint states, TF, command topics and `/rosout`, are recorded. Bags split
+at 1 GiB; there is no automatic deletion or total size cap. Raw images can use
+substantial disk space and recording bandwidth. Use `debug_record_root:=<path>`
+to choose storage or `record_debug:=false` to disable recording.
+
+After Ctrl+C the recorder stays alive for 5 seconds to capture hardware cleanup,
+then closes the bag. Wait for `DEBUG_RECORDING_COMPLETE` before closing the shell.
+The manifest and recorder log report abnormal termination. Topics published before
+discovery, dropped messages, and ROS 2 Humble service calls are not guaranteed to
+be captured. Gripper goals/results are also written to pick executor logs as
+`GRIPPER_COMMAND` / `GRIPPER_RESULT`. The current hardware driver does not expose
+individual motor error/temperature/voltage/torque registers; a full topic bag
+cannot supply those missing measurements. The `launch_logs` link is local; copy
+its target too when archiving or transferring this directory.

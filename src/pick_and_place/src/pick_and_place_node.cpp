@@ -10,6 +10,8 @@
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <cleanup_interfaces/srv/evaluate_grasp.hpp>
 #include <cleanup_interfaces/srv/place_object.hpp>
+#include <cleanup_interfaces/srv/execute_pick.hpp>
+#include <cleanup_interfaces/msg/gripper_hardware_state.hpp>
 #include "pick_and_place/grasp_kinematics.hpp"
 #include "pick_and_place/candidate_grasp.hpp"
 #include "pick_and_place/place_kinematics.hpp"
@@ -29,6 +31,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <functional>
 
 using namespace std::chrono_literals;
 
@@ -39,6 +42,8 @@ public:
     using Trigger = std_srvs::srv::Trigger;
     using EvaluateGrasp = cleanup_interfaces::srv::EvaluateGrasp;
     using PlaceObject = cleanup_interfaces::srv::PlaceObject;
+    using ExecutePick = cleanup_interfaces::srv::ExecutePick;
+    using PickResult = ExecutePick::Response;
 
     PickAndPlaceActionNode()
     : Node("pick_and_place_action_node"),
@@ -47,6 +52,13 @@ public:
     {
         this->declare_parameter<double>("target_max_age", 6.0);
         this->declare_parameter<std::string>("target_topic", "/object_centroid");
+        require_hardware_state_ = declare_parameter<bool>("require_gripper_hardware_state", false);
+        hardware_sub_ = create_subscription<cleanup_interfaces::msg::GripperHardwareState>(
+            "/manipulation/gripper_hardware_state", rclcpp::QoS(1).transient_local(),
+            [this](cleanup_interfaces::msg::GripperHardwareState::ConstSharedPtr msg) {
+                std::lock_guard<std::mutex> lock(joint_mutex_);
+                hardware_state_ = *msg;
+            });
         reached_joint_tolerance_ = declare_parameter<double>("reached_joint_tolerance", 0.0);
         if (!std::isfinite(reached_joint_tolerance_) || reached_joint_tolerance_ < 0.0 ||
             reached_joint_tolerance_ > 0.015) {
@@ -135,6 +147,26 @@ public:
             rmw_qos_profile_services_default,
             action_callback_group_);
 
+        pick_service_ = create_service<ExecutePick>(
+            "/cleanup/execute_pick",
+            [this](const std::shared_ptr<ExecutePick::Request>,
+                   std::shared_ptr<PickResult> response) {executePick(*response);},
+            rmw_qos_profile_services_default, action_callback_group_);
+        prepare_gripper_service_ = create_service<Trigger>(
+            "/cleanup/prepare_gripper",
+            [this](const std::shared_ptr<Trigger::Request>,
+                   std::shared_ptr<Trigger::Response> response) {
+                std::unique_lock<std::mutex> lock(operation_mutex_, std::try_to_lock);
+                if (!lock.owns_lock() || release_requested_ || action_fault_ || carrying_) {
+                    response->message = "Preparation refused: manipulation active, faulted, or carrying";
+                    return;
+                }
+                phase("GRIPPER_PREFLIGHT", "Verify opening before navigation");
+                response->success = sendGripperGoal(0.019);
+                response->message = response->success ? "Gripper opening verified" :
+                    "GRIPPER_FAULT: " + gripper_failure_;
+            }, rmw_qos_profile_services_default, action_callback_group_);
+
         park_service_ = this->create_service<Trigger>(
             "/park_arm",
             std::bind(&PickAndPlaceActionNode::handleParkRequest, this, std::placeholders::_1, std::placeholders::_2),
@@ -146,6 +178,12 @@ public:
             std::bind(&PickAndPlaceActionNode::handleOpenGripperRequest, this, std::placeholders::_1, std::placeholders::_2),
             rmw_qos_profile_services_default,
             action_callback_group_);
+
+        stop_manipulation_service_ = create_service<Trigger>(
+            "/cleanup/stop_manipulation",
+            std::bind(&PickAndPlaceActionNode::handleStopManipulation, this,
+                      std::placeholders::_1, std::placeholders::_2),
+            rmw_qos_profile_services_default, action_callback_group_);
 
         close_gripper_service_ = this->create_service<Trigger>(
             "/close_gripper",
@@ -167,7 +205,7 @@ public:
             "/observe_floor", [this](const std::shared_ptr<Trigger::Request>,
                 std::shared_ptr<Trigger::Response> response) {
                 std::unique_lock<std::mutex> operation_lock(operation_mutex_, std::try_to_lock);
-                if (!operation_lock.owns_lock() || release_requested_) {
+                if (!operation_lock.owns_lock() || release_requested_ || action_fault_) {
                     response->message = "Manipulation busy or finishing";
                     return;
                 }
@@ -336,33 +374,49 @@ private:
         std::shared_ptr<Trigger::Response> response)
     {
         (void)request;
+        PickResult result;
+        executePick(result);
+        response->success = result.success;
+        response->message = result.message;
+    }
 
+    void executePick(PickResult & response) {
+        response.result_code = PickResult::PRECONDITION_FAILED;
+        response.holding_state = PickResult::HOLD_UNKNOWN;
+        response.stage = "PRECHECK";
         std::unique_lock<std::mutex> operation_lock(operation_mutex_, std::try_to_lock);
-        if (!operation_lock.owns_lock() || release_requested_) {
-            response->message = "Manipulation busy or finishing";
+        if (!operation_lock.owns_lock() || release_requested_ || action_fault_ || carrying_) {
+            response.message = "Manipulation busy, faulted, or already carrying";
             return;
         }
         bool expected = false;
         if (!sequence_in_progress_.compare_exchange_strong(expected, true)) {
-            response->success = false;
-            response->message = "A pick-and-place sequence is already in progress.";
+            response.message = "A pick-and-place sequence is already in progress.";
             return;
         }
 
-        std::string message;
         try {
-            response->success = executePickSequence(message);
-            response->message = message;
+            response.success = executePickSequence(response);
+            if (response.success) {response.result_code = PickResult::OK;}
         } catch (const std::exception & ex) {
-            response->success = false;
-            response->message = std::string("Unexpected pick-and-place error: ") + ex.what();
-            RCLCPP_ERROR(this->get_logger(), "%s", response->message.c_str());
+            response.success = false;
+            response.message = std::string("Unexpected pick-and-place error: ") + ex.what();
+            RCLCPP_ERROR(this->get_logger(), "%s", response.message.c_str());
         }
-
+        if (!response.success && (release_requested_ || action_fault_)) {
+            response.result_code = PickResult::INTERRUPTED;
+        }
+        response.holding_state = holding_state_;
+        phase("PICK_RESULT", "stage=" + response.stage +
+            "; code=" + std::to_string(response.result_code) +
+            "; holding_state=" + std::to_string(response.holding_state) +
+            "; close_started=" + std::to_string(response.close_started) +
+            "; " + response.message);
         sequence_in_progress_ = false;
     }
 
-    bool executePickSequence(std::string & message) {
+    bool executePickSequence(PickResult & outcome) {
+        auto & message = outcome.message;
         geometry_msgs::msg::PointStamped target_in_map;
         {
             std::lock_guard<std::mutex> lock(target_mutex_);
@@ -449,8 +503,10 @@ private:
         // === Step 1: 그리퍼 열기 (Open Gripper) ===
         RCLCPP_INFO(this->get_logger(), "===> [Step 1/7] Opening Gripper...");
         phase("OPEN");
+        outcome.stage = "OPEN";
+        outcome.result_code = PickResult::GRIPPER_FAILED;
         if (!sendGripperGoal(0.019)) {
-            message = "Failed to open gripper.";
+            message = "Failed to open gripper: " + gripper_failure_;
             RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
             return false;
         }
@@ -461,6 +517,8 @@ private:
             "===> [Step 2/7] Moving to Pre-Grasp Pose (Above target, Yaw: %.1f°)...",
             pre_grasp_joints[0] * 180.0 / M_PI);
         phase("PREGRASP");
+        outcome.stage = "PREGRASP";
+        outcome.result_code = PickResult::ARM_FAILED;
         if (!sendArmGoal(pre_grasp_joints, 2.5)) {
             message = "Failed to reach pre-grasp pose.";
             RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
@@ -470,6 +528,7 @@ private:
         // === Step 3: 물체 위치로 수직 하강 (Grasp Pose) ===
         RCLCPP_INFO(this->get_logger(), "===> [Step 3/7] Descending to Surface Pose...");
         phase("DESCEND");
+        outcome.stage = "DESCEND";
         if (!sendArmPath(plan.descent, use_candidate_grasp_ ? 4.0 : 1.8)) {
             message = "Failed to reach target grasp pose.";
             RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
@@ -486,17 +545,28 @@ private:
         }
         // === Step 4: 물체 파지 (Close Gripper) ===
         phase("CLOSE");
+        outcome.stage = "CLOSE";
+        outcome.result_code = PickResult::GRIPPER_FAILED;
+        outcome.close_started = true;
         RCLCPP_INFO(this->get_logger(), "===> [Step 5/7] Closing Gripper (Grasping object)...");
         if (!sendGripperGoal(-0.010, 15.0)) {
-            message = "Failed to close gripper.";
+            message = "Failed to close gripper: " + gripper_failure_;
             RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
             return false;
         }
         // Controller success only acknowledges motion. Empty fingers reaching
         // their closed stop must never be transported as a collected object.
         if (!waitForGripper(true, -0.010)) {
+            // Missing, moving, or stale feedback is not proof of an empty grasp.
+            const bool empty = waitForGripper(false, -0.010);
+            if (!empty) {
+                message = "Grasp state unknown: " + gripper_failure_;
+                return false;
+            }
+            holding_state_ = PickResult::HOLD_EMPTY;
             const bool lifted = sendArmPath(plan.lift, use_candidate_grasp_ ? 4.0 : 1.8);
             const bool parked = lifted && sendArmGoal(initialPoseJoints(), 2.5);
+            outcome.result_code = parked ? PickResult::EMPTY_GRASP : PickResult::ARM_FAILED;
             message = parked ? "EMPTY_GRASP: no stable finger obstruction after closing" :
                 "Grasp unverified and arm recovery failed; operator inspection required";
             phase("GRASP_UNVERIFIED", message);
@@ -507,6 +577,8 @@ private:
         RCLCPP_INFO(this->get_logger(),
             "===> [Step 6/7] Lifting Object (+%.1f cm)...", plan.lift_height * 100.0);
         phase("LIFT");
+        outcome.stage = "LIFT";
+        outcome.result_code = PickResult::ARM_FAILED;
         if (!sendArmPath(plan.lift, use_candidate_grasp_ ? 4.0 : 1.8)) {
             message = "Lift failed; holding state unknown.";
             return false;
@@ -517,6 +589,7 @@ private:
         RCLCPP_INFO(this->get_logger(), "===> [Step 7/7] Returning to Home Pose...");
         const std::vector<double> home_joints = initialPoseJoints();
         phase("RETURN_HOME");
+        outcome.stage = "RETURN_HOME";
         if (!sendArmGoal(home_joints, 2.5)) {
             message = "Object grasped, but the arm failed to return home.";
             RCLCPP_ERROR(this->get_logger(), "%s", message.c_str());
@@ -524,7 +597,11 @@ private:
         }
 
         if (!held_after_lift || !waitForGripper(true, -0.010)) {
-            message = "EMPTY_GRASP: finger obstruction lost during lift/return";
+            const bool empty = waitForGripper(false, -0.010);
+            holding_state_ = empty ? PickResult::HOLD_EMPTY : PickResult::HOLD_UNKNOWN;
+            outcome.result_code = empty ? PickResult::EMPTY_GRASP : PickResult::GRIPPER_FAILED;
+            message = empty ? "EMPTY_GRASP: finger obstruction lost during lift/return" :
+                "Grasp state unknown after lift/return: " + gripper_failure_;
             phase("GRASP_UNVERIFIED", message);
             return false;
         }
@@ -549,7 +626,7 @@ private:
     void handlePlaceRequest(const std::shared_ptr<PlaceObject::Request> request,
                             std::shared_ptr<PlaceObject::Response> response) {
         std::unique_lock<std::mutex> operation_lock(operation_mutex_, std::try_to_lock);
-        if (!operation_lock.owns_lock() || release_requested_) {
+        if (!operation_lock.owns_lock() || release_requested_ || action_fault_) {
             response->message = "Manipulation busy or finishing";
             return;
         }
@@ -596,8 +673,7 @@ private:
             if (!sendArmPath(plan.lower, 3.0) || !waitForGripper(true, -0.010)) {
                 throw std::runtime_error("Placement lowering/hold failed; no release commanded");
             }
-            phase("PLACE_OPEN");
-            if (!sendGripperGoal(0.019) || !waitForGripper(false, 0.019)) {
+            if (!openForPlacement()) {
                 throw std::runtime_error("Placement opening not confirmed");
             }
             response->released = true;
@@ -621,7 +697,7 @@ private:
         if (msg.data) {
             std::lock_guard<std::mutex> lock(joint_mutex_);
             const double age = now().seconds() - gripper_stamp_;
-            msg.data = age >= 0.0 && age < 0.25 &&
+            msg.data = hardwareFeedbackValid() && age >= 0.0 && age < 0.25 &&
                 gripper_position_ > -0.0085 && gripper_position_ < 0.0175;
         }
         carrying_pub_->publish(msg);
@@ -635,7 +711,7 @@ private:
     }
 
     bool sendArmPath(const std::vector<std::vector<double>> & path, double duration_sec) {
-        if (release_requested_ || path.empty()) {return false;}
+        if (release_requested_ || action_fault_ || path.empty()) {return false;}
         if (!arm_action_client_->wait_for_action_server(2s)) {
             RCLCPP_ERROR(this->get_logger(), "Arm Action Server unavailable!");
             return false;
@@ -690,42 +766,134 @@ private:
             goal.trajectory.points.push_back(point);
         }
 
-        if (release_requested_) {return false;}
-        auto goal_handle_future = arm_action_client_->async_send_goal(goal);
-        if (goal_handle_future.wait_for(3s) != std::future_status::ready) return false;
-
-        auto goal_handle = goal_handle_future.get();
-        if (!goal_handle) return false;
-
-        auto result_future = arm_action_client_->async_get_result(goal_handle);
-        const auto deadline = std::chrono::steady_clock::now() +
-            std::chrono::duration<double>(duration_sec + 3.0);
-        while (!release_requested_ && std::chrono::steady_clock::now() < deadline &&
-            result_future.wait_for(20ms) != std::future_status::ready) {}
-        if (release_requested_ || result_future.wait_for(0s) != std::future_status::ready) {
-            arm_action_client_->async_cancel_goal(goal_handle);
-            return false;
-        }
-
-        const auto result = result_future.get();
-        return result.code == rclcpp_action::ResultCode::SUCCEEDED && result.result &&
-            result.result->error_code == FollowJointTrajectory::Result::SUCCESSFUL;
+        return runAction<FollowJointTrajectory>(arm_action_client_, goal, duration_sec + 3.0);
     }
 
-    bool waitForGripper(bool holding, double target) {
+    template<typename ActionT>
+    bool runAction(const typename rclcpp_action::Client<ActionT>::SharedPtr & client,
+                   const typename ActionT::Goal & goal, double seconds,
+                   bool opening = false) {
+        last_action_error_.clear();
+        if (action_fault_ || (release_requested_ && !opening)) {
+            last_action_error_ = "Action fault or cancellation requested";
+            return false;
+        }
+        auto abandoned = std::make_shared<std::atomic_bool>(false);
+        typename rclcpp_action::Client<ActionT>::SendGoalOptions options;
+        options.goal_response_callback = [client, abandoned](auto handle) {
+            // Even an acceptance arriving after our caller returned must be canceled.
+            if (*abandoned && handle) {client->async_cancel_goal(handle);}
+        };
+        decltype(client->async_send_goal(goal, options)) accepted;
+        {
+            std::lock_guard<std::mutex> dispatch_lock(dispatch_mutex_);
+            if (action_fault_ || (release_requested_ && !opening)) {
+                last_action_error_ = "Action canceled before dispatch";
+                return false;
+            }
+            accepted = client->async_send_goal(goal, options);
+        }
+        pending_cleanup_ = [client, accepted, abandoned]() mutable {
+            *abandoned = true;
+            if (accepted.wait_for(3s) != std::future_status::ready) {return false;}
+            const auto handle = accepted.get();
+            if (!handle) {return true;}
+            auto result = client->async_get_result(handle);
+            if (result.wait_for(0s) != std::future_status::ready) {
+                client->async_cancel_goal(handle);
+            }
+            return result.wait_for(3s) == std::future_status::ready &&
+                result.get().code != rclcpp_action::ResultCode::UNKNOWN;
+        };
+        if (accepted.wait_for(3s) != std::future_status::ready) {
+            *abandoned = true;
+            action_fault_ = true;
+            phase("ACTION_FAULT", "Acceptance unknown; restart after inspection");
+            last_action_error_ = "Goal acceptance timed out; execution unknown";
+            // Cover the race where the callback completed just before abandonment.
+            if (accepted.wait_for(0s) == std::future_status::ready) {cancelPending();}
+            return false;
+        }
+        const auto handle = accepted.get();
+        if (!handle) {
+            pending_cleanup_ = {};
+            last_action_error_ = "Controller rejected goal";
+            return false;
+        }
+        auto result = client->async_get_result(handle);
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::duration<double>(seconds);
+        while ((opening || !release_requested_) && std::chrono::steady_clock::now() < deadline &&
+               result.wait_for(20ms) != std::future_status::ready) {}
+        if ((!opening && release_requested_) || result.wait_for(0s) != std::future_status::ready) {
+            last_action_error_ = release_requested_ ? "Action interrupted" : "Action result timed out";
+            cancelPending();
+            return false;
+        }
+        const auto wrapped = result.get();
+        pending_cleanup_ = {};
+        const bool valid = wrapped.result && actionResultValid(*wrapped.result);
+        if (wrapped.code != rclcpp_action::ResultCode::SUCCEEDED || !valid) {
+            last_action_error_ = "Controller result status=" +
+                std::to_string(static_cast<int>(wrapped.code)) + "; invalid or unsuccessful result";
+            return false;
+        }
+        return true;
+    }
+
+    static bool actionResultValid(const FollowJointTrajectory::Result & result) {
+        return result.error_code == FollowJointTrajectory::Result::SUCCESSFUL;
+    }
+
+    bool actionResultValid(const GripperCommand::Result & result) {
+        phase("GRIPPER_RESULT", "position=" + std::to_string(result.position) +
+            "; effort=" + std::to_string(result.effort) +
+            "; stalled=" + std::to_string(result.stalled) +
+            "; reached_goal=" + std::to_string(result.reached_goal));
+        return std::isfinite(result.position) && (result.reached_goal || result.stalled);
+    }
+
+    bool cancelPending() {
+        if (!pending_cleanup_) {return true;}
+        bool stopped = false;
+        try {stopped = pending_cleanup_();} catch (const std::exception &) {}
+        if (stopped) {pending_cleanup_ = {};}
+        else {
+            action_fault_ = true;
+            phase("ACTION_FAULT", "Cancellation unconfirmed; restart after inspection");
+        }
+        return stopped;
+    }
+
+    void handleStopManipulation(const std::shared_ptr<Trigger::Request>,
+                                std::shared_ptr<Trigger::Response> response) {
+        std::lock_guard<std::mutex> release_lock(release_mutex_);
+        {
+            std::lock_guard<std::mutex> dispatch_lock(dispatch_mutex_);
+            release_requested_ = true;
+        }
+        std::unique_lock<std::mutex> operation_lock(operation_mutex_);
+        response->success = cancelPending() && !action_fault_;
+        response->message = response->success ? "Manipulation stopped; fingers unchanged" :
+            "Manipulation fault; restart after inspection";
+        release_requested_ = false;
+    }
+
+    bool waitForGripper(bool holding, double target, bool explicit_open = false) {
         const auto deadline = std::chrono::steady_clock::now() + 2s;
         double stable_since = -1.0, last_stamp = -1.0, last_position = 0.0;
         int samples = 0;
-        while (rclcpp::ok() && !(holding && release_requested_) &&
+        while (rclcpp::ok() && (!release_requested_ || explicit_open) &&
             std::chrono::steady_clock::now() < deadline) {
             double position, stamp;
+            bool hardware_ok;
             {
                 std::lock_guard<std::mutex> lock(joint_mutex_);
                 position = gripper_position_;
                 stamp = gripper_stamp_;
+                hardware_ok = hardwareFeedbackValid();
             }
             const double now = this->now().seconds();
-            const bool fresh = stamp > 0.0 && now >= stamp && now - stamp < 0.25;
+            const bool fresh = hardware_ok && stamp > 0.0 && now >= stamp && now - stamp < 0.25;
             const bool matches = holding ? (position > -0.0085 && position < 0.0175) :
                 std::abs(position - target) <= 0.0015;
             if (!fresh || !matches) {stable_since = -1.0; samples = 0;}
@@ -736,6 +904,7 @@ private:
                 }
                 ++samples;
                 if (samples >= 4 && stamp - stable_since >= 0.4) {
+                    if (holding) {holding_state_ = PickResult::HOLD_CONFIRMED;}
                     phase("GRIPPER_FEEDBACK", "position=" + std::to_string(position) +
                         "; holding=" + std::to_string(holding));
                     return true;
@@ -745,54 +914,108 @@ private:
             last_position = position;
             std::this_thread::sleep_for(20ms);
         }
-        phase("GRIPPER_FEEDBACK_REJECTED", holding ?
-            "Empty, moving, or stale fingers" : "Open width not reached with fresh encoders");
+        std::lock_guard<std::mutex> lock(joint_mutex_);
+        gripper_failure_ = std::string(holding ?
+            "Holding unconfirmed: empty, moving, or stale fingers" : "Target width not reached with fresh encoders") +
+            "; target=" + std::to_string(target) +
+            "; position=" + std::to_string(gripper_position_) +
+            "; feedback_age=" + std::to_string(now().seconds() - gripper_stamp_) +
+            "; hardware=" + hardware_state_.fault +
+            "; canceled=" + std::to_string(release_requested_.load());
+        phase("GRIPPER_FEEDBACK_REJECTED", gripper_failure_);
         return false;
     }
 
+    // Caller holds joint_mutex_. Older standalone/fake controllers can opt out explicitly.
+    bool hardwareFeedbackValid() const {
+        if (!require_hardware_state_) {return true;}
+        const double age = now().seconds() - rclcpp::Time(hardware_state_.header.stamp).seconds();
+        return age >= 0.0 && age < 0.5 && hardware_state_.read_ok && hardware_state_.command_ok &&
+            hardware_state_.ros_connected && hardware_state_.manipulator_connected &&
+            hardware_state_.all_joints_torque_enabled && hardware_state_.fault.empty();
+    }
+
     // GripperCommand 액션 전송 및 완료 대기
-    bool sendGripperGoal(double position, double max_effort = 10.0) {
-        if (position < 0.0 && release_requested_) {return false;}
+    bool sendGripperGoal(double position, double max_effort = 10.0, bool explicit_open = false,
+                         bool * feedback_failure = nullptr, double action_timeout = 3.0) {
+        if (feedback_failure) {*feedback_failure = false;}
+        gripper_failure_.clear();
+        if (release_requested_ && !explicit_open) {
+            gripper_failure_ = "Opening/closing interrupted";
+            return false;
+        }
         if (!gripper_action_client_->wait_for_action_server(2s)) {
+            gripper_failure_ = "Gripper action server unavailable";
             RCLCPP_ERROR(this->get_logger(), "Gripper Action Server unavailable!");
             return false;
+        }
+        {
+            std::lock_guard<std::mutex> lock(joint_mutex_);
+            const double age = now().seconds() - gripper_stamp_;
+            if (!hardwareFeedbackValid()) {
+                gripper_failure_ = "Hardware state missing, stale, torque disabled, or transport fault: " +
+                    hardware_state_.fault;
+                phase("GRIPPER_HARDWARE_FAILED", gripper_failure_);
+                return false;
+            }
+            if (gripper_stamp_ <= 0.0 || age < 0.0 || age >= 0.25) {
+                gripper_failure_ = "Fresh gripper feedback required before command; age=" +
+                    std::to_string(age);
+                phase("GRIPPER_FEEDBACK_REJECTED", gripper_failure_);
+                return false;
+            }
         }
 
         GripperCommand::Goal goal;
         goal.command.position = position;
         goal.command.max_effort = max_effort;
+        // A failed closing/opening operation cannot prove continued possession.
+        if (position < 0.0 || holding_state_ != PickResult::HOLD_EMPTY) {
+            holding_state_ = PickResult::HOLD_UNKNOWN;
+        }
 
-        if (position < 0.0 && release_requested_) {return false;}
-        auto goal_handle_future = gripper_action_client_->async_send_goal(goal);
-        if (goal_handle_future.wait_for(3s) != std::future_status::ready) return false;
+        phase("GRIPPER_COMMAND", "target=" + std::to_string(position) +
+            "; max_effort=" + std::to_string(max_effort) +
+            "; timeout=" + std::to_string(action_timeout) +
+            "; explicit_open=" + std::to_string(explicit_open));
 
-        auto goal_handle = goal_handle_future.get();
-        if (!goal_handle) return false;
-
-        auto result_future = gripper_action_client_->async_get_result(goal_handle);
-        const auto deadline = std::chrono::steady_clock::now() + 3s;
-        while (!(position < 0.0 && release_requested_) &&
-            std::chrono::steady_clock::now() < deadline &&
-            result_future.wait_for(20ms) != std::future_status::ready) {}
-        if ((position < 0.0 && release_requested_) ||
-            result_future.wait_for(0s) != std::future_status::ready) {
-            gripper_action_client_->async_cancel_goal(goal_handle);
+        if (!runAction<GripperCommand>(gripper_action_client_, goal, action_timeout, explicit_open)) {
+            gripper_failure_ = last_action_error_;
+            phase("GRIPPER_ACTION_FAILED", gripper_failure_);
             return false;
         }
-        const auto result = result_future.get();
-        if (result.result) {
-            phase("GRIPPER_RESULT", "position=" + std::to_string(result.result->position) +
-                "; effort=" + std::to_string(result.result->effort) +
-                "; stalled=" + std::to_string(result.result->stalled) +
-                "; reached_goal=" + std::to_string(result.result->reached_goal));
-        }
-        if (result.code != rclcpp_action::ResultCode::SUCCEEDED || !result.result) {return false;}
-        const bool confirmed = position < 0.0 || waitForGripper(false, position);
+        const bool confirmed = position < 0.0 || waitForGripper(false, position, explicit_open);
+        if (feedback_failure) {*feedback_failure = !confirmed;}
         if (confirmed && position > 0.0) {
+            holding_state_ = PickResult::HOLD_EMPTY;
             carrying_ = false;
             publishCarrying();
         }
         return confirmed;
+    }
+
+    bool openForPlacement() {
+        phase("PLACE_OPEN");
+        for (int attempt = 1; attempt <= 3; ++attempt) {
+            if (!rclcpp::ok() || release_requested_ || action_fault_) {return false;}
+            phase("PLACE_OPEN_ATTEMPT", "attempt=" + std::to_string(attempt) +
+                "/3; target=0.019; max_effort=10.0");
+            bool feedback_failure = false;
+            if (sendGripperGoal(0.019, 10.0, false, &feedback_failure)) {return true;}
+            if (!feedback_failure || release_requested_ || action_fault_) {
+                phase("PLACE_OPEN_ABORTED", "Action failed or opening canceled; no retry");
+                return false;
+            }
+            if (attempt == 3) {break;}
+            phase("PLACE_OPEN_RETRY_WAIT", "Opening unconfirmed; keeping arm pose; delay=0.3s");
+            const auto deadline = std::chrono::steady_clock::now() + 300ms;
+            while (std::chrono::steady_clock::now() < deadline) {
+                if (!rclcpp::ok() || release_requested_ || action_fault_) {return false;}
+                std::this_thread::sleep_for(20ms);
+            }
+        }
+        phase("PLACE_OPEN_EXHAUSTED", "Opening unconfirmed after 3 attempts; no retreat");
+        return false;
     }
 
     void initializePoseOnStartup() {
@@ -830,7 +1053,7 @@ private:
     {
         (void)request;
         std::unique_lock<std::mutex> operation_lock(operation_mutex_, std::try_to_lock);
-        if (!operation_lock.owns_lock() || release_requested_) {
+        if (!operation_lock.owns_lock() || release_requested_ || action_fault_) {
             response->message = "Manipulation busy or finishing";
             return;
         }
@@ -852,25 +1075,18 @@ private:
     {
         (void)request;
         std::lock_guard<std::mutex> release_lock(release_mutex_);
-        release_requested_ = true;
+        {
+            std::lock_guard<std::mutex> dispatch_lock(dispatch_mutex_);
+            release_requested_ = true;
+        }
         struct ResetRelease {
             std::atomic_bool & value;
             ~ResetRelease() {value = false;}
         } reset_release{release_requested_};
         std::unique_lock<std::mutex> operation_lock(operation_mutex_);
-        // An interrupted action must acknowledge cancellation before opening.
-        bool canceled = true;
-        if (arm_action_client_->action_server_is_ready()) {
-            auto future = arm_action_client_->async_cancel_all_goals();
-            canceled = future.wait_for(2s) == std::future_status::ready &&
-                future.get()->return_code == 0;
-        }
-        if (gripper_action_client_->action_server_is_ready()) {
-            auto future = gripper_action_client_->async_cancel_all_goals();
-            canceled = (future.wait_for(2s) == std::future_status::ready &&
-                future.get()->return_code == 0) && canceled;
-        }
-        if (canceled && sendGripperGoal(0.019)) {
+        // Opening is permitted only after the owned action has actually terminated.
+        const bool canceled = cancelPending() && !action_fault_;
+        if (canceled && sendGripperGoal(0.019, 10.0, true)) {
             response->success = true;
             response->message = "Gripper opened.";
         } else {
@@ -885,7 +1101,7 @@ private:
     {
         (void)request;
         std::unique_lock<std::mutex> operation_lock(operation_mutex_, std::try_to_lock);
-        if (!operation_lock.owns_lock() || release_requested_) {
+        if (!operation_lock.owns_lock() || release_requested_ || action_fault_) {
             response->message = "Manipulation busy or finishing";
             return;
         }
@@ -917,6 +1133,13 @@ private:
     rclcpp::Service<Trigger>::SharedPtr execute_service_;
     rclcpp::Service<Trigger>::SharedPtr park_service_;
     rclcpp::Service<Trigger>::SharedPtr open_gripper_service_;
+    rclcpp::Service<ExecutePick>::SharedPtr pick_service_;
+    rclcpp::Service<Trigger>::SharedPtr prepare_gripper_service_;
+    uint8_t holding_state_{PickResult::HOLD_UNKNOWN};  // Protected by operation_mutex_.
+    std::string gripper_failure_, last_action_error_;
+    bool require_hardware_state_{false};
+    cleanup_interfaces::msg::GripperHardwareState hardware_state_;
+    rclcpp::Subscription<cleanup_interfaces::msg::GripperHardwareState>::SharedPtr hardware_sub_;
     rclcpp::Service<Trigger>::SharedPtr close_gripper_service_;
     rclcpp::Service<PlaceObject>::SharedPtr place_service_;
     rclcpp::Service<Trigger>::SharedPtr observe_service_;
@@ -934,7 +1157,10 @@ private:
     rclcpp::Time target_received_time_;
     std::mutex target_mutex_;
     std::atomic_bool sequence_in_progress_{false};
-    std::atomic_bool carrying_{false}, release_requested_{false};
+    std::atomic_bool carrying_{false}, release_requested_{false}, action_fault_{false};
+    std::mutex dispatch_mutex_;
+    std::function<bool()> pending_cleanup_;  // Protected by operation_mutex_.
+    rclcpp::Service<Trigger>::SharedPtr stop_manipulation_service_;
     std::mutex operation_mutex_, release_mutex_;
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr carrying_pub_;
     rclcpp::TimerBase::SharedPtr carrying_timer_;

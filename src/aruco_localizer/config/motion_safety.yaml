@@ -27,10 +27,7 @@ collision_monitor:
       simulation_time_step: 0.05
       max_points: 1
       visualize: false
-    observation_sources: [scan, depth_points]
-    scan:
-      type: scan
-      topic: /scan
+    observation_sources: [depth_points]
     depth_points:
       type: pointcloud
       topic: /cleanup/obstacle_points

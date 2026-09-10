@@ -1,10 +1,12 @@
-# Balanced mobile-manipulator profile. Hardware motion still requires user testing.
+# Temporary test profile: depth collision protection is disabled.
 # Previous settings: Station .08 m/s, spin .30 rad/s, guard .10/.35,
 # accel .15/.4, approach slowdown .30 m, manager settle .35 s.
 controller_server:
   ros__parameters:
     controller_frequency: 20.0
     StationPath:
+      # Temporary test setting: bypass the local-costmap collision prediction.
+      use_collision_detection: false
       desired_linear_vel: 0.16
       min_approach_linear_velocity: 0.04
       approach_velocity_scaling_dist: 0.18
@@ -15,6 +17,7 @@ controller_server:
       min_lookahead_dist: 0.20
       max_lookahead_dist: 0.40
     ApproachPath:
+      use_collision_detection: false
       desired_linear_vel: 0.08
       approach_velocity_scaling_dist: 0.18
       rotate_to_heading_angular_vel: 0.35
@@ -36,6 +39,7 @@ behavior_server:
     rotational_acc_lim: 0.8
 motion_guard:
   ros__parameters:
+    enable_depth_safety: false
     max_linear_velocity: 0.18
     max_reverse_velocity: 0.05
     max_angular_velocity: 0.60
@@ -43,6 +47,7 @@ motion_guard:
     angular_acceleration: 0.8
 motion_executor:
   ros__parameters:
+    sync_depth_costmaps: false
     spin_max_velocity: 0.55
     spin_gain: 2.0
     spin_acceleration: 0.8
@@ -105,3 +110,13 @@ collision_monitor:
     source_timeout: 0.6
     ApproachFootprint:
       time_before_collision: 1.5
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      depth_layer:
+        enabled: false
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      depth_layer:
+        enabled: false

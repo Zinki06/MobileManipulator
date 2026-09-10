@@ -1,0 +1,5 @@
+OpenCR transport and hardware interface derived from ROBOTIS TurtleBot3 Manipulation.
+Copyright 2022 ROBOTIS CO., LTD. Licensed under Apache License 2.0.
+Original copyright and license notices are retained in the derived source files.
+Project changes: checked transport, measured-position activation, gripper telemetry,
+explicit shutdown, physical finger velocity units, and unchanged-goal suppression.

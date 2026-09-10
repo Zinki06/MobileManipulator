@@ -25,7 +25,7 @@ import yaml
 def test_feedback_overrides_preserve_vendor_file(tmp_path, monkeypatch):
     """Feedback and speed overrides are applied to a generated file only."""
     monkeypatch.setenv('ROS_LOG_DIR', str(tmp_path / 'logs'))
-    path = Path(__file__).parents[1] / 'launch' / 'feedback_robot.launch.py'
+    path = Path(__file__).parents[2] / 'manipulation_bringup/launch/hardware.launch.py'
     spec = importlib.util.spec_from_file_location('feedback_launch', path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -108,7 +108,7 @@ def test_hardware_shutdown_wrapper_is_connected(tmp_path, monkeypatch):
     from launch_ros.actions import Node
 
     monkeypatch.setenv('ROS_LOG_DIR', str(tmp_path / 'logs'))
-    path = Path(__file__).parents[1] / 'launch' / 'feedback_robot.launch.py'
+    path = Path(__file__).parents[2] / 'manipulation_bringup/launch/hardware.launch.py'
     spec = importlib.util.spec_from_file_location('shutdown_launch', path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

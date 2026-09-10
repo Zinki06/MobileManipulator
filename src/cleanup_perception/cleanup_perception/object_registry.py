@@ -103,17 +103,23 @@ class ObjectRegistry:
     def __init__(self, association_gate):
         self._association_gate = association_gate
         self._entries = {}
+        self._retired = set()
 
     @property
     def entries(self):
         """Return a read-only-style view used by diagnostics and tests."""
         return tuple(self._entries.values())
 
+    def retire(self, object_uuids):
+        """Exclude collected identities for the remainder of this mission."""
+        self._retired.update(object_uuids)
+
     def associate(self, detection, excluded_ids=()):
         """Return a stable UUID using class and map-plane proximity."""
         candidates = [
             entry for entry in self._entries.values()
             if entry.object_uuid not in excluded_ids and
+            entry.object_uuid not in self._retired and
             entry.class_name == detection.class_name and
             math.hypot(entry.x - detection.x, entry.y - detection.y) <=
             self._association_gate

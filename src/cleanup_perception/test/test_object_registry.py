@@ -57,3 +57,14 @@ def test_close_simultaneous_objects_are_not_dropped_or_merged():
     for item in confirmed:
         assigned.add(registry.associate(item.representative, assigned))
     assert len(assigned) == 2
+
+
+def test_collected_identity_cannot_hide_a_new_nearby_object():
+    """Retired UUIDs never absorb another object; duplicate retirement is harmless."""
+    registry = ObjectRegistry(0.25)
+    collected = registry.associate(detection(0.0, 0))
+    registry.retire([collected])
+    registry.retire([collected])
+    next_object = registry.associate(detection(0.15, 1))
+    assert next_object != collected
+    assert registry.associate(detection(0.16, 2)) == next_object

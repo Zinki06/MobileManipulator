@@ -9,6 +9,7 @@
 #include <cleanup_interfaces/srv/plan_cleanup.hpp>
 #include <cleanup_interfaces/srv/evaluate_grasp.hpp>
 #include <cleanup_interfaces/srv/place_object.hpp>
+#include <cleanup_interfaces/srv/execute_pick.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav2_msgs/action/navigate_to_pose.hpp>
@@ -35,6 +36,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -58,6 +60,8 @@ public:
   using PlanCleanup = cleanup_interfaces::srv::PlanCleanup;
   using EvaluateGrasp = cleanup_interfaces::srv::EvaluateGrasp;
   using PlaceObject = cleanup_interfaces::srv::PlaceObject;
+  using ExecutePick = cleanup_interfaces::srv::ExecutePick;
+  using PickResult = ExecutePick::Response;
   using ObjectObservation = cleanup_interfaces::msg::ObjectObservation;
   using Trigger = std_srvs::srv::Trigger;
 
@@ -83,9 +87,10 @@ public:
     if (!std::isfinite(target_max_age_) || target_max_age_ <= 0.0 || target_max_age_ > 10.0) {
       throw std::invalid_argument("target_max_age must be within 0..10 seconds");
     }
-    pick_client_ = this->create_client<Trigger>("/execute_pick_and_place");
+    pick_client_ = this->create_client<ExecutePick>("/cleanup/execute_pick");
+    prepare_gripper_client_ = create_client<Trigger>("/cleanup/prepare_gripper");
     grasp_check_client_ = this->create_client<EvaluateGrasp>("/cleanup/evaluate_grasp");
-    open_gripper_client_ = this->create_client<Trigger>("/open_gripper");
+    stop_arm_client_ = this->create_client<Trigger>("/cleanup/stop_manipulation");
     place_client_ = this->create_client<PlaceObject>("/cleanup/place_object");
     park_arm_client_ = this->create_client<Trigger>("/park_arm");
     observe_floor_client_ = this->create_client<Trigger>("/observe_floor");
@@ -129,7 +134,9 @@ private:
   enum class State
   {
     IDLE,
+    FAULT,
     PARKING_FOR_SCAN,
+    PREPARING_GRIPPER,
     NAVIGATING_TO_STATION,
     NAVIGATION_RETRY_WAIT,
     SCAN_SETTLING,
@@ -148,7 +155,6 @@ private:
     NAVIGATING_TO_DROP,
     RELEASING,
     PARKING_AFTER_DROP,
-    RECOVERING_RELEASE,
     RECOVERING_ARM,
     RETURNING_TO_STATION,
     FINISHING,
@@ -166,6 +172,23 @@ private:
 
   void declareParameters()
   {
+    const std::vector<std::tuple<std::string, std::string, double>> timeouts = {
+      {"/cleanup/capture_objects", "capture_service_timeout", 60.0},
+      {"/cleanup/plan_objects", "planner_service_timeout", 20.0},
+      {"/cleanup/evaluate_grasp", "evaluation_service_timeout", 5.0},
+      {"/cleanup/execute_pick", "pick_service_timeout", 60.0},
+      {"/cleanup/prepare_gripper", "gripper_prepare_timeout", 12.0},
+      {"/cleanup/place_object", "place_service_timeout", 45.0},
+      {"/park_arm", "park_service_timeout", 15.0},
+      {"/observe_floor", "observe_service_timeout", 10.0},
+      {"/cleanup/stop_manipulation", "stop_service_timeout", 10.0}};
+    for (const auto & entry : timeouts) {
+      const double value = declare_parameter<double>(std::get<1>(entry), std::get<2>(entry));
+      if (!std::isfinite(value) || value < 0.1 || value > 300.0) {
+        throw std::invalid_argument("Invalid service timeout");
+      }
+      service_timeouts_[std::get<0>(entry)] = value;
+    }
     this->declare_parameter<std::string>("task_config_path", "");
     this->declare_parameter<std::string>("map_frame", "map");
     this->declare_parameter<std::string>(
@@ -246,9 +269,11 @@ private:
   std::string stateName() const
   {
     switch (state_) {
+      case State::FAULT: return "FAULT";
       case State::IDLE: return "IDLE";
       case State::NAVIGATION_RETRY_WAIT: return "NAVIGATION_RETRY_WAIT";
       case State::PARKING_FOR_SCAN: return "PARKING_FOR_SCAN";
+      case State::PREPARING_GRIPPER: return "PREPARING_GRIPPER";
       case State::NAVIGATING_TO_STATION: return "NAVIGATING_TO_STATION";
       case State::SCAN_SETTLING: return "SCAN_SETTLING";
       case State::SENDING_SPIN: return "SENDING_SPIN";
@@ -266,7 +291,6 @@ private:
       case State::NAVIGATING_TO_DROP: return "NAVIGATING_TO_DROP";
       case State::RELEASING: return "RELEASING";
       case State::PARKING_AFTER_DROP: return "PARKING_AFTER_DROP";
-      case State::RECOVERING_RELEASE: return "RECOVERING_RELEASE";
       case State::RECOVERING_ARM: return "RECOVERING_ARM";
       case State::RETURNING_TO_STATION: return "RETURNING_TO_STATION";
       case State::FINISHING: return "FINISHING";
@@ -282,7 +306,7 @@ private:
 
   bool callbackCurrent(uint64_t session, uint64_t operation) const
   {
-    return missionActive() && session == mission_session_ &&
+    return missionActive() && state_ != State::FAULT && session == mission_session_ &&
            operation == operation_id_;
   }
 
@@ -291,7 +315,7 @@ private:
   {
     localization_mode_ = message->data;
     localization_received_ = std::chrono::steady_clock::now();
-    if (missionActive() && localization_mode_ == "DEGRADED") {
+    if (missionActive() && state_ != State::FAULT && localization_mode_ == "DEGRADED") {
       failMission("Localization became DEGRADED during cleanup.");
     }
   }
@@ -304,7 +328,7 @@ private:
            planner_client_->service_is_ready() &&
            pick_client_->service_is_ready() &&
            grasp_check_client_->service_is_ready() &&
-           open_gripper_client_->service_is_ready() &&
+           stop_arm_client_->service_is_ready() &&
            place_client_->service_is_ready() &&
            park_arm_client_->service_is_ready() && observe_floor_client_->service_is_ready();
   }
@@ -366,6 +390,7 @@ private:
     known_objects_.clear();
     active_object_uuid_.clear();
     gripper_may_hold_object_ = false;
+    manipulation_timeout_ = false;
     navigation_purpose_ = NavigationPurpose::NONE;
     startEvidenceSession();
     emitEvent(
@@ -386,7 +411,7 @@ private:
       response->message = "Cleanup is not active.";
       return;
     }
-    finishMission("MISSION_STOPPED", "Cleanup stopped; manipulation canceled and gripper opened.");
+    finishMission("MISSION_STOPPED", "Cleanup stop requested; fingers remain unchanged.");
     response->success = true;
     response->message = "Cleanup stop requested.";
   }
@@ -397,7 +422,7 @@ private:
     const uint64_t session = mission_session_;
     const uint64_t operation = ++operation_id_;
     emitEvent("ARM_PARK_START", "Parking the arm before station scanning.");
-    park_arm_client_->async_send_request(
+    callService(park_arm_client_,
       std::make_shared<Trigger::Request>(),
       [this, session, operation](rclcpp::Client<Trigger>::SharedFuture future) {
         if (!callbackCurrent(session, operation) ||
@@ -410,6 +435,25 @@ private:
           failMission("Initial arm park failed: " + response->message);
           return;
         }
+        navigateToCurrentStation(NavigationPurpose::STATION);
+      });
+  }
+
+  void requestGripperPreparation()
+  {
+    state_ = State::PREPARING_GRIPPER;
+    const auto session = mission_session_;
+    const auto operation = ++operation_id_;
+    emitEvent("GRIPPER_PREPARE_START", "Confirm opening before any navigation");
+    callService(prepare_gripper_client_, std::make_shared<Trigger::Request>(),
+      [this, session, operation](rclcpp::Client<Trigger>::SharedFuture future) {
+        if (!callbackCurrent(session, operation) || state_ != State::PREPARING_GRIPPER) {return;}
+        const auto response = future.get();
+        if (!response->success) {
+          failMission("Gripper preparation failed before navigation: " + response->message);
+          return;
+        }
+        emitEvent("GRIPPER_PREPARE_COMPLETE", response->message);
         navigateToCurrentStation(NavigationPurpose::STATION);
       });
   }
@@ -478,9 +522,10 @@ private:
     auto options = rclcpp_action::Client<NavigateToPose>::SendGoalOptions();
     options.goal_response_callback =
       [this, session, operation](const GoalHandleNavigate::SharedPtr & handle) {
+        --pending_acceptances_;
         if (!callbackCurrent(session, operation)) {
           if (handle) {
-            nav_client_->async_cancel_goal(handle);
+            trackMotionStop<NavigateToPose>(nav_client_, handle);
           }
           return;
         }
@@ -505,6 +550,7 @@ private:
         }
         handleNavigationSuccess();
       };
+    ++pending_acceptances_;
     nav_client_->async_send_goal(goal, options);
   }
 
@@ -714,9 +760,10 @@ private:
     auto options = rclcpp_action::Client<Spin>::SendGoalOptions();
     options.goal_response_callback =
       [this, session, operation](const GoalHandleSpin::SharedPtr & handle) {
+        --pending_acceptances_;
         if (!callbackCurrent(session, operation)) {
           if (handle) {
-            spin_client_->async_cancel_goal(handle);
+            trackMotionStop<Spin>(spin_client_, handle);
           }
           return;
         }
@@ -744,6 +791,7 @@ private:
           std::to_string(heading_index_) + " ready after settling.");
         scheduleSettle(false);
       };
+    ++pending_acceptances_;
     spin_client_->async_send_goal(goal, options);
   }
 
@@ -792,6 +840,7 @@ private:
   {
     auto request = std::make_shared<CaptureObjects::Request>();
     request->mission_id = mission_id_;
+    request->retired_object_uuids.assign(collected_objects_.begin(), collected_objects_.end());
     request->station_name = station_name;
     request->heading_index = heading;
     request->burst_frames = static_cast<uint16_t>(config_.scan.burst_frames);
@@ -809,7 +858,7 @@ private:
       "SCAN_CAPTURE_START",
       "station=" + currentStation().name + ", heading=" +
       std::to_string(heading_index_) + ".");
-    capture_client_->async_send_request(
+    callService(capture_client_,
       captureRequest(currentStation().name, static_cast<uint8_t>(heading_index_)),
       [this, session, operation](rclcpp::Client<CaptureObjects>::SharedFuture future) {
         if (!callbackCurrent(session, operation) || state_ != State::CAPTURING) {
@@ -967,7 +1016,7 @@ private:
       "PLANNING_START",
       "Sending " + std::to_string(observations.size()) +
       " validated candidates to the bounded planner.");
-    planner_client_->async_send_request(
+    callService(planner_client_,
       request,
       [this, session, operation](rclcpp::Client<PlanCleanup>::SharedFuture future) {
         if (!callbackCurrent(session, operation) || state_ != State::PLANNING) {
@@ -1041,8 +1090,9 @@ private:
     auto options = rclcpp_action::Client<Spin>::SendGoalOptions();
     options.goal_response_callback =
       [this, session, operation](const GoalHandleSpin::SharedPtr & handle) {
+        --pending_acceptances_;
         if (!callbackCurrent(session, operation)) {
-          if (handle) {spin_client_->async_cancel_goal(handle);}
+          if (handle) {trackMotionStop<Spin>(spin_client_, handle);}
           return;
         }
         if (!handle) {
@@ -1061,6 +1111,7 @@ private:
         }
         settleObservation(false);
       };
+    ++pending_acceptances_;
     spin_client_->async_send_goal(goal, options);
   }
 
@@ -1085,7 +1136,7 @@ private:
     const uint64_t session = mission_session_;
     const uint64_t operation = ++operation_id_;
     emitEvent("OBSERVATION_CAPTURE_START", "UUID=" + review_observation_.object_uuid);
-    capture_client_->async_send_request(
+    callService(capture_client_,
       captureRequest(currentStation().name + "_observation", 249U),
       [this, session, operation](rclcpp::Client<CaptureObjects>::SharedFuture future) {
         if (!callbackCurrent(session, operation)) {return;}
@@ -1144,7 +1195,7 @@ private:
     request->target.point = active_observation_.centroid;
     emitEvent("GRASP_REACHABILITY_START", "UUID=" + active_object_uuid_ +
       "; attempt=" + std::to_string(approach_attempts_));
-    grasp_check_client_->async_send_request(
+    callService(grasp_check_client_,
       request, [this, session, operation, after_reacquisition](
         rclcpp::Client<EvaluateGrasp>::SharedFuture future) {
         if (!callbackCurrent(session, operation) || state_ != State::CHECKING_GRASP) {return;}
@@ -1201,7 +1252,7 @@ private:
     const uint64_t operation = ++operation_id_;
     emitEvent("TARGET_VIEW_START", "Looking down before fresh target capture; UUID=" +
       active_object_uuid_);
-    observe_floor_client_->async_send_request(std::make_shared<Trigger::Request>(),
+    callService(observe_floor_client_, std::make_shared<Trigger::Request>(),
       [this, session, operation, full_refresh](rclcpp::Client<Trigger>::SharedFuture future) {
         if (!callbackCurrent(session, operation) || state_ != State::REACQUIRING_TARGET) {return;}
         if (!future.get()->success) {
@@ -1225,7 +1276,7 @@ private:
     emitEvent(
       "TARGET_REACQUIRE_START",
       "Re-detecting reserved UUID " + active_object_uuid_ + " before pick.");
-    capture_client_->async_send_request(
+    callService(capture_client_,
       captureRequest(currentStation().name + "_approach", full_refresh ? 249U : 250U),
       [this, session, operation](rclcpp::Client<CaptureObjects>::SharedFuture future) {
         if (!callbackCurrent(session, operation) ||
@@ -1299,21 +1350,33 @@ private:
           return;
         }
         const uint64_t service_operation = ++operation_id_;
-        // Trigger cannot distinguish a pre-grasp failure from a failure after
-        // closing the gripper. Recovery must allow for a partially held object.
+        // While the service is pending (including timeout), possession is unknown.
         gripper_may_hold_object_ = true;
-        pick_client_->async_send_request(
-          std::make_shared<Trigger::Request>(),
+        callService(pick_client_,
+          std::make_shared<ExecutePick::Request>(),
           [this, session, service_operation](
-            rclcpp::Client<Trigger>::SharedFuture future) {
+            rclcpp::Client<ExecutePick>::SharedFuture future) {
             if (!callbackCurrent(session, service_operation) ||
               state_ != State::PICKING)
             {
               return;
             }
             const auto response = future.get();
+            gripper_may_hold_object_ = response->holding_state != PickResult::HOLD_EMPTY;
+            emitEvent("PICK_RESULT", "stage=" + response->stage +
+              "; code=" + std::to_string(response->result_code) +
+              "; holding_state=" + std::to_string(response->holding_state) +
+              "; close_started=" + std::to_string(response->close_started) +
+              "; " + response->message);
             if (!response->success) {
-              if (response->message.rfind("EMPTY_GRASP:", 0) == 0 &&
+              if (response->result_code == PickResult::GRIPPER_FAILED ||
+                response->result_code == PickResult::INTERRUPTED)
+              {
+                failMission("Manipulation failure at " + response->stage + ": " + response->message);
+                return;
+              }
+              if (response->result_code == PickResult::EMPTY_GRASP &&
+                response->holding_state == PickResult::HOLD_EMPTY &&
                 pick_retry_count_ < max_pick_retries_)
               {
                 ++pick_retry_count_;
@@ -1323,6 +1386,13 @@ private:
                 return;
               }
               recoverFromObjectFailure("Pick failed: " + response->message);
+              return;
+            }
+            if (response->result_code != PickResult::OK ||
+              response->holding_state != PickResult::HOLD_CONFIRMED)
+            {
+              gripper_may_hold_object_ = true;
+              failMission("Inconsistent pick result: success without confirmed hold");
               return;
             }
             gripper_may_hold_object_ = true;
@@ -1344,7 +1414,7 @@ private:
     emitEvent(
       "PICK_VERIFY_START",
       "Checking whether UUID " + active_object_uuid_ + " remains on the floor.");
-    capture_client_->async_send_request(
+    callService(capture_client_,
       captureRequest(currentStation().name + "_pick_verify", 251U),
       [this, session, operation](rclcpp::Client<CaptureObjects>::SharedFuture future) {
         if (!callbackCurrent(session, operation) || state_ != State::VERIFYING_PICK) {
@@ -1354,19 +1424,7 @@ private:
         const ObjectObservation * remaining = response->success ?
           findActiveObservation(response->observations) : nullptr;
         if (remaining) {
-          if (pick_retry_count_ < max_pick_retries_) {
-            ++pick_retry_count_;
-            active_observation_ = *remaining;
-            emitEvent(
-              "PICK_RETRY",
-              "Object still detected; retry=" +
-              std::to_string(pick_retry_count_) + ".");
-            // A failed pick invalidates old anchors. Look down and obtain a new
-            // full-body observation; never reuse the clipped verification centroid.
-            requestTargetReacquisition(true);
-            return;
-          }
-          recoverFromObjectFailure("Object remained after all pick retries");
+          failMission("Object still visible after confirmed grasp; holding state ambiguous");
           return;
         }
         if (!response->success) {
@@ -1394,14 +1452,18 @@ private:
     request->floor_target.point.y = config_.placement_point.y;
     request->floor_target.point.z = config_.placement_floor_height;
     request->release_height = config_.placement_release_height;
-    place_client_->async_send_request(
+    callService(place_client_,
       request,
       [this, session, operation](rclcpp::Client<PlaceObject>::SharedFuture future) {
         if (!callbackCurrent(session, operation) || state_ != State::RELEASING) {
           return;
         }
         const auto response = future.get();
-        if (response->released) {gripper_may_hold_object_ = false;}
+        if (response->released) {
+          gripper_may_hold_object_ = false;
+          collected_objects_.insert(active_object_uuid_);
+          writeRegistrySnapshot();
+        }
         if (!response->success || !response->released) {
           failMission("Object placement failed: " + response->message);
           return;
@@ -1416,7 +1478,7 @@ private:
     state_ = State::PARKING_AFTER_DROP;
     const uint64_t session = mission_session_;
     const uint64_t operation = ++operation_id_;
-    park_arm_client_->async_send_request(
+    callService(park_arm_client_,
       std::make_shared<Trigger::Request>(),
       [this, session, operation](rclcpp::Client<Trigger>::SharedFuture future) {
         if (!callbackCurrent(session, operation) ||
@@ -1446,40 +1508,13 @@ private:
       failed_objects_.insert(active_object_uuid_);
       station_observations_.erase(active_object_uuid_);
     }
-    emitEvent(
-      "OBJECT_FAILED",
-      reason + "; this object is skipped without aborting the station route.");
     if (gripper_may_hold_object_) {
-      requestRecoveryRelease();
+      emitEvent("OBJECT_FAILED", reason + "; possession unknown or confirmed; stopping mission.");
+      failMission("Object failure with possible held object: " + reason);
       return;
     }
+    emitEvent("OBJECT_FAILED", reason + "; empty gripper confirmed; skipping object.");
     requestRecoveryPark();
-  }
-
-  void requestRecoveryRelease()
-  {
-    state_ = State::RECOVERING_RELEASE;
-    const uint64_t session = mission_session_;
-    const uint64_t operation = ++operation_id_;
-    emitEvent(
-      "RECOVERY_RELEASE_START",
-      "Opening the gripper because the failed pick may still be held.");
-    open_gripper_client_->async_send_request(
-      std::make_shared<Trigger::Request>(),
-      [this, session, operation](rclcpp::Client<Trigger>::SharedFuture future) {
-        if (!callbackCurrent(session, operation) ||
-          state_ != State::RECOVERING_RELEASE)
-        {
-          return;
-        }
-        const auto response = future.get();
-        if (!response->success) {
-          failMission("Recovery release failed: " + response->message);
-          return;
-        }
-        gripper_may_hold_object_ = false;
-        requestRecoveryPark();
-      });
   }
 
   void requestRecoveryPark()
@@ -1487,7 +1522,7 @@ private:
     state_ = State::RECOVERING_ARM;
     const uint64_t session = mission_session_;
     const uint64_t operation = ++operation_id_;
-    park_arm_client_->async_send_request(
+    callService(park_arm_client_,
       std::make_shared<Trigger::Request>(),
       [this, session, operation](rclcpp::Client<Trigger>::SharedFuture future) {
         if (!callbackCurrent(session, operation) || state_ != State::RECOVERING_ARM) {
@@ -1548,6 +1583,10 @@ private:
 
   void cancelActiveOperations()
   {
+    ++service_token_;
+    if (service_timer_) {service_timer_->cancel();}
+    if (remove_pending_) {remove_pending_(); remove_pending_ = {};}
+
     ++mission_session_;
     ++operation_id_;
     if (navigation_retry_timer_) {navigation_retry_timer_->cancel();}
@@ -1558,11 +1597,11 @@ private:
       pick_timer_->cancel();
     }
     if (active_navigation_goal_) {
-      nav_client_->async_cancel_goal(active_navigation_goal_);
+      trackMotionStop<NavigateToPose>(nav_client_, active_navigation_goal_);
       active_navigation_goal_.reset();
     }
     if (active_spin_goal_) {
-      spin_client_->async_cancel_goal(active_spin_goal_);
+      trackMotionStop<Spin>(spin_client_, active_spin_goal_);
       active_spin_goal_.reset();
     }
   }
@@ -1574,43 +1613,108 @@ private:
 
   void finishMission(const std::string & event, const std::string & reason)
   {
-    if (state_ == State::FINISHING) {return;}
+    if (state_ == State::FINISHING || state_ == State::FAULT) {return;}
+    stop_checks_.clear();
     cancelActiveOperations();
     state_ = State::FINISHING;
     navigation_purpose_ = NavigationPurpose::NONE;
     terminal_event_ = event;
     terminal_reason_ = reason;
-    emitEvent("MISSION_RELEASE_START", "Opening fingers before ending cleanup");
-    const auto session = mission_session_;
-    terminal_timer_ = create_wall_timer(30s, [this, session]() {
-      if (state_ == State::FINISHING && session == mission_session_) {
-        terminal_timer_->cancel();
-        emitEvent("MISSION_RELEASE_TIMEOUT", "Waiting for outstanding release; new mission blocked");
-      }
-    });
-    if (!open_gripper_client_->service_is_ready()) {
-      finishRelease(false, "Gripper opening service unavailable");
+    emitEvent("MISSION_STOP_START", "Canceling motion; fingers unchanged");
+    if (!stop_arm_client_->service_is_ready()) {
+      finishStop(false, "Manipulation stop service unavailable");
       return;
     }
-    open_gripper_client_->async_send_request(std::make_shared<Trigger::Request>(),
-      [this, session](rclcpp::Client<Trigger>::SharedFuture future) {
-        if (state_ != State::FINISHING || session != mission_session_) {return;}
+    callService(stop_arm_client_, std::make_shared<Trigger::Request>(),
+      [this](rclcpp::Client<Trigger>::SharedFuture future) {
         const auto response = future.get();
-        finishRelease(response->success, response->message);
+        if (!response->success) {finishStop(false, response->message); return;}
+        const auto deadline = std::chrono::steady_clock::now() + 10s;
+        terminal_timer_ = create_wall_timer(50ms, [this, deadline]() {
+          const bool stopped = pending_acceptances_ == 0 && navigation_evidence_->stationary() &&
+            std::all_of(stop_checks_.begin(), stop_checks_.end(), [](auto & check) {return check();});
+          if (stopped) {finishStop(true, "Actions terminated and base stationary");}
+          else if (std::chrono::steady_clock::now() >= deadline) {
+            finishStop(false, "Motion termination or stationary feedback unconfirmed");
+          }
+        });
       });
   }
 
-  void finishRelease(bool opened, const std::string & detail)
+  void finishStop(bool stopped, const std::string & detail)
   {
     if (terminal_timer_) {terminal_timer_->cancel();}
-    emitEvent(opened ? "MISSION_RELEASE_COMPLETE" : "MISSION_RELEASE_FAILED", detail);
-    if (opened) {gripper_may_hold_object_ = false;}
-    // Never report successful completion when the requested final opening failed.
-    emitEvent(!opened && terminal_event_ == "MISSION_COMPLETE" ? "MISSION_FAILED" :
-      terminal_event_, terminal_reason_ + (opened ? "" : "; final release failed: " + detail));
+    emitEvent(stopped ? "MISSION_STOP_COMPLETE" : "MISSION_STOP_FAILED", detail);
+    const bool fault = !stopped || gripper_may_hold_object_ || manipulation_timeout_;
+    emitEvent(!stopped && terminal_event_ == "MISSION_COMPLETE" ? "MISSION_FAILED" :
+      terminal_event_, terminal_reason_ + "; " + detail);
+    state_ = fault ? State::FAULT : State::IDLE;
     writeRegistrySnapshot();
-    state_ = State::IDLE;
     publishStatus();
+  }
+
+  template<typename ActionT>
+  void trackMotionStop(const typename rclcpp_action::Client<ActionT>::SharedPtr & client,
+                       const typename rclcpp_action::ClientGoalHandle<ActionT>::SharedPtr & handle)
+  {
+    auto result = client->async_get_result(handle);
+    client->async_cancel_goal(handle);
+    stop_checks_.push_back([result]() {
+      return result.wait_for(0s) == std::future_status::ready &&
+        result.get().code != rclcpp_action::ResultCode::UNKNOWN;
+    });
+  }
+
+  template<typename ServiceT, typename Callback>
+  void callService(const std::shared_ptr<rclcpp::Client<ServiceT>> & client,
+                   const std::shared_ptr<typename ServiceT::Request> & request, Callback callback)
+  {
+    const std::string name = client->get_service_name();
+    const auto session = mission_session_;
+    const auto operation = operation_id_;
+    const auto token = ++service_token_;
+    if (service_timer_) {service_timer_->cancel();}
+    if (remove_pending_) {remove_pending_(); remove_pending_ = {};}
+    auto pending = client->async_send_request(request,
+      [this, session, operation, token, callback, name](typename rclcpp::Client<ServiceT>::SharedFuture future) {
+        if (token != service_token_ || session != mission_session_ || operation != operation_id_) {return;}
+        if (service_timer_) {service_timer_->cancel();}
+        remove_pending_ = {};
+        try {callback(future);} catch (const std::exception & error) {
+          serviceTimeout(std::string("Service response error: ") + error.what(), name);
+        }
+      });
+    remove_pending_ = [client, id = pending.request_id]() {client->remove_pending_request(id);};
+    const auto deadline = std::chrono::steady_clock::now() +
+      std::chrono::duration<double>(service_timeouts_.at(name));
+    service_timer_ = create_wall_timer(50ms, [this, token, deadline, name]() {
+      if (token != service_token_ || std::chrono::steady_clock::now() < deadline) {return;}
+      service_timer_->cancel();
+      ++service_token_;
+      ++operation_id_;
+      if (remove_pending_) {remove_pending_(); remove_pending_ = {};}
+      serviceTimeout("Service timeout: " + name, name);
+    });
+  }
+
+  void serviceTimeout(const std::string & reason, const std::string & service)
+  {
+    emitEvent("SERVICE_TIMEOUT", reason);
+    if (state_ == State::FINISHING) {finishStop(false, reason); return;}
+    if (state_ == State::REACQUIRING_TARGET && service == "/cleanup/capture_objects") {
+      recoverFromObjectFailure(reason); return;
+    }
+    switch (state_) {
+      case State::CAPTURING: handleCaptureFailure(reason); return;
+      case State::OBSERVATION_CAPTURING: finishObservation(false, reason); return;
+      case State::PLANNING: advanceStation(); return;
+      case State::CHECKING_GRASP:
+        recoverFromObjectFailure(reason); return;
+      default:
+        // A service timeout cannot prove that a physical command never ran.
+        manipulation_timeout_ = true;
+        failMission(reason); return;
+    }
   }
 
   static std::string jsonEscape(const std::string & input)
@@ -1716,6 +1820,13 @@ private:
     status_pub_->publish(status);
   }
 
+  rclcpp::TimerBase::SharedPtr service_timer_;
+  std::function<void()> remove_pending_;
+  uint64_t service_token_{0};
+  std::unordered_map<std::string, double> service_timeouts_;
+  std::vector<std::function<bool()>> stop_checks_;
+  int pending_acceptances_{0};
+  bool manipulation_timeout_{false};
   std::string task_config_path_;
   std::unique_ptr<NavigationEvidence> navigation_evidence_;
   geometry_msgs::msg::PoseStamped last_navigation_pose_;
@@ -1778,9 +1889,10 @@ private:
   GoalHandleSpin::SharedPtr active_spin_goal_;
   rclcpp::Client<CaptureObjects>::SharedPtr capture_client_;
   rclcpp::Client<PlanCleanup>::SharedPtr planner_client_;
-    rclcpp::Client<Trigger>::SharedPtr pick_client_;
+  rclcpp::Client<ExecutePick>::SharedPtr pick_client_;
+  rclcpp::Client<Trigger>::SharedPtr prepare_gripper_client_;
   rclcpp::Client<EvaluateGrasp>::SharedPtr grasp_check_client_;
-  rclcpp::Client<Trigger>::SharedPtr open_gripper_client_;
+  rclcpp::Client<Trigger>::SharedPtr stop_arm_client_;
   rclcpp::Client<PlaceObject>::SharedPtr place_client_;
     rclcpp::Client<Trigger>::SharedPtr park_arm_client_;
     rclcpp::Client<Trigger>::SharedPtr observe_floor_client_;

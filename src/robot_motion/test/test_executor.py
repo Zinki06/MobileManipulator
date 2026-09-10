@@ -43,6 +43,7 @@ def test_measured_turns_safety_wait_cancel_and_exclusive_admission(
         args = ['--ros-args', '-p', 'spin_max_velocity:=0.55', '-p', 'spin_gain:=2.0',
                 '-p', 'spin_acceleration:=0.8', '-p', 'rotation_settle:=0.15',
                 '-p', 'reuse_stationary_readiness:=true']
+    args = (args or ['--ros-args']) + ['-p', 'sync_depth_costmaps:=false']
     rclpy.init(args=args)
     motion = MotionExecutor()
     motion.wait_limit = 1.0

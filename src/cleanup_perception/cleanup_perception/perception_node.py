@@ -351,6 +351,7 @@ class ScanPerceptionNode(Node):
                 self.get_logger().info(
                     f'Reset object registry for mission {request.mission_id}'
                 )
+            self._registry.retire(request.retired_object_uuids)
             return self._perform_capture(request, response)
         except Exception as exception:
             response.success = False

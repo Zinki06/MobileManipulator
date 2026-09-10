@@ -125,6 +125,8 @@ def main(args=None):
         'lib/controller_manager/ros2_control_node'))
     options, controller_args = parser.parse_known_args(args)
     stopping = False
+    release_ok = True
+    forced_shutdown = False
 
     def stop(_number, _frame):
         nonlocal stopping
@@ -142,25 +144,39 @@ def main(args=None):
             rclpy.spin_once(node, timeout_sec=0.1)
         if stopping and child.poll() is None:
             try:
-                node.release()
+                release_ok = node.release()
             except Exception as error:
+                release_ok = False
                 node.get_logger().error(f'[SHUTDOWN_RELEASE_FAILED] {error}')
     finally:
         if child.poll() is None:
+            node.get_logger().info(
+                '[CONTROLLER_SHUTDOWN_START] Waiting up to 10s for hardware cleanup')
             os.killpg(child.pid, signal.SIGINT)
             try:
-                child.wait(timeout=3)
+                # OpenCR's destructor sleeps for 3s BEFORE disabling torque.
+                # Include controller teardown and serial I/O, not just that sleep.
+                child.wait(timeout=10)
             except subprocess.TimeoutExpired:
+                forced_shutdown = True
+                node.get_logger().error(
+                    '[CONTROLLER_SHUTDOWN_FORCED] Graceful timeout; sending SIGTERM; '
+                    'torque-off unconfirmed')
                 os.killpg(child.pid, signal.SIGTERM)
                 try:
-                    child.wait(timeout=2)
+                    child.wait(timeout=5)
                 except subprocess.TimeoutExpired:
+                    node.get_logger().error(
+                        '[CONTROLLER_SHUTDOWN_FORCED] Sending SIGKILL; torque-off unconfirmed')
                     os.killpg(child.pid, signal.SIGKILL)
                     child.wait()
+        node.get_logger().info(
+            f'[CONTROLLER_SHUTDOWN_RESULT] returncode={child.returncode}; '
+            f'forced={forced_shutdown}; release_confirmed={release_ok}')
         node.destroy_node()
         rclpy.shutdown()
-    if not stopping and child.returncode:
-        raise SystemExit(child.returncode)
+    if child.returncode or forced_shutdown or not release_ok:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

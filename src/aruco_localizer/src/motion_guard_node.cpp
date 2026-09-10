@@ -9,7 +9,6 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
-#include <sensor_msgs/msg/laser_scan.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/utils.h>
@@ -28,6 +27,10 @@ public:
     max_angular_ = declare_parameter<double>("max_angular_velocity", 0.35);
     linear_accel_ = declare_parameter<double>("linear_acceleration", 0.15);
     angular_accel_ = declare_parameter<double>("angular_acceleration", 0.4);
+    depth_safety_ = declare_parameter<bool>("enable_depth_safety", true);
+    if (!depth_safety_) {
+      RCLCPP_WARN(get_logger(), "TEST MODE: depth collision stops and depth watchdog disabled");
+    }
     for (double value : {max_linear_, max_reverse_, max_angular_, linear_accel_, angular_accel_}) {
       if (!std::isfinite(value) || value <= 0.0) {
         throw std::invalid_argument("Invalid guard motion limit");
@@ -42,7 +45,7 @@ public:
     status_ = create_publisher<std_msgs::msg::String>(
       "/motion_guard/status", rclcpp::QoS(1).transient_local());
     input_ = create_subscription<geometry_msgs::msg::Twist>(
-      "/cmd_vel_collision_checked", 1,
+      depth_safety_ ? "/cmd_vel_collision_checked" : "/cmd_vel_smoothed", 1,
       [this](geometry_msgs::msg::Twist::ConstSharedPtr msg) {
         command_ = *msg;
         command_time_ = std::chrono::steady_clock::now();
@@ -64,16 +67,6 @@ public:
         mode_value_ = msg->data;
         mode_time_ = std::chrono::steady_clock::now();
         if (mode_value_ == "DEGRADED") {fault_ = "localization degraded";}
-      });
-    scan_ = create_subscription<sensor_msgs::msg::LaserScan>(
-      "/scan", rclcpp::SensorDataQoS(),
-      [this](sensor_msgs::msg::LaserScan::ConstSharedPtr msg) {
-        const bool valid = std::any_of(msg->ranges.begin(), msg->ranges.end(),
-          [msg](float range) {
-            return (std::isfinite(range) && range >= msg->range_min &&
-              range <= msg->range_max) || (std::isinf(range) && range > 0.0);
-          });
-        if (valid) {scan_header_ = msg->header;}
       });
     depth_ = create_subscription<sensor_msgs::msg::PointCloud2>(
       "/cleanup/obstacle_points", rclcpp::SensorDataQoS(),
@@ -147,18 +140,16 @@ private:
       blocked = "map transform unavailable";
     }
     if (!fault_.empty()) {blocked = fault_;}
-    if (blocked.empty()) {
-      std::string laser_detail, depth_detail;
-      const auto laser_issue = sourceIssue(scan_header_, laser_detail);
-      const auto depth_issue = sourceIssue(depth_header_, depth_detail);
-      if (!laser_issue.empty() || !depth_issue.empty()) {
-        blocked = !laser_issue.empty() ? "laser " + laser_issue : "depth " + depth_issue;
+    if (depth_safety_ && blocked.empty()) {
+      std::string detail;
+      const auto issue = sourceIssue(depth_header_, detail);
+      if (!issue.empty()) {
+        blocked = "depth " + issue;
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
-          "[MOTION_SENSOR] laser={%s; %s} depth={%s; %s}; limit=0.500s",
-          laser_issue.empty() ? "OK" : laser_issue.c_str(), laser_detail.c_str(),
-          depth_issue.empty() ? "OK" : depth_issue.c_str(), depth_detail.c_str());
+          "[MOTION_SENSOR] depth={%s; %s}; limit=0.500s", issue.c_str(), detail.c_str());
       }
     }
+
     if (count_publishers("/cmd_vel") > 1) {
       fault_ = "multiple final velocity publishers";
       blocked = fault_;
@@ -171,7 +162,7 @@ private:
     if (!std::isfinite(command_.linear.x) || !std::isfinite(command_.angular.z)) {
       blocked = "invalid command";
     }
-    if (blocked.empty() &&
+    if (depth_safety_ && blocked.empty() &&
       std::chrono::duration<double>(now - intent_time_).count() < 0.25 &&
       (std::abs(intent_.linear.x) > 0.001 || std::abs(intent_.angular.z) > 0.001) &&
       std::abs(command_.linear.x) < 0.0001 && std::abs(command_.angular.z) < 0.0001)
@@ -212,6 +203,7 @@ private:
   Steady::time_point last_tick_{Steady::now()};
   double max_linear_, max_reverse_, max_angular_, linear_accel_, angular_accel_;
   bool command_received_{false}, have_transform_{false};
+  bool depth_safety_{true};
   double x_{0.0}, y_{0.0}, yaw_{0.0};
   std::string fault_, mode_value_, last_status_;
   geometry_msgs::msg::Twist command_, previous_;
@@ -225,9 +217,8 @@ private:
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr status_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr input_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr mode_;
-  rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_;
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr depth_;
-  std_msgs::msg::Header scan_header_, depth_header_;
+  std_msgs::msg::Header depth_header_;
   rclcpp::TimerBase::SharedPtr timer_;
 };
 

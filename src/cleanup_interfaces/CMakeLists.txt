@@ -9,10 +9,12 @@ find_package(std_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ObjectObservation.msg"
+  "msg/GripperHardwareState.msg"
   "srv/CaptureObjects.srv"
   "srv/PlanCleanup.srv"
   "srv/EvaluateGrasp.srv"
   "srv/PlaceObject.srv"
+  "srv/ExecutePick.srv"
   DEPENDENCIES builtin_interfaces geometry_msgs std_msgs
 )
 

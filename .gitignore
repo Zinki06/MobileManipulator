@@ -35,3 +35,8 @@ motion_debug/video_*/
 *.swp
 *~
 .DS_Store
+
+# Debug logs and local backups
+cleanup_debug/
+gripper_debug/
+rollback_backups/

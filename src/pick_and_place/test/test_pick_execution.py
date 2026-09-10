@@ -13,7 +13,7 @@ from cleanup_interfaces.srv import EvaluateGrasp, PlaceObject
 from control_msgs.action import FollowJointTrajectory, GripperCommand
 from geometry_msgs.msg import PointStamped, TransformStamped
 import rclpy
-from rclpy.action import ActionServer, CancelResponse
+from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from std_msgs.msg import Bool, String
@@ -35,7 +35,8 @@ def wait_for(predicate, seconds=5):
     'holding', 'empty', 'drop', 'false_open',
     'candidate_holding', 'candidate_empty', 'candidate_false_open', 'candidate_relaxed',
     'candidate_processed',
-    'optimized_park', 'interrupt',
+    'optimized_park', 'interrupt', 'stop_holding', 'cancel_stuck', 'late_accept', 'stop_place',
+    'place_delayed_open', 'place_stalled', 'place_stale', 'place_abort', 'place_hold_stop',
 ])
 def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatch, outcome):
     """Reject shallow targets and execute insertion before closing at a closer target."""
@@ -47,16 +48,25 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
     group = ReentrantCallbackGroup()
     paths, grippers, phases, carrying = [], [], [], []
     candidate_mode = outcome.startswith('candidate_')
-    behavior = ('holding' if outcome in {'candidate_relaxed', 'candidate_processed', 'interrupt'}
+    behavior = ('holding' if outcome in {
+        'candidate_relaxed', 'candidate_processed', 'interrupt', 'stop_holding',
+        'cancel_stuck', 'late_accept', 'stop_place',
+        'place_delayed_open', 'place_stalled', 'place_stale', 'place_abort', 'place_hold_stop'}
                 else outcome.removeprefix('candidate_'))
     finger = [0.019]
     arm_position = [0.0, -0.523, -0.523, 1.5707]
     reject_lowering = [False]
     block_arm = [False]
     arm_waiting = threading.Event()
+    placement_active = [False]
+    open_attempts = []
+    placement_close_done = [None]
+    stale_feedback = [False]
     joint_pub = node.create_publisher(JointState, '/joint_states', 10)
 
     def feedback():
+        if stale_feedback[0]:
+            return
         msg = JointState()
         msg.header.stamp = node.get_clock().now().to_msg()
         msg.name = ['gripper_left_joint', 'joint1', 'joint2', 'joint3', 'joint4']
@@ -71,7 +81,8 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
         if block_arm[0]:
             arm_waiting.set()
             deadline = time.monotonic() + 5
-            while not goal.is_cancel_requested and time.monotonic() < deadline:
+            while (not goal.is_cancel_requested or outcome == 'cancel_stuck') and \
+                    time.monotonic() < deadline:
                 time.sleep(.02)
             if goal.is_cancel_requested:
                 goal.canceled()
@@ -89,14 +100,40 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
 
     def gripper(goal):
         grippers.append(goal.request.command.position)
+        if placement_active[0] and goal.request.command.position > 0:
+            assert placement_close_done[0] is not None
+            assert time.monotonic() - placement_close_done[0] >= 5.0
+            open_attempts.append((goal.request.command.position, goal.request.command.max_effort))
+            if outcome == 'place_abort':
+                goal.abort()
+                return GripperCommand.Result(position=finger[0], reached_goal=False)
+            if outcome == 'place_delayed_open':
+                time.sleep(3.5)  # Longer than the former three-second action deadline.
+            if outcome == 'place_stalled':
+                goal.succeed()
+                return GripperCommand.Result(position=finger[0], stalled=True, reached_goal=False)
+            if outcome == 'place_stale':
+                stale_feedback[0] = True
+                goal.succeed()
+                return GripperCommand.Result(position=.019, reached_goal=True)
+        if goal.request.command.position < 0 and outcome in {'stop_holding', 'cancel_stuck'}:
+            block_arm[0] = True
         finger[0] = (0.009 if behavior == 'false_open' else 0.019) \
             if goal.request.command.position > 0 else \
             (-0.00996 if behavior == 'empty' else 0.002)
+        if placement_active[0] and goal.request.command.position < 0:
+            placement_close_done[0] = time.monotonic()
         goal.succeed()
         return GripperCommand.Result(position=finger[0], reached_goal=True)
 
+    def accept_arm(_request):
+        if outcome == 'late_accept' and block_arm[0]:
+            time.sleep(3.6)
+        return GoalResponse.ACCEPT
+
     arm_server = ActionServer(node, FollowJointTrajectory,
                               '/arm_controller/follow_joint_trajectory', arm,
+                              goal_callback=accept_arm,
                               cancel_callback=lambda _: CancelResponse.ACCEPT,
                               callback_group=group)
     grip_server = ActionServer(node, GripperCommand, '/gripper_controller/gripper_cmd',
@@ -238,6 +275,33 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
         target_pub.publish(req.target)
         time.sleep(0.1)
         paths.clear()
+        if outcome in {'stop_holding', 'cancel_stuck', 'late_accept'}:
+            block_arm[0] = outcome == 'late_accept'
+            client = node.create_client(Trigger, '/execute_pick_and_place')
+            assert client.wait_for_service(timeout_sec=3)
+            future = client.call_async(Trigger.Request())
+            if outcome == 'late_accept':
+                wait_for(future.done, 8)
+                wait_for(arm_waiting.is_set, 8)
+                time.sleep(.5)
+                assert not future.result().success
+            else:
+                wait_for(arm_waiting.is_set, 8)
+                stop = node.create_client(Trigger, '/cleanup/stop_manipulation')
+                assert stop.wait_for_service(timeout_sec=3)
+                stopped = stop.call_async(Trigger.Request())
+                wait_for(stopped.done, 10)
+                assert stopped.result().success == (outcome == 'stop_holding')
+                wait_for(future.done, 10)
+                assert finger[0] == .002
+            assert grippers.count(.019) == 1  # Stop never opens the held object.
+            if outcome != 'stop_holding':
+                assert any(p.startswith('ACTION_FAULT|') for p in phases)
+                count = len(paths)
+                assert not trigger('/park_arm').success
+                assert not trigger('/open_gripper').success
+                assert len(paths) == count
+            return
         if outcome == 'interrupt':
             block_arm[0] = True
             client = node.create_client(Trigger, '/execute_pick_and_place')
@@ -307,6 +371,17 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
         assert len(grippers) == opened_before
         placement.floor_target.point.x = 0.24
         placement.floor_target.header.stamp = node.get_clock().now().to_msg()
+        if outcome == 'stop_place':
+            block_arm[0] = True
+            arm_waiting.clear()
+            future = place.call_async(placement)
+            wait_for(arm_waiting.is_set)
+            assert trigger('/cleanup/stop_manipulation').success
+            wait_for(future.done)
+            assert not future.result().success and not future.result().released
+            assert len(grippers) == opened_before
+            assert finger[0] == .002
+            return
         reject_lowering[0] = True
         future = place.call_async(placement)
         wait_for(future.done, 20)
@@ -314,12 +389,29 @@ def test_strict_reachability_insertion_and_observation_pose(tmp_path, monkeypatc
         assert len(grippers) == opened_before
         reject_lowering[0] = False
         placement.floor_target.header.stamp = node.get_clock().now().to_msg()
+        placement_active[0] = True
+        paths_before = len(paths)
         future = place.call_async(placement)
+        if outcome == 'place_hold_stop':
+            wait_for(lambda: any(p.startswith('PLACE_HOLD|') for p in phases), 15)
+            assert trigger('/cleanup/stop_manipulation').success
         wait_for(future.done, 20)
+        if outcome in {'place_stalled', 'place_stale', 'place_abort', 'place_hold_stop'}:
+            assert not future.result().success and not future.result().released
+            attempts = 0 if outcome == 'place_hold_stop' else 1
+            assert open_attempts == [(.019, 10.)] * attempts
+            assert len(paths) == paths_before + 2  # Approach and lower only, no retreat.
+            assert not any(p.startswith('PLACE_RETREAT|') for p in phases)
+            assert finger[0] == .002
+            return
         assert future.result().success and future.result().released
+        assert open_attempts == [(.019, 10.)]
+        assert len(paths) == paths_before + 3  # Approach, lower, then retreat only after release.
         tags = [p.split('|')[0] for p in phases]
         assert tags.index('PLACE_LOWER') < tags.index('PLACE_OPEN') < tags.index('PLACE_RETREAT')
-        assert grippers[-1] == 0.019
+        assert grippers[-2:] == [-0.010, 0.019]
+        assert tags.index('PLACE_LOWER') < tags.index('PLACE_RECLOSE') < (
+            tags.index('PLACE_HOLD')) < tags.index('PLACE_OPEN')
         wait_for(lambda: carrying and not carrying[-1])
     finally:
         process.terminate()

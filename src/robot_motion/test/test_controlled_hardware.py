@@ -28,8 +28,12 @@ def wait_for(predicate, timeout=5):
     assert predicate()
 
 
-@pytest.mark.parametrize('opens', [True, False])
-def test_sigint_opens_before_controller_exit(tmp_path, monkeypatch, opens):
+@pytest.mark.parametrize('opens,cleanup_delay,exit_code', [
+    (True, 0.0, 0), (False, 0.0, 0), (True, 3.2, 0), (False, 3.2, 0), (True, 0.0, 7),
+    (True, 20.0, 0),
+])
+def test_sigint_opens_before_controller_exit(
+        tmp_path, monkeypatch, opens, cleanup_delay, exit_code):
     """Shield the hardware child from group SIGINT until opening feedback is checked."""
     monkeypatch.setenv('ROS_DOMAIN_ID', str(145 + os.getpid() % 10))
     monkeypatch.setenv('ROS_LOCALHOST_ONLY', '1')
@@ -41,10 +45,11 @@ def test_sigint_opens_before_controller_exit(tmp_path, monkeypatch, opens):
                      'import signal, time\nfrom pathlib import Path\n'
                      f'Path({str(started)!r}).touch()\n'
                      'def stop(*_):\n'
+                     f'    time.sleep({cleanup_delay})\n'
                      f'    Path({str(stopped)!r}).write_text(str(time.monotonic()))\n'
-                     '    raise SystemExit(0)\n'
+                     f'    raise SystemExit({exit_code})\n'
                      'signal.signal(signal.SIGINT, stop)\n'
-                     'signal.signal(signal.SIGTERM, stop)\n'
+                     'signal.signal(signal.SIGTERM, signal.SIG_DFL)\n'
                      'while True: time.sleep(.05)\n')
     child.chmod(0o755)
     rclpy.init()
@@ -93,12 +98,18 @@ def test_sigint_opens_before_controller_exit(tmp_path, monkeypatch, opens):
         wait_for(lambda: started.exists() and joint_pub.get_subscription_count() > 0)
         time.sleep(.5)
         os.killpg(process.pid, signal.SIGINT)  # Exactly how launch signals its process group.
-        assert process.wait(timeout=12) == 0, (tmp_path / 'shutdown.log').read_text()
+        forced = cleanup_delay > 10
+        expected_code = 0 if opens and exit_code == 0 and not forced else 1
+        assert process.wait(timeout=20) == expected_code, (tmp_path / 'shutdown.log').read_text()
         assert len(commanded) == 1 and commanded[0][0] == .019
-        assert stopped.exists() and float(stopped.read_text()) > commanded[0][1]
+        if forced:
+            assert not stopped.exists()
+        else:
+            assert stopped.exists() and float(stopped.read_text()) > commanded[0][1]
         text = (tmp_path / 'shutdown.log').read_text()
         assert ('[SHUTDOWN_RELEASE_COMPLETE]' in text) == opens
         assert ('[SHUTDOWN_RELEASE_FAILED]' in text) != opens
+        assert f'returncode={-15 if forced else exit_code}; forced={forced}' in text
     finally:
         if process.poll() is None:
             process.terminate()

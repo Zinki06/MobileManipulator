@@ -3,6 +3,7 @@ string station_name
 uint8 heading_index
 uint16 burst_frames
 uint16 min_confirmations
+string[] retired_object_uuids
 ---
 bool success
 string message

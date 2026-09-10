@@ -14,8 +14,8 @@ CONFIG = Path(__file__).parents[2] / 'aruco_localizer/config'
 
 
 @pytest.mark.parametrize('name', ['performance.yaml', 'performance_conservative.yaml'])
-def test_profile_preserves_collision_checks_and_goal_tolerances(name):
-    """Speed overlays retain footprint sensing and precision approach contracts."""
+def test_profile_collision_mode_and_goal_tolerances(name):
+    """Test profile bypasses prediction while retaining independent sensing."""
     profile = yaml.safe_load((CONFIG / name).read_text())
     assert validate_profile(profile) > 0
     before = yaml.safe_load((CONFIG / 'nav2_params.yaml').read_text())
@@ -24,13 +24,18 @@ def test_profile_preserves_collision_checks_and_goal_tolerances(name):
     for key in a['goal_checker_plugins']:
         assert a[key] == b[key]
     for key in ('StationPath', 'ApproachPath'):
-        assert b[key]['use_collision_detection']
+        assert b[key]['use_collision_detection'] == (name != 'performance.yaml')
         assert b[key]['use_regulated_linear_velocity_scaling']
     safety = yaml.safe_load((CONFIG / 'motion_safety.yaml').read_text())
     merged = merge_parameters(safety, profile)['collision_monitor']['ros__parameters']
     assert merged['StopFootprint'] == safety['collision_monitor']['ros__parameters'][
         'StopFootprint']
-    assert merged['observation_sources'] == ['scan', 'depth_points']
+    assert merged['observation_sources'] == ['depth_points']
+    if name == 'performance.yaml':
+        assert not profile['motion_guard']['ros__parameters']['enable_depth_safety']
+        assert not profile['motion_executor']['ros__parameters']['sync_depth_costmaps']
+        for key in ('local_costmap', 'global_costmap'):
+            assert not after[key][key]['ros__parameters']['depth_layer']['enabled']
 
 
 def test_inconsistent_or_unsafe_profiles_rejected():
